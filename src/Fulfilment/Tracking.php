@@ -10,11 +10,13 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Fulfilment;
 
 use Pixonaut\WooCommerce\Api\Answers\OrderTracking;
+use RuntimeException;
+use WC_Order_Item_Product;
 
 /**
- * The tracking of the parcel a line's item left in, from Pixonaut's answer
- * to a move the store made or from a read of the order, as a line stores it
- * in `LineState::REF_TRACKING`: a number, with the carrier and
+ * The tracking of the parcel a line's item left in, from a `parcel.*` event,
+ * Pixonaut's answer to a move the store made or a read of the order, as a
+ * line stores it in `LineState::REF_TRACKING`: a number, with the carrier and
  * a link when Pixonaut knows them. `LineState::REF_TRACKING_AT` holds when the
  * event that carried it was created, so an older event never replaces it.
  */
@@ -103,6 +105,29 @@ final class Tracking {
 	public static function set( LineState $line, array $tracking, int $created_at ): void {
 		$line->set_ref( LineState::REF_TRACKING, $tracking );
 		$line->set_ref( LineState::REF_TRACKING_AT, $created_at );
+	}
+
+	/**
+	 * Keeps a parcel's tracking on a line, unless an event newer than the one
+	 * that carried it set the line's.
+	 *
+	 * @param WC_Order_Item_Product                                 $item       A line of the parcel.
+	 * @param array{carrier?: string, number: string, url?: string} $tracking   The parcel's tracking.
+	 * @param int                                                   $created_at When the event that carried it was created, epoch milliseconds.
+	 * @throws RuntimeException When the line kept changing for OrderStatusChanged::MAX_ATTEMPTS tries.
+	 */
+	public static function keep( WC_Order_Item_Product $item, array $tracking, int $created_at ): void {
+		for ( $attempt = 0; $attempt < OrderStatusChanged::MAX_ATTEMPTS; $attempt++ ) {
+			$line = LineState::of( $item );
+			if ( ! self::may_set( $line, $created_at ) || ( self::of( $line ) === $tracking && $line->ref( LineState::REF_TRACKING_AT ) === $created_at ) ) {
+				return;
+			}
+			self::set( $line, $tracking, $created_at );
+			if ( $line->save() ) {
+				return;
+			}
+		}
+		throw new RuntimeException( sprintf( 'Parcel tracking not applied to order item %d: the line kept changing.', (int) $item->get_id() ) );
 	}
 
 	/**

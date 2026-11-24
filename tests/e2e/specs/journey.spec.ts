@@ -172,7 +172,7 @@ test('a personalised product goes from the product page to a shipped printshop o
 	expect(await statuses(fake, 'POST /v1/orders')).toEqual([201]);
 
 	// The printshop ships it: an item event per step, the only kind the store subscribes to.
-	expect(await shipAtPrintshop(fake, ordered)).toEqual([200, 200, 200]);
+	expect(await shipAtPrintshop(fake, ordered)).toEqual([200, 200, 200, 200]);
 	await runJobs(request);
 
 	await expectShipped(request, ordered.orderId);

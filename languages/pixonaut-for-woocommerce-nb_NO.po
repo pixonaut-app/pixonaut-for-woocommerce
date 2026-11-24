@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-24T03:14:43+00:00\n"
+"POT-Creation-Date: 2026-11-24T03:32:12+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: nb_NO\n"
@@ -5219,7 +5219,7 @@ msgstr "Hos trykkeriet"
 
 #. translators: Status of an order line in the order box on the order screen, shown to the merchant: the printshop has shipped it.
 #. translators: Status of an order line on the admin order screen: the item has shipped.
-#: src/Admin/OrderBox.php:299 src/Labels.php:639
+#: src/Admin/OrderBox.php:299 src/Labels.php:683
 msgid "Shipped"
 msgstr "Sendt"
 
@@ -5230,7 +5230,7 @@ msgstr "Mislyktes"
 
 #. translators: Status of an order line in the order box on the order screen, shown to the merchant: the item is cancelled.
 #. translators: Status of an order line on the admin order screen: the item is cancelled.
-#: src/Admin/OrderBox.php:303 src/Labels.php:643
+#: src/Admin/OrderBox.php:303 src/Labels.php:687
 msgid "Cancelled"
 msgstr "Kansellert"
 
@@ -7325,28 +7325,28 @@ msgid "Order #{order_number} needs attention"
 msgstr "Ordrenr. {order_number} krever handling"
 
 #. translators: Name of the email to the customer, shown in WooCommerce > Settings > Emails.
-#: src/Emails/PartShippedEmail.php:36
+#: src/Emails/PartShippedEmail.php:38
 msgctxt "name of the part shipped email in WooCommerce email settings"
 msgid "Part of your order has shipped"
 msgstr "En del av ordren din er sendt"
 
-#: src/Emails/PartShippedEmail.php:37
+#: src/Emails/PartShippedEmail.php:39
 msgid ""
-"Sent to the customer when a personalised item ships before the rest of the "
-"order. Not sent for an order with a single item, nor when the shipment "
-"completes the order."
+"Sent to the customer once per parcel of personalised items that ships before "
+"the rest of the order. Not sent for an order of a single item that ships "
+"whole, nor for the parcel that completes the order."
 msgstr ""
-"Sendes til kunden når en personalisert vare sendes før resten av ordren. "
-"Sendes ikke for en ordre med bare én vare, og heller ikke når forsendelsen "
-"fullfører ordren."
+"Sendes til kunden én gang per pakke med personaliserte varer som sendes før "
+"resten av ordren. Sendes ikke for en ordre med én vare som sendes samlet, og "
+"heller ikke for pakken som fullfører ordren."
 
 #. translators: Default subject of the email to the customer. {order_number}, {site_title} and similar in braces are filled in by WooCommerce; keep them as written.
-#: src/Emails/PartShippedEmail.php:51
+#: src/Emails/PartShippedEmail.php:53
 msgid "Part of your {site_title} order #{order_number} has shipped"
 msgstr "En del av din ordre nr. {order_number} hos {site_title} er sendt"
 
 #. translators: Heading at the top of the email to the customer.
-#: src/Emails/PartShippedEmail.php:56
+#: src/Emails/PartShippedEmail.php:58
 msgctxt "heading of the part shipped email"
 msgid "Part of your order has shipped"
 msgstr "En del av ordren din er sendt"
@@ -7444,12 +7444,12 @@ msgid "Enter recipients (comma separated) for this email. Defaults to %s."
 msgstr "Fyll inn mottakere (kommaseparert) for denne e-posten. Standard er %s."
 
 #. translators: Name of the email to the customer, shown in WooCommerce > Settings > Emails.
-#: src/Emails/TrackingChangedEmail.php:37
+#: src/Emails/TrackingChangedEmail.php:44
 msgctxt "name of the tracking updated email in WooCommerce email settings"
 msgid "Tracking updated"
 msgstr "Sporing oppdatert"
 
-#: src/Emails/TrackingChangedEmail.php:38
+#: src/Emails/TrackingChangedEmail.php:45
 msgid ""
 "Sent to the customer when the printshop adds tracking to a personalised item "
 "that shipped without any, or corrects its tracking."
@@ -7458,12 +7458,12 @@ msgstr ""
 "vare som ble sendt uten sporing, eller retter varens sporing."
 
 #. translators: Default subject of the email to the customer. {order_number}, {site_title} and similar in braces are filled in by WooCommerce; keep them as written.
-#: src/Emails/TrackingChangedEmail.php:51
+#: src/Emails/TrackingChangedEmail.php:58
 msgid "New tracking for your {site_title} order #{order_number}"
 msgstr "Ny sporing for din ordre nr. {order_number} hos {site_title}"
 
 #. translators: Heading at the top of the email to the customer.
-#: src/Emails/TrackingChangedEmail.php:56
+#: src/Emails/TrackingChangedEmail.php:63
 msgctxt "heading of the tracking updated email"
 msgid "New tracking for your order"
 msgstr "Ny sporing for ordren din"
@@ -8342,22 +8342,65 @@ msgstr ""
 "utvidelsen ikke kjenner til; ingenting ble endret."
 
 #. translators: %s: product name
-#: src/Fulfilment/OrderStatusChanged.php:304
+#: src/Fulfilment/OrderStatusChanged.php:303
 #, php-format
 msgid "Pixonaut: \"%s\" was printed at the printshop."
 msgstr "Pixonaut: «%s» ble trykket hos trykkeriet."
 
 #. translators: %s: product name
-#: src/Fulfilment/OrderStatusChanged.php:355
+#: src/Fulfilment/OrderStatusChanged.php:333
 #, php-format
 msgid "Pixonaut: \"%s\" was shipped."
 msgstr "Pixonaut: «%s» ble sendt."
 
 #. translators: 1: product name, 2: carrier, tracking number and link
-#: src/Fulfilment/OrderStatusChanged.php:358
+#: src/Fulfilment/OrderStatusChanged.php:336
 #, php-format
 msgid "Pixonaut: \"%1$s\" was shipped. Tracking: %2$s"
 msgstr "Pixonaut: «%1$s» ble sendt. Sporing: %2$s"
+
+#. translators: %s: product names, each in quotes. Order note the merchant reads.
+#: src/Fulfilment/ParcelDelivered.php:60
+#, php-format
+msgid "Pixonaut: the parcel with %s was delivered."
+msgstr "Pixonaut: pakken med %s er levert."
+
+#. translators: %s: product name. Order note the merchant reads.
+#: src/Fulfilment/ParcelShipped.php:236
+#, php-format
+msgid ""
+"Pixonaut: part of \"%s\" was shipped. The rest follow in another parcel."
+msgstr "Pixonaut: en del av «%s» er sendt. Resten kommer i en annen pakke."
+
+#. translators: 1: copies shipped, 2: copies ordered, 3: product name. Order note the merchant reads.
+#: src/Fulfilment/ParcelShipped.php:238
+#, php-format
+msgid ""
+"Pixonaut: %1$d of %2$d of \"%3$s\" were shipped. The rest follow in another "
+"parcel."
+msgstr ""
+"Pixonaut: %1$d av %2$d av «%3$s» er sendt. Resten kommer i en annen pakke."
+
+#. translators: 1: what was shipped, an order note, 2: carrier, tracking number and link. Order note the merchant reads.
+#: src/Fulfilment/ParcelShipped.php:241
+#, php-format
+msgid "%1$s Tracking: %2$s"
+msgstr "%1$s Sporing: %2$s"
+
+#. translators: 1: product names, each in quotes, 2: carrier, tracking number and link. Order note the merchant reads.
+#: src/Fulfilment/ParcelTrackingChanged.php:110
+#, php-format
+msgid "Pixonaut: tracking was added for the parcel with %1$s: %2$s"
+msgstr "Pixonaut: sporing ble lagt til for pakken med %1$s: %2$s"
+
+#. translators: 1: product names, each in quotes, 2: new carrier, tracking number and link, 3: the carrier and tracking number before. Order note the merchant reads.
+#: src/Fulfilment/ParcelTrackingChanged.php:112
+#, php-format
+msgid ""
+"Pixonaut: the tracking of the parcel with %1$s was corrected to %2$s. It was "
+"%3$s."
+msgstr ""
+"Pixonaut: sporingen av pakken med %1$s ble rettet til %2$s. Tidligere: %3$s."
 
 #. translators: %s: the error code Pixonaut answered, e.g. order_at_printshop.
 #: src/Fulfilment/RetryRefusal.php:30
@@ -8534,7 +8577,10 @@ msgid ""
 "A page or the cover of the item was designed for another page, or for "
 "another number of pages, than it is ordered with. Check the item's designs "
 "in Pixonaut, then retry."
-msgstr "En side eller omslaget til varen ble designet for en annen side, eller for et annet antall sider, enn varen bestilles med. Kontroller designene til varen i Pixonaut, og prøv deretter på nytt."
+msgstr ""
+"En side eller omslaget til varen ble designet for en annen side, eller for "
+"et annet antall sider, enn varen bestilles med. Kontroller designene til "
+"varen i Pixonaut, og prøv deretter på nytt."
 
 #: src/Fulfilment/RetryRefusal.php:97
 msgid ""
@@ -8552,11 +8598,11 @@ msgstr ""
 "Den lagrede adressen ordren sendes til, finnes ikke lenger i Pixonaut. "
 "Kontroller ordrens leveringsadresse, og prøv deretter på nytt."
 
-#: src/Fulfilment/Shipments.php:89
+#: src/Fulfilment/Shipments.php:88
 msgid "Pixonaut: every item has shipped."
 msgstr "Pixonaut: alle varene er sendt."
 
-#: src/Fulfilment/Shipments.php:105
+#: src/Fulfilment/Shipments.php:101
 msgid ""
 "Pixonaut: All personalised items shipped. The order's other items are yours "
 "to ship."
@@ -8576,38 +8622,38 @@ msgctxt "group numbers"
 msgid "Off"
 msgstr "Av"
 
-#: src/Labels.php:329
+#: src/Labels.php:353
 msgid "Personalisation is unavailable right now. Please try again later."
 msgstr "Personalisering er ikke tilgjengelig akkurat nå. Prøv igjen senere."
 
 #. translators: On the page of a personalised product the shop cannot sell for now, in place of the add-to-cart button.
-#: src/Labels.php:334
+#: src/Labels.php:358
 msgid "This product is not available right now."
 msgstr "Dette produktet er ikke tilgjengelig akkurat nå."
 
-#: src/Labels.php:338
+#: src/Labels.php:362
 msgid "Please personalise this product before adding it to your cart."
 msgstr "Personaliser dette produktet før du legger det i handlekurven."
 
-#: src/Labels.php:342
+#: src/Labels.php:366
 msgid "We could not save your design. Please try again."
 msgstr "Vi kunne ikke lagre designet ditt. Prøv igjen."
 
-#: src/Labels.php:346
+#: src/Labels.php:370
 msgid "Your design does not match this product. Please personalise it again."
 msgstr ""
 "Designet ditt passer ikke til dette produktet. Personaliser det på nytt."
 
-#: src/Labels.php:350
+#: src/Labels.php:374
 msgid "This product was just updated, please reload."
 msgstr "Dette produktet ble nettopp oppdatert. Last inn siden på nytt."
 
-#: src/Labels.php:354
+#: src/Labels.php:378
 msgid "Your design preview expired. Please approve it again."
 msgstr ""
 "Forhåndsvisningen av designet ditt er utløpt. Godkjenn designet på nytt."
 
-#: src/Labels.php:358
+#: src/Labels.php:382
 msgid ""
 "This design is already in a cart or an order. Please personalise the product "
 "again."
@@ -8615,12 +8661,12 @@ msgstr ""
 "Dette designet ligger allerede i en handlekurv eller en ordre. Personaliser "
 "produktet på nytt."
 
-#: src/Labels.php:362
+#: src/Labels.php:386
 msgid "Your design could not be prepared. Please check it and try again."
 msgstr "Designet ditt kunne ikke klargjøres. Kontroller det og prøv igjen."
 
 #. translators: %s: the name of the personalised product in the shopper's cart.
-#: src/Labels.php:367
+#: src/Labels.php:391
 #, php-format
 msgid ""
 "The design for \"%s\" is no longer available. Please remove it from your "
@@ -8630,19 +8676,19 @@ msgstr ""
 "eller personaliser den på nytt."
 
 #. translators: %s: the names of the product options the shopper has not chosen yet, as a list such as "Colour and Size". Notice on the product page after pressing the Personalise button.
-#: src/Labels.php:372
+#: src/Labels.php:396
 #, php-format
 msgid "Please choose a value for %s before personalising this product."
 msgstr "Velg en verdi for %s før du personaliserer dette produktet."
 
 #. translators: %s: the labels of the design's fields the shopper must change, as a list such as "Photo, Name and Class".
-#: src/Labels.php:377
+#: src/Labels.php:401
 #, php-format
 msgid "Please change these fields: %s"
 msgstr "Endre disse feltene: %s"
 
 #. translators: Notice on the product page, shown to the shopper, when the design was refused because the product cannot be printed at the chosen print size.
-#: src/Labels.php:382
+#: src/Labels.php:406
 msgid ""
 "This product cannot be printed at this size. Please choose another size, or "
 "contact the store."
@@ -8651,17 +8697,17 @@ msgstr ""
 "størrelse, eller kontakt butikken."
 
 #. translators: Label of the checkbox next to the preview on the product page, shown to the shopper; ticking it approves the design. %1$s and %2$s go around the word for the preview, which becomes a link that opens the design's proof.
-#: src/Labels.php:387
+#: src/Labels.php:411
 #, php-format
 msgid "I approve the %1$spreview%2$s"
 msgstr "Jeg godkjenner %1$sforhåndsvisningen%2$s"
 
 #. translators: Button in the cart and on the order received page, shown to the shopper; opens the proof of the design.
-#: src/Labels.php:392
+#: src/Labels.php:416
 msgid "Open proof"
 msgstr "Åpne korrektur"
 
-#: src/Labels.php:396
+#: src/Labels.php:420
 msgid ""
 "Please tick \"I approve the preview\" before adding this product to your "
 "cart."
@@ -8670,94 +8716,120 @@ msgstr ""
 "produktet i handlekurven."
 
 #. translators: Short note under the live preview on the product page, shown to the shopper.
-#: src/Labels.php:401
+#: src/Labels.php:425
 msgid "The preview updates as you type"
 msgstr "Forhåndsvisningen oppdateres mens du skriver"
 
-#: src/Labels.php:405
+#: src/Labels.php:429
 msgid "Loading the designer"
 msgstr "Designverktøyet lastes inn"
 
 #. translators: Alternative text of the design preview image in the cart and order, shown to the shopper.
-#: src/Labels.php:410
+#: src/Labels.php:434
 msgid "Your design"
 msgstr "Designet ditt"
 
 #. translators: Shown to the shopper in the window over the product page while their design's proof is made.
-#: src/Labels.php:415
+#: src/Labels.php:439
 msgid "Preparing your proof"
 msgstr "Korrekturen din klargjøres"
 
 #. translators: Button that closes the window showing the design's proof on the product page; here Close is a verb.
-#: src/Labels.php:420
+#: src/Labels.php:444
 msgctxt "proof window"
 msgid "Close"
 msgstr "Lukk"
 
 #. translators: Heading above a cart or order item's design details, shown to the shopper.
-#: src/Labels.php:425
+#: src/Labels.php:449
 msgid "Personalisation"
 msgstr "Personalisering"
 
 #. translators: Shown to the shopper in place of a design's field values once the shop has removed them after its retention period.
-#: src/Labels.php:430
+#: src/Labels.php:454
 msgid "Removed after the shop's retention period"
 msgstr "Fjernet etter butikkens oppbevaringsperiode"
 
 #. translators: Name of a design field type, a free-text field, shown to the shopper in the cart line details.
-#: src/Labels.php:435
+#: src/Labels.php:459
 msgid "Text"
 msgstr "Tekst"
 
 #. translators: Name of a design field type, a pick from a list of options, shown to the shopper in the cart line details.
-#: src/Labels.php:440
+#: src/Labels.php:464
 msgid "Choice"
 msgstr "Valg"
 
 #. translators: Name of a design field type, a numeric value, shown to the shopper in the cart line details.
-#: src/Labels.php:445
+#: src/Labels.php:469
 msgid "Number"
 msgstr "Tall"
 
 #. translators: Name of a design field type, a picked colour, shown to the shopper in the cart line details.
-#: src/Labels.php:450
+#: src/Labels.php:474
 msgid "Colour"
 msgstr "Farge"
 
 #. translators: Name of a design field type, an uploaded image, shown to the shopper in the cart line details.
-#: src/Labels.php:455
+#: src/Labels.php:479
 msgid "Image"
 msgstr "Bilde"
 
 #. translators: Heading of the status of an order line on the admin order screen.
-#: src/Labels.php:460
+#: src/Labels.php:484
 msgctxt "heading: status of an order line"
 msgid "Status"
 msgstr "Status"
 
 #. translators: Heading of the shipment tracking links in the order details and shipping emails, shown to the shopper.
-#: src/Labels.php:465
+#: src/Labels.php:489
 msgid "Tracking"
 msgstr "Sporing"
 
-#: src/Labels.php:469
+#: src/Labels.php:493
 msgid "Part of your order is on its way. The rest follows as soon as it ships."
 msgstr "En del av ordren din er på vei. Resten kommer så snart den er sendt."
 
-#: src/Labels.php:473
+#: src/Labels.php:497
 msgid ""
 "There is new tracking for your order. Follow your parcel with the details "
 "below."
 msgstr ""
 "Det er ny sporing for ordren din. Følg pakken din med opplysningene nedenfor."
 
+#. translators: Under an item in the customer's email about a parcel that holds only some of the item's copies. 1: copies in this parcel, 2: copies ordered.
+#: src/Labels.php:502
+#, php-format
+msgid "%1$d of %2$d in this parcel. The rest come in a separate parcel."
+msgstr "%1$d av %2$d i denne pakken. Resten kommer i en egen pakke."
+
+#. translators: Under an item in the customer's email about a parcel that holds some of the item's copies, when the printshop did not say how many.
+#: src/Labels.php:507
+msgid ""
+"Part of this item is in this parcel. The rest come in a separate parcel."
+msgstr ""
+"En del av denne varen er i denne pakken. Resten kommer i en egen pakke."
+
+#. translators: Under an item in the customer's email about the parcel that holds the last of the item's copies, the others having shipped before. 1: copies in this parcel, 2: copies ordered.
+#: src/Labels.php:512
+#, php-format
+msgid "%1$d of %2$d in this parcel. The rest were sent in a separate parcel."
+msgstr "%1$d av %2$d i denne pakken. Resten ble sendt i en egen pakke."
+
+#. translators: Under an item in the customer's email about the parcel that holds the last of the item's copies, when the printshop did not say how many.
+#: src/Labels.php:517
+msgid ""
+"Part of this item is in this parcel. The rest were sent in a separate parcel."
+msgstr ""
+"En del av denne varen er i denne pakken. Resten ble sendt i en egen pakke."
+
 #. translators: Accessible name of the tabs that switch between a product's sides, such as front and back, on the product page, read by screen readers.
 #. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: the product's sides, such as front and back, each with its template.
-#: src/Labels.php:478 templates/admin/product-fields.php:174
+#: src/Labels.php:522 templates/admin/product-fields.php:174
 msgid "Sides"
 msgstr "Sider"
 
-#: src/Labels.php:482
+#: src/Labels.php:526
 msgid ""
 "Your order is paid. Before we print it, please check the proof of your "
 "design and approve it. Nothing is printed until you do."
@@ -8766,15 +8838,15 @@ msgstr ""
 "designet ditt og godkjenne den. Ingenting trykkes før du har gjort det."
 
 #. translators: Link in the proof email to the shopper, and under the order item on the order received page and in My Account; opens the proof page where the design is approved.
-#: src/Labels.php:487
+#: src/Labels.php:531
 msgid "Review and approve your design"
 msgstr "Se gjennom og godkjenn designet ditt"
 
-#: src/Labels.php:491
+#: src/Labels.php:535
 msgid "Thank you for approving your design. It is now on its way to print."
 msgstr "Takk for at du godkjente designet ditt. Det er nå på vei til trykk."
 
-#: src/Labels.php:495
+#: src/Labels.php:539
 msgid ""
 "We are still waiting for your approval. Please check the proof of your "
 "design and approve it, or tell us what to change. Nothing is printed until "
@@ -8785,7 +8857,7 @@ msgstr ""
 "før du har gjort det."
 
 #. translators: %s: date of the approval deadline.
-#: src/Labels.php:500
+#: src/Labels.php:544
 #, php-format
 msgid ""
 "If we have not heard from you by %s, we will print your design as the proof "
@@ -8795,13 +8867,13 @@ msgstr ""
 "korrekturen viser det."
 
 #. translators: %s: date of the approval deadline.
-#: src/Labels.php:505
+#: src/Labels.php:549
 #, php-format
 msgid "If we have not heard from you by %s, we will cancel this item."
 msgstr "Hvis vi ikke har hørt fra deg innen %s, kansellerer vi denne varen."
 
 #. translators: %s: date of the approval deadline.
-#: src/Labels.php:510
+#: src/Labels.php:554
 #, php-format
 msgid ""
 "If we have not heard from you by %s, we will cancel this item and refund it."
@@ -8810,7 +8882,7 @@ msgstr ""
 "refunderer den."
 
 #. translators: %s: date of the approval deadline.
-#: src/Labels.php:515
+#: src/Labels.php:559
 #, php-format
 msgid ""
 "If we have not heard from you by %s, we will not print your design and will "
@@ -8819,7 +8891,7 @@ msgstr ""
 "Hvis vi ikke har hørt fra deg innen %s, trykker vi ikke designet ditt, og vi "
 "tar kontakt med deg om denne varen."
 
-#: src/Labels.php:519
+#: src/Labels.php:563
 msgid ""
 "You did not approve your design by the deadline, so we have cancelled this "
 "item. Nothing was printed."
@@ -8827,34 +8899,34 @@ msgstr ""
 "Du godkjente ikke designet ditt innen fristen, så vi har kansellert denne "
 "varen. Ingenting ble trykket."
 
-#: src/Labels.php:523
+#: src/Labels.php:567
 msgid "Its price is being refunded to you."
 msgstr "Beløpet for varen blir refundert til deg."
 
 #. translators: Button on the product page opened to edit a cart item, shown to the shopper; saves the changed design.
-#: src/Labels.php:528
+#: src/Labels.php:572
 msgid "Update design"
 msgstr "Oppdater design"
 
-#: src/Labels.php:532
+#: src/Labels.php:576
 msgid "This design was changed elsewhere. Please reload the page."
 msgstr "Dette designet ble endret et annet sted. Last inn siden på nytt."
 
-#: src/Labels.php:536
+#: src/Labels.php:580
 msgid "This design can no longer be changed."
 msgstr "Dette designet kan ikke lenger endres."
 
-#: src/Labels.php:540
+#: src/Labels.php:584
 msgid "This item is no longer in your cart."
 msgstr "Denne varen ligger ikke lenger i handlekurven din."
 
 #. translators: Button on the product page, shown to the shopper; opens the Pixonaut designer to personalise the product.
-#: src/Labels.php:545
+#: src/Labels.php:589
 msgctxt "verb: button that opens the designer"
 msgid "Personalise"
 msgstr "Personaliser"
 
-#: src/Labels.php:549
+#: src/Labels.php:593
 msgid ""
 "We could not match your design to this visit. Please personalise the product "
 "again."
@@ -8862,55 +8934,55 @@ msgstr ""
 "Vi kunne ikke knytte designet ditt til dette besøket. Personaliser produktet "
 "på nytt."
 
-#: src/Labels.php:553
+#: src/Labels.php:597
 msgid "Your design is ready. Use it with the button below."
 msgstr "Designet ditt er klart. Bruk det med knappen nedenfor."
 
 #. translators: Button on the product page, shown to the shopper after returning from the Pixonaut designer when their design could not be kept yet, or when they came back in a browser that did not open the designer; keeps the design.
-#: src/Labels.php:558
+#: src/Labels.php:602
 msgid "Use my design"
 msgstr "Bruk designet mitt"
 
 #. translators: Soft note above the add-to-cart row on a product page showing the design the shopper made in the Pixonaut designer.
-#: src/Labels.php:563
+#: src/Labels.php:607
 msgid "This is your design."
 msgstr "Dette er designen din."
 
 #. translators: Button beside the note that this is the shopper's design; reopens it in the Pixonaut designer.
-#: src/Labels.php:568
+#: src/Labels.php:612
 msgctxt "personalised product button"
 msgid "Change"
 msgstr "Endre"
 
 #. translators: %s: the name of a printed side, such as Front. Button beside the note that this is the shopper's design; reopens that side's design in the Pixonaut designer.
-#: src/Labels.php:573
+#: src/Labels.php:617
 #, php-format
 msgid "Change %s"
 msgstr "Endre %s"
 
 #. translators: Start of the line on a product page saying the design it shows is already in the shopper's cart, followed by its size and quantity.
-#: src/Labels.php:578
+#: src/Labels.php:622
 msgid "In your cart"
 msgstr "I handlekurven din"
 
 #. translators: Button on the product page of an item already in the shopper's cart; reopens its design in the Pixonaut designer.
-#: src/Labels.php:583
+#: src/Labels.php:627
 msgctxt "item in the cart button"
 msgid "Change design"
 msgstr "Endre design"
 
 #. translators: The main button on the product page of an item already in the shopper's cart; goes to the cart.
-#: src/Labels.php:588
+#: src/Labels.php:632
 msgctxt "item in the cart button"
 msgid "View cart"
 msgstr "Vis handlekurv"
 
 #. translators: Link on the product page of an item already in the shopper's cart; opens the plain product page, to start another design from scratch.
-#: src/Labels.php:593
+#: src/Labels.php:637
 msgid "Make another with a new design"
 msgstr "Lag en til med et nytt design"
 
-#: src/Labels.php:597
+#: src/Labels.php:641
 msgid ""
 "This proof has changed since this link was sent. Please use the link in our "
 "latest email."
@@ -8918,16 +8990,16 @@ msgstr ""
 "Denne korrekturen er endret siden denne lenken ble sendt. Bruk lenken i den "
 "siste e-posten fra oss."
 
-#: src/Labels.php:601
+#: src/Labels.php:645
 msgid "This design is approved and can no longer be changed."
 msgstr "Dette designet er godkjent og kan ikke lenger endres."
 
 #. translators: Button on the page opened from a proof email, shown to the shopper; saves the changes and approves the design.
-#: src/Labels.php:606
+#: src/Labels.php:650
 msgid "Save and approve design"
 msgstr "Lagre og godkjenn designet"
 
-#: src/Labels.php:610
+#: src/Labels.php:654
 msgid ""
 "We received your request to change your design. If you did not finish your "
 "changes, you can open the design again here. Nothing is printed until you "
@@ -8938,11 +9010,11 @@ msgstr ""
 "godkjenner det."
 
 #. translators: Button in the email to the shopper after a change request; reopens the design.
-#: src/Labels.php:615
+#: src/Labels.php:659
 msgid "Edit your design"
 msgstr "Rediger designet ditt"
 
-#: src/Labels.php:619
+#: src/Labels.php:663
 msgid ""
 "We could not match your changes to this visit. Please change your design "
 "again from its product page."
@@ -8950,42 +9022,42 @@ msgstr ""
 "Vi kunne ikke knytte endringene dine til dette besøket. Endre designet ditt "
 "på nytt fra produktsiden."
 
-#: src/Labels.php:623
+#: src/Labels.php:667
 msgid "Your design has been updated."
 msgstr "Designet ditt er oppdatert."
 
 #. translators: Status of an order line on the admin order screen: the design is saved, payment is pending.
-#: src/Labels.php:629
+#: src/Labels.php:673
 msgid "Design saved"
 msgstr "Design lagret"
 
 #. translators: Status of an order line on the admin order screen: the shopper has to approve the proof.
-#: src/Labels.php:631
+#: src/Labels.php:675
 msgid "Awaiting your approval"
 msgstr "Venter på godkjenningen din"
 
 #. translators: Status of an order line on the admin order screen: the design is approved.
-#: src/Labels.php:633
+#: src/Labels.php:677
 msgid "Design approved"
 msgstr "Design godkjent"
 
 #. translators: Status of an order line on the admin order screen: the print file is made.
-#: src/Labels.php:635
+#: src/Labels.php:679
 msgid "Print file ready"
 msgstr "Trykkfil klar"
 
 #. translators: Status of an order line on the admin order screen: the printshop is making it.
-#: src/Labels.php:637
+#: src/Labels.php:681
 msgid "In production"
 msgstr "I produksjon"
 
 #. translators: Status of an order line on the admin order screen: the printshop could not make it.
-#: src/Labels.php:641
+#: src/Labels.php:685
 msgid "Could not be produced"
 msgstr "Kunne ikke produseres"
 
 #. translators: Status of an order line on the admin order screen: the store is looking into the item.
-#: src/Labels.php:645
+#: src/Labels.php:689
 msgid "Being reviewed by the store"
 msgstr "Under vurdering av butikken"
 
@@ -10416,7 +10488,7 @@ msgstr ""
 "du oppdaterer."
 
 #. translators: %s: why Pixonaut did not answer, e.g. rate_limited.
-#: src/Webhooks/Endpoint.php:196
+#: src/Webhooks/Endpoint.php:199
 #, php-format
 msgid "Pixonaut did not send the test request (%s)."
 msgstr "Pixonaut sendte ikke testforespørselen (%s)."
@@ -13714,6 +13786,15 @@ msgid "%s view"
 msgid_plural "%s views"
 msgstr[0] "%s visning"
 msgstr[1] "%s visninger"
+
+#~ msgid ""
+#~ "Sent to the customer when a personalised item ships before the rest of "
+#~ "the order. Not sent for an order with a single item, nor when the "
+#~ "shipment completes the order."
+#~ msgstr ""
+#~ "Sendes til kunden når en personalisert vare sendes før resten av ordren. "
+#~ "Sendes ikke for en ordre med bare én vare, og heller ikke når "
+#~ "forsendelsen fullfører ordren."
 
 #, php-format
 #~ msgid "Pixonaut: tracking was added for \"%1$s\": %2$s"

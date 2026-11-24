@@ -33,7 +33,7 @@ final class OrderEventLines {
 	}
 
 	/**
-	 * @param Event $event An `order.*` or `item.*` event.
+	 * @param Event $event An `order.*`, `item.*` or `parcel.*` event.
 	 *
 	 * @return list<LineState> None when the event carries no `orderId` or the store is not connected.
 	 */
@@ -52,6 +52,29 @@ final class OrderEventLines {
 	 */
 	public function holding( string $order_id, Event $event ): array {
 		return $this->kept( LineState::for_order_id( $order_id ), $event );
+	}
+
+	/**
+	 * The lines a parcel of the event's order holds, each with its item in the
+	 * parcel.
+	 *
+	 * @param Parcel $parcel The parcel.
+	 * @param Event  $event  A `parcel.*` event.
+	 *
+	 * @return list<array{0: LineState, 1: ParcelItem}> None when the store is not connected.
+	 */
+	public function in_parcel( Parcel $parcel, Event $event ): array {
+		$lines = $this->of( $event );
+		$held  = array();
+		foreach ( $parcel->items as $item ) {
+			foreach ( $lines as $line ) {
+				if ( self::holds_item( $line, $item->item_id ) ) {
+					$held[] = array( $line, $item );
+					break;
+				}
+			}
+		}
+		return $held;
 	}
 
 	/**

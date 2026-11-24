@@ -9,15 +9,15 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Emails;
 
+use Pixonaut\WooCommerce\Fulfilment\ParcelLine;
 use Pixonaut\WooCommerce\Labels;
 use WC_Order;
 use WC_Order_Item_Product;
 
 /**
- * Sent to the customer when the printshop gives
- * tracking for personalised lines that shipped without any, or corrects
- * their tracking. One email per order, with each line whose tracking changed
- * and its tracking as it now is.
+ * Sent to the customer when the printshop gives tracking for a parcel that
+ * shipped without any, or corrects it. One email per parcel, with its lines,
+ * how many of each are in it, and its tracking once.
  */
 class TrackingChangedEmail extends Email {
 
@@ -29,6 +29,13 @@ class TrackingChangedEmail extends Email {
 	 * @var list<WC_Order_Item_Product>
 	 */
 	public array $items = array();
+
+	/**
+	 * The parcel whose tracking changed, while the email about it is sent.
+	 *
+	 * @var ParcelContent|null
+	 */
+	public ?ParcelContent $parcel = null;
 
 	public function __construct() {
 		$this->id             = self::ID;
@@ -57,24 +64,30 @@ class TrackingChangedEmail extends Email {
 	}
 
 	/**
-	 * Sends the email about lines of one order.
+	 * Sends the email about a parcel's new tracking.
 	 *
-	 * @param WC_Order_Item_Product[] $items The shipped lines whose tracking changed.
+	 * @param WC_Order                                                   $order    The order.
+	 * @param ParcelLine[]                                               $lines    The parcel's lines.
+	 * @param array{carrier?: string, number: string, url?: string}|null $tracking The parcel's tracking as it now is.
+	 * @phpstan-param list<ParcelLine> $lines
 	 */
-	public function trigger( array $items ): void {
-		$order = array() === $items ? null : wc_get_order( $items[0]->get_order_id() );
-		if ( ! $order instanceof WC_Order ) {
+	public function trigger( WC_Order $order, array $lines, ?array $tracking ): void {
+		if ( array() === $lines ) {
 			return;
 		}
 		$this->setup_locale();
 		$this->object                         = $order;
-		$this->items                          = array_values( $items );
+		$this->items                          = array_map( static fn ( ParcelLine $line ): WC_Order_Item_Product => $line->item, $lines );
+		$this->parcel                         = new ParcelContent( $lines, $tracking );
 		$this->recipient                      = $order->get_billing_email();
 		$this->placeholders['{order_number}'] = $order->get_order_number();
 		if ( $this->is_enabled() && '' !== $this->get_recipient() ) {
-			$this->send( $this->get_recipient(), $this->get_subject(), $this->get_content(), $this->get_headers(), $this->get_attachments() );
+			ParcelContent::without_line_tracking(
+				fn () => $this->send( $this->get_recipient(), $this->get_subject(), $this->get_content(), $this->get_headers(), $this->get_attachments() )
+			);
 		}
 		$this->restore_locale();
+		$this->parcel = null;
 	}
 
 	/**
@@ -83,9 +96,10 @@ class TrackingChangedEmail extends Email {
 	protected function template_args(): array {
 		$labels = new Labels();
 		return array(
-			'order' => $this->object instanceof WC_Order ? $this->object : null,
-			'items' => $this->items,
-			'intro' => $labels->get( Labels::TRACKING_CHANGED_INTRO, array() === $this->items ? array() : array( 'item_id' => $this->items[0]->get_id() ) ),
+			'order'  => $this->object instanceof WC_Order ? $this->object : null,
+			'items'  => $this->items,
+			'parcel' => null === $this->parcel ? null : $this->parcel->template_args(),
+			'intro'  => $labels->get( Labels::TRACKING_CHANGED_INTRO, array() === $this->items ? array() : array( 'item_id' => $this->items[0]->get_id() ) ),
 		);
 	}
 }

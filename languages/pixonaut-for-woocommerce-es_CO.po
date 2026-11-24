@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-24T03:14:43+00:00\n"
+"POT-Creation-Date: 2026-11-24T03:32:12+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -5393,7 +5393,7 @@ msgstr "En la imprenta"
 
 #. translators: Status of an order line in the order box on the order screen, shown to the merchant: the printshop has shipped it.
 #. translators: Status of an order line on the admin order screen: the item has shipped.
-#: src/Admin/OrderBox.php:299 src/Labels.php:639
+#: src/Admin/OrderBox.php:299 src/Labels.php:683
 msgid "Shipped"
 msgstr "Enviado"
 
@@ -5404,7 +5404,7 @@ msgstr "Fallido"
 
 #. translators: Status of an order line in the order box on the order screen, shown to the merchant: the item is cancelled.
 #. translators: Status of an order line on the admin order screen: the item is cancelled.
-#: src/Admin/OrderBox.php:303 src/Labels.php:643
+#: src/Admin/OrderBox.php:303 src/Labels.php:687
 msgid "Cancelled"
 msgstr "Cancelado"
 
@@ -7532,28 +7532,29 @@ msgid "Order #{order_number} needs attention"
 msgstr "El pedido #{order_number} requiere atención"
 
 #. translators: Name of the email to the customer, shown in WooCommerce > Settings > Emails.
-#: src/Emails/PartShippedEmail.php:36
+#: src/Emails/PartShippedEmail.php:38
 msgctxt "name of the part shipped email in WooCommerce email settings"
 msgid "Part of your order has shipped"
 msgstr "Parte de tu pedido ya se envió"
 
-#: src/Emails/PartShippedEmail.php:37
+#: src/Emails/PartShippedEmail.php:39
 msgid ""
-"Sent to the customer when a personalised item ships before the rest of the "
-"order. Not sent for an order with a single item, nor when the shipment "
-"completes the order."
+"Sent to the customer once per parcel of personalised items that ships before "
+"the rest of the order. Not sent for an order of a single item that ships "
+"whole, nor for the parcel that completes the order."
 msgstr ""
-"Se envía al cliente cuando un artículo personalizado se envía antes que el "
-"resto del pedido. No se envía para un pedido con un solo artículo ni cuando "
-"el envío completa el pedido."
+"Se envía al cliente una vez por cada paquete de artículos personalizados que "
+"se envía antes que el resto del pedido. No se envía para un pedido de un "
+"solo artículo que se envía completo, ni para el paquete que completa el "
+"pedido."
 
 #. translators: Default subject of the email to the customer. {order_number}, {site_title} and similar in braces are filled in by WooCommerce; keep them as written.
-#: src/Emails/PartShippedEmail.php:51
+#: src/Emails/PartShippedEmail.php:53
 msgid "Part of your {site_title} order #{order_number} has shipped"
 msgstr "Parte de tu pedido #{order_number} de {site_title} ya se envió"
 
 #. translators: Heading at the top of the email to the customer.
-#: src/Emails/PartShippedEmail.php:56
+#: src/Emails/PartShippedEmail.php:58
 msgctxt "heading of the part shipped email"
 msgid "Part of your order has shipped"
 msgstr "Parte de tu pedido ya se envió"
@@ -7653,12 +7654,12 @@ msgstr ""
 "electrónico. Por defecto: %s."
 
 #. translators: Name of the email to the customer, shown in WooCommerce > Settings > Emails.
-#: src/Emails/TrackingChangedEmail.php:37
+#: src/Emails/TrackingChangedEmail.php:44
 msgctxt "name of the tracking updated email in WooCommerce email settings"
 msgid "Tracking updated"
 msgstr "Seguimiento actualizado"
 
-#: src/Emails/TrackingChangedEmail.php:38
+#: src/Emails/TrackingChangedEmail.php:45
 msgid ""
 "Sent to the customer when the printshop adds tracking to a personalised item "
 "that shipped without any, or corrects its tracking."
@@ -7667,12 +7668,12 @@ msgstr ""
 "personalizado que se envió sin él, o corrige su seguimiento."
 
 #. translators: Default subject of the email to the customer. {order_number}, {site_title} and similar in braces are filled in by WooCommerce; keep them as written.
-#: src/Emails/TrackingChangedEmail.php:51
+#: src/Emails/TrackingChangedEmail.php:58
 msgid "New tracking for your {site_title} order #{order_number}"
 msgstr "Nuevo seguimiento para tu pedido #{order_number} de {site_title}"
 
 #. translators: Heading at the top of the email to the customer.
-#: src/Emails/TrackingChangedEmail.php:56
+#: src/Emails/TrackingChangedEmail.php:63
 msgctxt "heading of the tracking updated email"
 msgid "New tracking for your order"
 msgstr "Nuevo seguimiento para tu pedido"
@@ -8559,22 +8560,66 @@ msgstr ""
 "no conoce; no se cambió nada."
 
 #. translators: %s: product name
-#: src/Fulfilment/OrderStatusChanged.php:304
+#: src/Fulfilment/OrderStatusChanged.php:303
 #, php-format
 msgid "Pixonaut: \"%s\" was printed at the printshop."
 msgstr "Pixonaut: “%s” se imprimió en la imprenta."
 
 #. translators: %s: product name
-#: src/Fulfilment/OrderStatusChanged.php:355
+#: src/Fulfilment/OrderStatusChanged.php:333
 #, php-format
 msgid "Pixonaut: \"%s\" was shipped."
 msgstr "Pixonaut: “%s” se envió."
 
 #. translators: 1: product name, 2: carrier, tracking number and link
-#: src/Fulfilment/OrderStatusChanged.php:358
+#: src/Fulfilment/OrderStatusChanged.php:336
 #, php-format
 msgid "Pixonaut: \"%1$s\" was shipped. Tracking: %2$s"
 msgstr "Pixonaut: “%1$s” se envió. Seguimiento: %2$s"
+
+#. translators: %s: product names, each in quotes. Order note the merchant reads.
+#: src/Fulfilment/ParcelDelivered.php:60
+#, php-format
+msgid "Pixonaut: the parcel with %s was delivered."
+msgstr "Pixonaut: se entregó el paquete con %s."
+
+#. translators: %s: product name. Order note the merchant reads.
+#: src/Fulfilment/ParcelShipped.php:236
+#, php-format
+msgid ""
+"Pixonaut: part of \"%s\" was shipped. The rest follow in another parcel."
+msgstr "Pixonaut: se envió parte de “%s”. El resto llega en otro paquete."
+
+#. translators: 1: copies shipped, 2: copies ordered, 3: product name. Order note the merchant reads.
+#: src/Fulfilment/ParcelShipped.php:238
+#, php-format
+msgid ""
+"Pixonaut: %1$d of %2$d of \"%3$s\" were shipped. The rest follow in another "
+"parcel."
+msgstr ""
+"Pixonaut: se enviaron %1$d de %2$d de “%3$s”. El resto llega en otro paquete."
+
+#. translators: 1: what was shipped, an order note, 2: carrier, tracking number and link. Order note the merchant reads.
+#: src/Fulfilment/ParcelShipped.php:241
+#, php-format
+msgid "%1$s Tracking: %2$s"
+msgstr "%1$s Seguimiento: %2$s"
+
+#. translators: 1: product names, each in quotes, 2: carrier, tracking number and link. Order note the merchant reads.
+#: src/Fulfilment/ParcelTrackingChanged.php:110
+#, php-format
+msgid "Pixonaut: tracking was added for the parcel with %1$s: %2$s"
+msgstr "Pixonaut: se añadió el seguimiento del paquete con %1$s: %2$s"
+
+#. translators: 1: product names, each in quotes, 2: new carrier, tracking number and link, 3: the carrier and tracking number before. Order note the merchant reads.
+#: src/Fulfilment/ParcelTrackingChanged.php:112
+#, php-format
+msgid ""
+"Pixonaut: the tracking of the parcel with %1$s was corrected to %2$s. It was "
+"%3$s."
+msgstr ""
+"Pixonaut: el seguimiento del paquete con %1$s se corrigió a %2$s. Antes era "
+"%3$s."
 
 #. translators: %s: the error code Pixonaut answered, e.g. order_at_printshop.
 #: src/Fulfilment/RetryRefusal.php:30
@@ -8756,7 +8801,10 @@ msgid ""
 "A page or the cover of the item was designed for another page, or for "
 "another number of pages, than it is ordered with. Check the item's designs "
 "in Pixonaut, then retry."
-msgstr "Una página o la cubierta del artículo se diseñó para otra página, o para un número de páginas distinto del que se pide. Revisa los diseños del artículo en Pixonaut y vuelve a intentarlo."
+msgstr ""
+"Una página o la cubierta del artículo se diseñó para otra página, o para un "
+"número de páginas distinto del que se pide. Revisa los diseños del artículo "
+"en Pixonaut y vuelve a intentarlo."
 
 #: src/Fulfilment/RetryRefusal.php:97
 msgid ""
@@ -8774,11 +8822,11 @@ msgstr ""
 "La dirección guardada a la que se envía el pedido ya no existe en Pixonaut. "
 "Revisa la dirección de envío del pedido y vuelve a intentarlo."
 
-#: src/Fulfilment/Shipments.php:89
+#: src/Fulfilment/Shipments.php:88
 msgid "Pixonaut: every item has shipped."
 msgstr "Pixonaut: todos los artículos se enviaron."
 
-#: src/Fulfilment/Shipments.php:105
+#: src/Fulfilment/Shipments.php:101
 msgid ""
 "Pixonaut: All personalised items shipped. The order's other items are yours "
 "to ship."
@@ -8798,38 +8846,38 @@ msgctxt "group numbers"
 msgid "Off"
 msgstr "Desactivados"
 
-#: src/Labels.php:329
+#: src/Labels.php:353
 msgid "Personalisation is unavailable right now. Please try again later."
 msgstr ""
 "La personalización no está disponible en este momento. Inténtalo de nuevo "
 "más tarde."
 
 #. translators: On the page of a personalised product the shop cannot sell for now, in place of the add-to-cart button.
-#: src/Labels.php:334
+#: src/Labels.php:358
 msgid "This product is not available right now."
 msgstr "Este producto no está disponible en este momento."
 
-#: src/Labels.php:338
+#: src/Labels.php:362
 msgid "Please personalise this product before adding it to your cart."
 msgstr "Personaliza este producto antes de añadirlo a tu carrito."
 
-#: src/Labels.php:342
+#: src/Labels.php:366
 msgid "We could not save your design. Please try again."
 msgstr "No pudimos guardar tu diseño. Inténtalo de nuevo."
 
-#: src/Labels.php:346
+#: src/Labels.php:370
 msgid "Your design does not match this product. Please personalise it again."
 msgstr "Tu diseño no corresponde a este producto. Vuelve a personalizarlo."
 
-#: src/Labels.php:350
+#: src/Labels.php:374
 msgid "This product was just updated, please reload."
 msgstr "Este producto se acaba de actualizar; recarga la página."
 
-#: src/Labels.php:354
+#: src/Labels.php:378
 msgid "Your design preview expired. Please approve it again."
 msgstr "La vista previa de tu diseño expiró. Vuelve a aprobarla."
 
-#: src/Labels.php:358
+#: src/Labels.php:382
 msgid ""
 "This design is already in a cart or an order. Please personalise the product "
 "again."
@@ -8837,12 +8885,12 @@ msgstr ""
 "Este diseño ya está en un carrito o en un pedido. Vuelve a personalizar el "
 "producto."
 
-#: src/Labels.php:362
+#: src/Labels.php:386
 msgid "Your design could not be prepared. Please check it and try again."
 msgstr "No se pudo preparar tu diseño. Revísalo e inténtalo de nuevo."
 
 #. translators: %s: the name of the personalised product in the shopper's cart.
-#: src/Labels.php:367
+#: src/Labels.php:391
 #, php-format
 msgid ""
 "The design for \"%s\" is no longer available. Please remove it from your "
@@ -8852,19 +8900,19 @@ msgstr ""
 "vuelve a personalizarlo."
 
 #. translators: %s: the names of the product options the shopper has not chosen yet, as a list such as "Colour and Size". Notice on the product page after pressing the Personalise button.
-#: src/Labels.php:372
+#: src/Labels.php:396
 #, php-format
 msgid "Please choose a value for %s before personalising this product."
 msgstr "Elige un valor para %s antes de personalizar este producto."
 
 #. translators: %s: the labels of the design's fields the shopper must change, as a list such as "Photo, Name and Class".
-#: src/Labels.php:377
+#: src/Labels.php:401
 #, php-format
 msgid "Please change these fields: %s"
 msgstr "Cambia estos campos: %s"
 
 #. translators: Notice on the product page, shown to the shopper, when the design was refused because the product cannot be printed at the chosen print size.
-#: src/Labels.php:382
+#: src/Labels.php:406
 msgid ""
 "This product cannot be printed at this size. Please choose another size, or "
 "contact the store."
@@ -8873,17 +8921,17 @@ msgstr ""
 "contacta a la tienda."
 
 #. translators: Label of the checkbox next to the preview on the product page, shown to the shopper; ticking it approves the design. %1$s and %2$s go around the word for the preview, which becomes a link that opens the design's proof.
-#: src/Labels.php:387
+#: src/Labels.php:411
 #, php-format
 msgid "I approve the %1$spreview%2$s"
 msgstr "Apruebo la %1$svista previa%2$s"
 
 #. translators: Button in the cart and on the order received page, shown to the shopper; opens the proof of the design.
-#: src/Labels.php:392
+#: src/Labels.php:416
 msgid "Open proof"
 msgstr "Abrir prueba"
 
-#: src/Labels.php:396
+#: src/Labels.php:420
 msgid ""
 "Please tick \"I approve the preview\" before adding this product to your "
 "cart."
@@ -8891,82 +8939,82 @@ msgstr ""
 "Marca “Apruebo la vista previa” antes de añadir este producto a tu carrito."
 
 #. translators: Short note under the live preview on the product page, shown to the shopper.
-#: src/Labels.php:401
+#: src/Labels.php:425
 msgid "The preview updates as you type"
 msgstr "La vista previa se actualiza mientras escribes"
 
-#: src/Labels.php:405
+#: src/Labels.php:429
 msgid "Loading the designer"
 msgstr "Cargando el personalizador"
 
 #. translators: Alternative text of the design preview image in the cart and order, shown to the shopper.
-#: src/Labels.php:410
+#: src/Labels.php:434
 msgid "Your design"
 msgstr "Tu diseño"
 
 #. translators: Shown to the shopper in the window over the product page while their design's proof is made.
-#: src/Labels.php:415
+#: src/Labels.php:439
 msgid "Preparing your proof"
 msgstr "Preparando tu prueba"
 
 #. translators: Button that closes the window showing the design's proof on the product page; here Close is a verb.
-#: src/Labels.php:420
+#: src/Labels.php:444
 msgctxt "proof window"
 msgid "Close"
 msgstr "Cerrar"
 
 #. translators: Heading above a cart or order item's design details, shown to the shopper.
-#: src/Labels.php:425
+#: src/Labels.php:449
 msgid "Personalisation"
 msgstr "Personalización"
 
 #. translators: Shown to the shopper in place of a design's field values once the shop has removed them after its retention period.
-#: src/Labels.php:430
+#: src/Labels.php:454
 msgid "Removed after the shop's retention period"
 msgstr "Eliminada tras el periodo de conservación de la tienda"
 
 #. translators: Name of a design field type, a free-text field, shown to the shopper in the cart line details.
-#: src/Labels.php:435
+#: src/Labels.php:459
 msgid "Text"
 msgstr "Texto"
 
 #. translators: Name of a design field type, a pick from a list of options, shown to the shopper in the cart line details.
-#: src/Labels.php:440
+#: src/Labels.php:464
 msgid "Choice"
 msgstr "Opción"
 
 #. translators: Name of a design field type, a numeric value, shown to the shopper in the cart line details.
-#: src/Labels.php:445
+#: src/Labels.php:469
 msgid "Number"
 msgstr "Número"
 
 #. translators: Name of a design field type, a picked colour, shown to the shopper in the cart line details.
-#: src/Labels.php:450
+#: src/Labels.php:474
 msgid "Colour"
 msgstr "Color"
 
 #. translators: Name of a design field type, an uploaded image, shown to the shopper in the cart line details.
-#: src/Labels.php:455
+#: src/Labels.php:479
 msgid "Image"
 msgstr "Imagen"
 
 #. translators: Heading of the status of an order line on the admin order screen.
-#: src/Labels.php:460
+#: src/Labels.php:484
 msgctxt "heading: status of an order line"
 msgid "Status"
 msgstr "Estado"
 
 #. translators: Heading of the shipment tracking links in the order details and shipping emails, shown to the shopper.
-#: src/Labels.php:465
+#: src/Labels.php:489
 msgid "Tracking"
 msgstr "Seguimiento"
 
-#: src/Labels.php:469
+#: src/Labels.php:493
 msgid "Part of your order is on its way. The rest follows as soon as it ships."
 msgstr ""
 "Parte de tu pedido está en camino. El resto llegará en cuanto se envíe."
 
-#: src/Labels.php:473
+#: src/Labels.php:497
 msgid ""
 "There is new tracking for your order. Follow your parcel with the details "
 "below."
@@ -8974,13 +9022,41 @@ msgstr ""
 "Hay un nuevo seguimiento para tu pedido. Sigue tu paquete con los datos que "
 "aparecen a continuación."
 
+#. translators: Under an item in the customer's email about a parcel that holds only some of the item's copies. 1: copies in this parcel, 2: copies ordered.
+#: src/Labels.php:502
+#, php-format
+msgid "%1$d of %2$d in this parcel. The rest come in a separate parcel."
+msgstr "%1$d de %2$d en este paquete. El resto llega en un paquete aparte."
+
+#. translators: Under an item in the customer's email about a parcel that holds some of the item's copies, when the printshop did not say how many.
+#: src/Labels.php:507
+msgid ""
+"Part of this item is in this parcel. The rest come in a separate parcel."
+msgstr ""
+"Parte de este artículo está en este paquete. El resto llega en un paquete "
+"aparte."
+
+#. translators: Under an item in the customer's email about the parcel that holds the last of the item's copies, the others having shipped before. 1: copies in this parcel, 2: copies ordered.
+#: src/Labels.php:512
+#, php-format
+msgid "%1$d of %2$d in this parcel. The rest were sent in a separate parcel."
+msgstr "%1$d de %2$d en este paquete. El resto se envió en un paquete aparte."
+
+#. translators: Under an item in the customer's email about the parcel that holds the last of the item's copies, when the printshop did not say how many.
+#: src/Labels.php:517
+msgid ""
+"Part of this item is in this parcel. The rest were sent in a separate parcel."
+msgstr ""
+"Parte de este artículo está en este paquete. El resto se envió en un paquete "
+"aparte."
+
 #. translators: Accessible name of the tabs that switch between a product's sides, such as front and back, on the product page, read by screen readers.
 #. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: the product's sides, such as front and back, each with its template.
-#: src/Labels.php:478 templates/admin/product-fields.php:174
+#: src/Labels.php:522 templates/admin/product-fields.php:174
 msgid "Sides"
 msgstr "Caras"
 
-#: src/Labels.php:482
+#: src/Labels.php:526
 msgid ""
 "Your order is paid. Before we print it, please check the proof of your "
 "design and approve it. Nothing is printed until you do."
@@ -8989,15 +9065,15 @@ msgstr ""
 "apruébala. No se imprime nada hasta que lo hagas."
 
 #. translators: Link in the proof email to the shopper, and under the order item on the order received page and in My Account; opens the proof page where the design is approved.
-#: src/Labels.php:487
+#: src/Labels.php:531
 msgid "Review and approve your design"
 msgstr "Revisa y aprueba tu diseño"
 
-#: src/Labels.php:491
+#: src/Labels.php:535
 msgid "Thank you for approving your design. It is now on its way to print."
 msgstr "Gracias por aprobar tu diseño. Ya va camino a la impresión."
 
-#: src/Labels.php:495
+#: src/Labels.php:539
 msgid ""
 "We are still waiting for your approval. Please check the proof of your "
 "design and approve it, or tell us what to change. Nothing is printed until "
@@ -9007,7 +9083,7 @@ msgstr ""
 "o dinos qué hay que cambiar. No se imprime nada hasta que lo hagas."
 
 #. translators: %s: date of the approval deadline.
-#: src/Labels.php:500
+#: src/Labels.php:544
 #, php-format
 msgid ""
 "If we have not heard from you by %s, we will print your design as the proof "
@@ -9017,13 +9093,13 @@ msgstr ""
 "muestra la prueba."
 
 #. translators: %s: date of the approval deadline.
-#: src/Labels.php:505
+#: src/Labels.php:549
 #, php-format
 msgid "If we have not heard from you by %s, we will cancel this item."
 msgstr "Si no sabemos nada de ti antes del %s, cancelaremos este artículo."
 
 #. translators: %s: date of the approval deadline.
-#: src/Labels.php:510
+#: src/Labels.php:554
 #, php-format
 msgid ""
 "If we have not heard from you by %s, we will cancel this item and refund it."
@@ -9032,7 +9108,7 @@ msgstr ""
 "reembolsaremos."
 
 #. translators: %s: date of the approval deadline.
-#: src/Labels.php:515
+#: src/Labels.php:559
 #, php-format
 msgid ""
 "If we have not heard from you by %s, we will not print your design and will "
@@ -9041,7 +9117,7 @@ msgstr ""
 "Si no sabemos nada de ti antes del %s, no imprimiremos tu diseño y nos "
 "pondremos en contacto contigo sobre este artículo."
 
-#: src/Labels.php:519
+#: src/Labels.php:563
 msgid ""
 "You did not approve your design by the deadline, so we have cancelled this "
 "item. Nothing was printed."
@@ -9049,34 +9125,34 @@ msgstr ""
 "No aprobaste tu diseño dentro del plazo, así que cancelamos este artículo. "
 "No se imprimió nada."
 
-#: src/Labels.php:523
+#: src/Labels.php:567
 msgid "Its price is being refunded to you."
 msgstr "Te estamos reembolsando su precio."
 
 #. translators: Button on the product page opened to edit a cart item, shown to the shopper; saves the changed design.
-#: src/Labels.php:528
+#: src/Labels.php:572
 msgid "Update design"
 msgstr "Actualizar diseño"
 
-#: src/Labels.php:532
+#: src/Labels.php:576
 msgid "This design was changed elsewhere. Please reload the page."
 msgstr "Este diseño se cambió en otro lugar. Recarga la página."
 
-#: src/Labels.php:536
+#: src/Labels.php:580
 msgid "This design can no longer be changed."
 msgstr "Este diseño ya no se puede cambiar."
 
-#: src/Labels.php:540
+#: src/Labels.php:584
 msgid "This item is no longer in your cart."
 msgstr "Este artículo ya no está en tu carrito."
 
 #. translators: Button on the product page, shown to the shopper; opens the Pixonaut designer to personalise the product.
-#: src/Labels.php:545
+#: src/Labels.php:589
 msgctxt "verb: button that opens the designer"
 msgid "Personalise"
 msgstr "Personalizar"
 
-#: src/Labels.php:549
+#: src/Labels.php:593
 msgid ""
 "We could not match your design to this visit. Please personalise the product "
 "again."
@@ -9084,55 +9160,55 @@ msgstr ""
 "No pudimos asociar tu diseño a esta visita. Vuelve a personalizar el "
 "producto."
 
-#: src/Labels.php:553
+#: src/Labels.php:597
 msgid "Your design is ready. Use it with the button below."
 msgstr "Tu diseño está listo. Úsalo con el botón de abajo."
 
 #. translators: Button on the product page, shown to the shopper after returning from the Pixonaut designer when their design could not be kept yet, or when they came back in a browser that did not open the designer; keeps the design.
-#: src/Labels.php:558
+#: src/Labels.php:602
 msgid "Use my design"
 msgstr "Usar mi diseño"
 
 #. translators: Soft note above the add-to-cart row on a product page showing the design the shopper made in the Pixonaut designer.
-#: src/Labels.php:563
+#: src/Labels.php:607
 msgid "This is your design."
 msgstr "Este es tu diseño."
 
 #. translators: Button beside the note that this is the shopper's design; reopens it in the Pixonaut designer.
-#: src/Labels.php:568
+#: src/Labels.php:612
 msgctxt "personalised product button"
 msgid "Change"
 msgstr "Cambiar"
 
 #. translators: %s: the name of a printed side, such as Front. Button beside the note that this is the shopper's design; reopens that side's design in the Pixonaut designer.
-#: src/Labels.php:573
+#: src/Labels.php:617
 #, php-format
 msgid "Change %s"
 msgstr "Cambiar %s"
 
 #. translators: Start of the line on a product page saying the design it shows is already in the shopper's cart, followed by its size and quantity.
-#: src/Labels.php:578
+#: src/Labels.php:622
 msgid "In your cart"
 msgstr "En tu carrito"
 
 #. translators: Button on the product page of an item already in the shopper's cart; reopens its design in the Pixonaut designer.
-#: src/Labels.php:583
+#: src/Labels.php:627
 msgctxt "item in the cart button"
 msgid "Change design"
 msgstr "Cambiar el diseño"
 
 #. translators: The main button on the product page of an item already in the shopper's cart; goes to the cart.
-#: src/Labels.php:588
+#: src/Labels.php:632
 msgctxt "item in the cart button"
 msgid "View cart"
 msgstr "Ver carrito"
 
 #. translators: Link on the product page of an item already in the shopper's cart; opens the plain product page, to start another design from scratch.
-#: src/Labels.php:593
+#: src/Labels.php:637
 msgid "Make another with a new design"
 msgstr "Hacer otro con un diseño nuevo"
 
-#: src/Labels.php:597
+#: src/Labels.php:641
 msgid ""
 "This proof has changed since this link was sent. Please use the link in our "
 "latest email."
@@ -9140,16 +9216,16 @@ msgstr ""
 "Esta prueba cambió desde que se envió este enlace. Usa el enlace de nuestro "
 "último correo electrónico."
 
-#: src/Labels.php:601
+#: src/Labels.php:645
 msgid "This design is approved and can no longer be changed."
 msgstr "Este diseño está aprobado y ya no se puede cambiar."
 
 #. translators: Button on the page opened from a proof email, shown to the shopper; saves the changes and approves the design.
-#: src/Labels.php:606
+#: src/Labels.php:650
 msgid "Save and approve design"
 msgstr "Guardar y aprobar diseño"
 
-#: src/Labels.php:610
+#: src/Labels.php:654
 msgid ""
 "We received your request to change your design. If you did not finish your "
 "changes, you can open the design again here. Nothing is printed until you "
@@ -9160,11 +9236,11 @@ msgstr ""
 "apruebes."
 
 #. translators: Button in the email to the shopper after a change request; reopens the design.
-#: src/Labels.php:615
+#: src/Labels.php:659
 msgid "Edit your design"
 msgstr "Edita tu diseño"
 
-#: src/Labels.php:619
+#: src/Labels.php:663
 msgid ""
 "We could not match your changes to this visit. Please change your design "
 "again from its product page."
@@ -9172,42 +9248,42 @@ msgstr ""
 "No pudimos asociar tus cambios a esta visita. Vuelve a cambiar tu diseño "
 "desde la página del producto."
 
-#: src/Labels.php:623
+#: src/Labels.php:667
 msgid "Your design has been updated."
 msgstr "Tu diseño se actualizó."
 
 #. translators: Status of an order line on the admin order screen: the design is saved, payment is pending.
-#: src/Labels.php:629
+#: src/Labels.php:673
 msgid "Design saved"
 msgstr "Diseño guardado"
 
 #. translators: Status of an order line on the admin order screen: the shopper has to approve the proof.
-#: src/Labels.php:631
+#: src/Labels.php:675
 msgid "Awaiting your approval"
 msgstr "Pendiente de tu aprobación"
 
 #. translators: Status of an order line on the admin order screen: the design is approved.
-#: src/Labels.php:633
+#: src/Labels.php:677
 msgid "Design approved"
 msgstr "Diseño aprobado"
 
 #. translators: Status of an order line on the admin order screen: the print file is made.
-#: src/Labels.php:635
+#: src/Labels.php:679
 msgid "Print file ready"
 msgstr "Archivo de impresión listo"
 
 #. translators: Status of an order line on the admin order screen: the printshop is making it.
-#: src/Labels.php:637
+#: src/Labels.php:681
 msgid "In production"
 msgstr "En producción"
 
 #. translators: Status of an order line on the admin order screen: the printshop could not make it.
-#: src/Labels.php:641
+#: src/Labels.php:685
 msgid "Could not be produced"
 msgstr "No se pudo fabricar"
 
 #. translators: Status of an order line on the admin order screen: the store is looking into the item.
-#: src/Labels.php:645
+#: src/Labels.php:689
 msgid "Being reviewed by the store"
 msgstr "En revisión por la tienda"
 
@@ -10659,7 +10735,7 @@ msgstr ""
 "sitio antes de actualizar."
 
 #. translators: %s: why Pixonaut did not answer, e.g. rate_limited.
-#: src/Webhooks/Endpoint.php:196
+#: src/Webhooks/Endpoint.php:199
 #, php-format
 msgid "Pixonaut did not send the test request (%s)."
 msgstr "Pixonaut no envió la solicitud de prueba (%s)."
@@ -13998,6 +14074,15 @@ msgid "%s view"
 msgid_plural "%s views"
 msgstr[0] "%s vista"
 msgstr[1] "%s vistas"
+
+#~ msgid ""
+#~ "Sent to the customer when a personalised item ships before the rest of "
+#~ "the order. Not sent for an order with a single item, nor when the "
+#~ "shipment completes the order."
+#~ msgstr ""
+#~ "Se envía al cliente cuando un artículo personalizado se envía antes que "
+#~ "el resto del pedido. No se envía para un pedido con un solo artículo ni "
+#~ "cuando el envío completa el pedido."
 
 #, php-format
 #~ msgid "Pixonaut: tracking was added for \"%1$s\": %2$s"

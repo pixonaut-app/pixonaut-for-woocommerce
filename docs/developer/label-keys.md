@@ -43,8 +43,12 @@ JavaScript (see [hooks](../hooks/)). An unknown key reads as the key itself.
 | `field_image` | Image | In a personalised item's details, as `field_text`: names a picture field, and stands for the picture the customer chose |
 | `line_state` | Status | Under a personalised item on the admin order screen: names the item's state |
 | `tracking` | Tracking | Under a shipped personalised item in My Account, on the order received page and in order emails: names its tracking |
-| `part_shipped_intro` | Part of your order is on its way. The rest follows as soon as it ships. | The email a customer gets when a personalised item of an order with other items ships |
+| `part_shipped_intro` | Part of your order is on its way. The rest follows as soon as it ships. | The email a customer gets when a parcel of personalised items ships and the rest of the order follows |
 | `tracking_changed_intro` | There is new tracking for your order. Follow your parcel with the details below. | The email a customer gets when tracking is added to, or corrected for, a personalised item that has shipped |
+| `parcel_split` | %1$d of %2$d in this parcel. The rest come in a separate parcel. | Under an item in the part shipped and tracking updated emails, when the parcel holds only some of its copies. Keep %1$d, the copies in the parcel, and %2$d, the copies ordered |
+| `parcel_part` | Part of this item is in this parcel. The rest come in a separate parcel. | Under an item in the part shipped and tracking updated emails, when the parcel holds some of its copies and the printshop did not say how many |
+| `parcel_split_last` | %1$d of %2$d in this parcel. The rest were sent in a separate parcel. | As parcel_split, when the parcel holds the last of the item's copies. Keep %1$d, the copies in the parcel, and %2$d, the copies ordered |
+| `parcel_part_last` | Part of this item is in this parcel. The rest were sent in a separate parcel. | As parcel_part, when the parcel holds the last of the item's copies |
 | `sides` | Sides | Read by screen readers as the name of the side tabs, on a product printed on more than one side |
 | `proof_ready_intro` | Your order is paid. Before we print it, please check the proof of your design and approve it. Nothing is printed until you do. | In the "proof ready" email, above the links to the proofs |
 | `review_proof` | Review and approve your design | In the "proof ready" email, and under an item waiting for the customer's approval on the order received page and in My Account: the link to a proof page |

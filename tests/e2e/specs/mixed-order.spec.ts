@@ -51,8 +51,8 @@ async function ship(
 	const { attempts } = (await moved.json()) as {
 		attempts: { status: number }[];
 	};
-	// An item event per step, the only kind the store subscribes to.
-	expect(attempts.map((a) => a.status)).toEqual([200, 200, 200]);
+	// An item event per step, and the parcel's; the store subscribes to no other.
+	expect(attempts.map((a) => a.status)).toEqual([200, 200, 200, 200]);
 }
 
 test('a mixed order ships its personalised items at different times and is never completed', async ({
@@ -98,12 +98,13 @@ test('a mixed order ships its personalised items at different times and is never
 	// The first ships; the order stays open.
 	await ship(fake, firstLine, FIRST_TRACKING);
 	await runJobs(request);
-	// The item's event carries no tracking: the read of the order it queued finds its parcel's.
-	await runJobs(request);
 	const partly = await readOrder(request, orderId);
 	expect(partly.status).toBe('processing');
 	expect(partly.lines.map((l) => l.state)).toEqual(['shipped', 'ordered']);
 	expect(partly.notes.join('\n')).not.toContain(ALL_SHIPPED_NOTE);
+	expect(partly.notes.join('\n')).toContain(
+		`was shipped. Tracking: PostNord ${FIRST_TRACKING.number}`,
+	);
 
 	// The customer sees the shipped item's tracking, and no item's state.
 	await customer.goto(received);

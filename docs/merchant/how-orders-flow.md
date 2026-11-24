@@ -267,36 +267,48 @@ WooCommerce order keeps the address it had.
 
 ## Printing and shipping
 
-As the printshop works on an item, Pixonaut tells the store, and the plugin
-notes each step on the WooCommerce order: when the item is printed and when
-it ships. Each personalised line ships on its own, so the items of one order
-can reach the customer at different times.
+As the printshop works on a printshop order, Pixonaut tells the store, and
+the plugin notes each step on the WooCommerce order: when the item is printed
+and when it ships, with the carrier and tracking number when the printshop
+gives one. The printshop sends an order in parcels: one parcel can hold
+several personalised items, and the copies of one item can be split over
+parcels (of 10 mugs, 5 in each of two parcels), so the items of one order can
+reach the customer at different times.
 
-When a personalised item ships:
+When a parcel ships:
 
-- **Every item of the order is personalised and has shipped**: the order is
-  marked **Completed**, and WooCommerce sends the customer its *Completed
-  order* email.
-- **Other personalised items are still on their way**: the order stays
-  **Processing**, and the customer gets the *Part of your order has shipped*
-  email, with the item. An order with a single line gets no
-  such email: its shipment completes it.
+- **Every item of the order is personalised and has now shipped whole**: the
+  order is marked **Completed**, and WooCommerce sends the customer its
+  *Completed order* email, which lists each item with its tracking.
+- **Other personalised items, or other copies of an item, are still on their
+  way**: the order stays **Processing**, and the customer gets one *Part of
+  your order has shipped* email for the parcel. It lists each item in the
+  parcel with how many copies are in it, says when the rest of an item comes
+  in a separate parcel, and gives the parcel's tracking once. An order of a
+  single item that ships whole gets no such email: its shipment completes
+  it.
 - **The order also has items the plugin does not fulfil** (a mixed order):
   the plugin never completes it. The customer gets the *Part of your order
-  has shipped* email for each personalised item, and once the last one ships
-  an order note says "All personalised items shipped", so you know the rest
-  is yours to ship. Complete the order yourself when it has.
+  has shipped* email for each parcel, and once the last personalised item
+  ships an order note says "All personalised items shipped", so you know the
+  rest is yours to ship. Complete the order yourself when it has.
+
+An item whose copies are split over parcels is marked shipped once its last
+copies ship; until then, each parcel holding some of them adds an order note
+saying how many shipped. When the printshop reports a parcel delivered, the
+order gets a note too.
 
 Once an order is no longer **Processing**, for example because you completed
-it yourself, a later shipment is still noted on the order, but sends no *Part
+it yourself, a later parcel is still noted on the order, but sends no *Part
 of your order has shipped* email and adds no "All personalised items shipped"
 note.
 
-Tracking belongs to the parcel an item left in, not to Pixonaut's notice
-that the item shipped. Once an item ships, the store reads its order from
-Pixonaut again and keeps the parcel's carrier and tracking number with the
-item, where the customer sees it; the shipment's own note and email, sent
-before that read, go out without it, and no further note or email follows.
+When the printshop adds tracking to a parcel that shipped without any, or
+corrects its tracking, the order gets a note with the new tracking (and the
+old one, for a correction), and the customer gets one *Tracking updated*
+email for the parcel, with its items and its tracking as it now is. Tracking
+that reaches the store before the parcel's shipment is kept for it and sent
+with the shipment's email.
 
 The *Part of your order has shipped* email is a WooCommerce email: turn it
 off or edit it under **WooCommerce > Settings > Emails**.

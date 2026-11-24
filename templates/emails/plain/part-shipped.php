@@ -1,17 +1,18 @@
 <?php
 /**
- * Plain text email to the customer about a personalised item that shipped before the rest of the order.
+ * Plain text email to the customer about a parcel of personalised items that shipped before the rest of the order.
  *
  * Override by copying to yourtheme/woocommerce/pixonaut/emails/plain/part-shipped.php.
  *
  * @package Pixonaut\WooCommerce
- * @version 0.1.0
+ * @version 1.31.0
  *
- * @var WC_Order|null              $order              The order.
- * @var WC_Order_Item_Product|null $item               The item that shipped.
- * @var string                     $intro              The text above the item.
- * @var string                     $email_heading      The heading.
- * @var string                     $additional_content Text the store added in the email's settings.
+ * @var WC_Order|null             $order              The order.
+ * @var array<string, mixed>|null $parcel             What `emails/plain/parcel.php` shows of the parcel that shipped.
+ * @var string                    $intro              The text above the parcel.
+ * @var string                    $email_heading      The heading.
+ * @var string                    $additional_content Text the store added in the email's settings.
+ * @var WC_Email                  $email              The email.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -20,23 +21,8 @@ echo '= ' . esc_html( wp_strip_all_tags( $email_heading ) ) . " =\n\n";
 
 echo esc_html( $intro ) . "\n\n";
 
-if ( null !== $item ) {
-	echo esc_html( $item->get_name() . ' × ' . $item->get_quantity() ) . "\n";
-	echo esc_html(
-		wp_strip_all_tags(
-			wc_display_item_meta(
-				$item,
-				array(
-					'before'    => '',
-					'separator' => "\n",
-					'after'     => '',
-					'echo'      => false,
-					'autop'     => false,
-				)
-			)
-		)
-	);
-	echo "\n\n";
+if ( null !== $parcel ) {
+	wc_get_template( 'emails/plain/parcel.php', $parcel, 'woocommerce/pixonaut/', $email->template_base );
 }
 
 if ( '' !== $additional_content ) {
