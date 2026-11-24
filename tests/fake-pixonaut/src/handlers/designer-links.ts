@@ -2,7 +2,9 @@
 // template's live version, one side at the top level or 2–10 under `sides`;
 // more than `RECOMMENDED_SIDES` is made, and answered with a warning.
 // A side's `initialVariant` must be one of its `variants` when it names any;
-// the hosted designer shows the variant and views a side is shown in.
+// the hosted designer shows the variant and views a side is shown in. A side's
+// `pages` narrows its placement's own page counts, else it is refused
+// `link_pages_off_range`; the hosted designer opens at the fewest offered.
 // The link is kept so the hosted designer (designer.ts) can make each side's
 // proof and send the shopper back to `returnUrl`.
 //
@@ -14,6 +16,7 @@ import { randomUUID } from 'node:crypto';
 import {
 	allOwned,
 	type HostedLocale,
+	type PrintedPages,
 	putOwned,
 	type State,
 	type TemplateVersion,
@@ -62,6 +65,7 @@ const SIDE_FIELDS = [
 	'variants',
 	'initialView',
 	'initialVariant',
+	'pages',
 ] as const;
 
 type SizeRequest = { widthMm: number; heightMm: number; label: string };
@@ -80,7 +84,11 @@ type SideRequest = {
 	variants?: string[];
 	initialView?: string;
 	initialVariant?: string;
+	pages?: OfferedPages;
 };
+
+/** The page counts the shopper picks from on a side printed as pages. */
+type OfferedPages = { min: number; max: number };
 
 type LinkRequest = SideRequest & {
 	sides?: SideRequest[];
@@ -121,6 +129,9 @@ export type LinkSide = {
 	variants: string[];
 	/** The variant it starts on, or null. */
 	initialVariant: string | null;
+	/** The page counts offered on a placement printed as pages: the link's
+	 *  own, else the placement's; null on any other. */
+	pages: OfferedPages | null;
 };
 
 export type DesignerLink = {
@@ -171,6 +182,24 @@ type SideRead =
 	| { ok: true; side: LinkSide }
 	| { ok: false; result: HandlerResult };
 
+/** Whether `offered` narrows the pages a placement is printed at, on its
+ *  own steps. */
+function offersPages(
+	printed: PrintedPages | undefined,
+	offered: OfferedPages,
+): boolean {
+	return (
+		printed !== undefined &&
+		offered.min <= offered.max &&
+		[offered.min, offered.max].every(
+			(count) =>
+				count >= printed.min &&
+				count <= printed.max &&
+				(count - printed.min) % printed.step === 0,
+		)
+	);
+}
+
 function readSide(
 	state: State,
 	tenantId: string,
@@ -218,6 +247,19 @@ function readSide(
 	if (request.blankId !== undefined && placement === undefined) {
 		return { ok: false, result: refusal(422, 'unknown_placement') };
 	}
+	const printed = placement?.pages;
+	if (request.pages !== undefined && !offersPages(printed, request.pages)) {
+		return {
+			ok: false,
+			result: {
+				status: 422,
+				body: {
+					error: 'link_pages_off_range',
+					reason: `placement ${request.placementId} does not take the pages`,
+				},
+			},
+		};
+	}
 	const named = sizes[selected];
 	let printSize: Box | undefined =
 		named === undefined
@@ -246,6 +288,9 @@ function readSide(
 			views: request.views ?? [],
 			variants,
 			initialVariant: request.initialVariant ?? null,
+			pages:
+				request.pages ??
+				(printed === undefined ? null : { min: printed.min, max: printed.max }),
 		},
 	};
 }

@@ -105,3 +105,50 @@ describe('POST /v1/proofs of a page', () => {
 		);
 	});
 });
+
+describe("a designer link's pages", () => {
+	function link(json: object) {
+		return send(fake, '/v1/templates/mini-tee/designer-links', {
+			method: 'POST',
+			headers: { authorization: `Bearer ${FIXTURE.store.main.integrationKey}` },
+			json: {
+				blankId: FIXTURE.blank.tee,
+				placementId: FIXTURE.placement.front,
+				returnUrl: `${SITE_URL}/`,
+				...json,
+			},
+		});
+	}
+
+	it('is the count its hosted designer makes the book at', async () => {
+		const made = await link({ pages: { min: 4, max: 4 } });
+		expect(made.status).toBe(201);
+		const { url } = (await made.json()) as { url: string };
+
+		const approved = await send(fake, `${new URL(url).pathname}/approve`);
+
+		const proofSet = new URL(
+			approved.headers.get('location') ?? '',
+		).searchParams.get('proofSet');
+		const set = await send(fake, `/v1/proof-sets/${proofSet}`, {
+			headers: { authorization: `Bearer ${FIXTURE.store.main.integrationKey}` },
+		});
+		const { proofs } = (await set.json()) as { proofs: { page: number }[] };
+		expect(proofs.map(({ page }) => page)).toEqual([1, 2, 3, 4]);
+	});
+
+	it('is refused off the placement’s own counts', async () => {
+		for (const json of [
+			{ pages: { min: 3, max: 3 } },
+			{ pages: { min: 2, max: 8 } },
+			{
+				placementId: FIXTURE.placement.back,
+				pages: { min: 2, max: 2 },
+			},
+		]) {
+			const refused = await link(json);
+			expect(refused.status).toBe(422);
+			expect((await refused.json()).error).toBe('link_pages_off_range');
+		}
+	});
+});

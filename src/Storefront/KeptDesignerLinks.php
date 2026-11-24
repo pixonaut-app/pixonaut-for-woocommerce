@@ -18,6 +18,7 @@ use Pixonaut\WooCommerce\Api\WpHttpTransport;
 use Pixonaut\WooCommerce\Api\DesignerLinks;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
+use Pixonaut\WooCommerce\Catalogue\BlankOptionLinks;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
 use Pixonaut\WooCommerce\Connection\Connection;
@@ -111,6 +112,8 @@ final class KeptDesignerLinks {
 	 * @param Settings                $settings    The default layout, the designer's language, its print-area frame and its form layout.
 	 * @param Notices                 $notices     Says on the product's screen why Pixonaut refused its link.
 	 * @param LoggerInterface         $logger      Logs a link that could not be renamed or checked.
+	 * @param Closure                 $paged       `fn( string $blank_id ): list<string>`, the blank's placements printed as pages; throws an `ApiException` when Pixonaut cannot say.
+	 * @phpstan-param Closure(string): list<string> $paged
 	 * @param Closure|null            $sleep       `fn( int $microseconds ): void`; `usleep()` when null.
 	 * @param Closure|null            $clock       `fn(): int` Unix time; `time()` when null.
 	 */
@@ -121,6 +124,7 @@ final class KeptDesignerLinks {
 		private readonly Settings $settings,
 		private readonly Notices $notices,
 		private readonly LoggerInterface $logger,
+		private readonly Closure $paged,
 		?Closure $sleep = null,
 		?Closure $clock = null,
 	) {
@@ -174,7 +178,7 @@ final class KeptDesignerLinks {
 	 * @param ProductConfig $config  Its configuration.
 	 * @param string        $locale  The request's WordPress locale, e.g. `sv_SE`; the Designer language setting may choose another language.
 	 *
-	 * @return string|null Null when the store is not connected, the product sells no variant of its blank, or its sides cannot be sent.
+	 * @return string|null Null when the store is not connected, the product sells no variant of its blank or is sold at a page count that cannot be read, or its sides cannot be sent.
 	 *
 	 * @throws ApiException When Pixonaut would not mint the link, or could not be reached.
 	 */
@@ -197,17 +201,28 @@ final class KeptDesignerLinks {
 		$language   = DesignerLanguage::resolve( $this->settings, $locale );
 		$key        = self::key( $language );
 		$variant    = null === $config->blank_id ? null : ProductVariant::sold_on( $product, $config );
-		$link       = DesignerLinkBody::for_config(
+		// Without a connection, or without a variant of its blank the product cannot be bought, and a link minted now would be replaced once it has one.
+		if ( null === $connection || ( null !== $config->blank_id && null === $variant ) ) {
+			return null;
+		}
+		$page_count = null === $config->blank_id ? null : BlankOptionLinks::page_count( $product );
+		if ( BlankOptionLinks::UNRESOLVED_PAGES === $page_count ) {
+			// Nothing is sold at a count nobody can read.
+			return null;
+		}
+		$link = DesignerLinkBody::for_config(
 			$config,
 			self::return_url( $product ),
 			$language,
 			$variant,
 			true === $this->settings->get( Settings::PRINT_AREA_FRAME ),
 			FormLayout::resolve( $config, $this->settings ),
-			true === $this->settings->get( Settings::ADD_AFTER_APPROVE )
+			true === $this->settings->get( Settings::ADD_AFTER_APPROVE ),
+			$page_count,
+			// Asked only for a book: any other product's link needs no read of its blank.
+			null === $config->blank_id || null === $page_count ? array() : ( $this->paged )( $config->blank_id )
 		);
-		// Without a variant of its blank the product cannot be bought, and a link minted now would be replaced once it has one.
-		if ( null === $connection || null === $link || ( null !== $config->blank_id && null === $variant ) ) {
+		if ( null === $link ) {
 			return null;
 		}
 
@@ -226,7 +241,7 @@ final class KeptDesignerLinks {
 		 *
 		 * @since 0.1.0
 		 *
-		 * @param array<string, mixed> $body    One side's `blankId`, `placementId`, `views` (when the product narrows them), `variants` and `initialVariant` (the variant it sells), `initialView` (the product's starting view), `printSizes`, `selectedPrintSizeIndex` (the size it starts on) at the top level, or 2–10 under `sides` with `key`, `label` and `templateId` when it is not the link's; `returnUrl`, `locale`, `printAreaFrame` (`true`, when the store frames the print area), `layout` (`page` or `steps`, when the product or store fixes the form's layout), and `afterApprove` (`add_to_cart`, when the store adds the design on return).
+		 * @param array<string, mixed> $body    One side's `blankId`, `placementId`, `views` (when the product narrows them), `variants` and `initialVariant` (the variant it sells), `initialView` (the product's starting view), `printSizes`, `selectedPrintSizeIndex` (the size it starts on), `pages` (`min` and `max`, both the page count it is sold at, on a side printed as pages) at the top level, or 2–10 under `sides` with `key`, `label` and `templateId` when it is not the link's; `returnUrl`, `locale`, `printAreaFrame` (`true`, when the store frames the print area), `layout` (`page` or `steps`, when the product or store fixes the form's layout), and `afterApprove` (`add_to_cart`, when the store adds the design on return).
 		 * @param WC_Product           $product The product or variation.
 		 *
 		 * @example

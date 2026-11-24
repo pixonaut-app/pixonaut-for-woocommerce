@@ -396,7 +396,10 @@ A test approves a side of a hosted designer link as a book by adding
 `pages=<count>` (a link of one side) or `pages[<side key>]=<count>` to the
 approve address: the fake then mints a proof per page, keeps the approval's
 proofs as a proof set, and returns `proofSet` in place of tokens.
-`GET /v1/proof-sets/{proofSet}` answers the set to the store that made it
+Without either, a side on a placement printed as pages
+(`POST /__fake/blanks/:id/pages`) is approved at the fewest pages the link
+offers (`pages`, else the placement's own; `422 link_pages_off_range` off
+them). `GET /v1/proof-sets/{proofSet}` answers the set to the store that made it
 (`404 unknown_proof_set` otherwise) until its first proof expires
 (`410 proof_set_expired`). A design committed from a page's proof reads its
 `page` and `pageCount`.

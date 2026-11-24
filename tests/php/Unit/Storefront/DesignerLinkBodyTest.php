@@ -87,6 +87,24 @@ final class DesignerLinkBodyTest extends TestCase {
 		);
 	}
 
+	public function test_a_side_printed_as_pages_offers_the_one_count_sold(): void {
+		$one     = DesignerLinkBody::for_config( self::config( array( self::front() ) ), self::RETURN_URL, 'en', page_count: 44, paged: array( 'front' ) );
+		$several = DesignerLinkBody::for_config( self::config( array( self::front(), self::back( 'mini-tee' ) ) ), self::RETURN_URL, 'en', page_count: 44, paged: array( 'back' ) );
+		$plain   = DesignerLinkBody::for_config( self::config( array( self::front() ) ), self::RETURN_URL, 'en', page_count: 44 );
+
+		$this->assertNotNull( $one );
+		$this->assertNotNull( $several );
+		$this->assertNotNull( $plain );
+		$pages = array(
+			'min' => 44,
+			'max' => 44,
+		);
+		$this->assertSame( $pages, $one->body['pages'] );
+		$this->assertArrayNotHasKey( 'pages', $several->body['sides'][0] );
+		$this->assertSame( $pages, $several->body['sides'][1]['pages'] );
+		$this->assertArrayNotHasKey( 'pages', $plain->body );
+	}
+
 	public function test_a_side_on_the_first_sides_template_names_none(): void {
 		$link = DesignerLinkBody::for_config( self::config( array( self::front(), self::back( 'mini-tee' ) ) ), self::RETURN_URL, 'en' );
 

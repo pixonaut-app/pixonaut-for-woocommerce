@@ -1,4 +1,5 @@
 import type {
+	Approved,
 	PixonautDesigner,
 	ProductPlacement,
 	SplitMountOptions,
@@ -160,4 +161,33 @@ export function showPageCount(
 			designer.setItemPageCount(count);
 		}
 	}
+}
+
+/** The proof tokens of an approved side: its one, or a side printed as
+ *  pages' one a page, from the first. */
+export type DesignTokens = string | string[];
+
+/** The side's proofs in an approval, a page each on a side printed as
+ *  pages: those of the lead's placement. */
+function proofsOf(approved: Approved): Approved['sides'][number][] {
+	return approved.page === undefined
+		? [approved]
+		: approved.sides
+				.filter(
+					({ page, placementId }) =>
+						page !== undefined && placementId === approved.placementId,
+				)
+				.sort((first, second) => (first.page ?? 0) - (second.page ?? 0));
+}
+
+/** The proof tokens an approval is committed by. */
+export function designTokens(approved: Approved): DesignTokens {
+	return approved.page === undefined
+		? approved.proofToken
+		: proofsOf(approved).map(({ proofToken }) => proofToken);
+}
+
+/** When an approval is no longer good: with its first proof to expire. */
+export function expiryOf(approved: Approved): number {
+	return Math.min(...proofsOf(approved).map(({ expiresAt }) => expiresAt));
 }

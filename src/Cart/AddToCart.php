@@ -17,6 +17,7 @@ use Pixonaut\WooCommerce\Api\Answers\Design;
 use Pixonaut\WooCommerce\Api\Designs;
 use Pixonaut\WooCommerce\Api\RateLimitBudget;
 use Pixonaut\WooCommerce\ApprovalMode;
+use Pixonaut\WooCommerce\Catalogue\BlankOptionLinks;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
 use Pixonaut\WooCommerce\Catalogue\Side;
@@ -42,6 +43,8 @@ use WC_Product;
  * side, each committed and checked against the side's configuration, and, in
  * the checkbox approval mode, with its approval box ticked; the line's data
  * then joins the cart item through `woocommerce_add_cart_item_data`. A
+ * side printed as pages brings a token per page, as many as the product or
+ * variation is sold at, and each page is committed as a design of its own. A
  * standing side names its standing design and asks Pixonaut nothing, so a
  * product of standing sides alone adds as any other product does, on every
  * path, the Store API and order again included. A design made on the hosted
@@ -60,7 +63,8 @@ final class AddToCart {
 
 	/**
 	 * The form field holding the proof tokens: `pixonaut_designs[<side key>]`,
-	 * or a single value for a product with one side.
+	 * `pixonaut_designs[<side key>][<page>]` for a side printed as pages, or a
+	 * single value for a product with one side.
 	 */
 	public const FIELD = 'pixonaut_designs';
 
@@ -394,9 +398,12 @@ final class AddToCart {
 			$this->personalised?->forget( $key );
 			throw new AddRefused( Labels::DESIGN_OUTDATED );
 		}
+		$pages  = BlankOptionLinks::page_count( $product );
 		$by_key = array_combine( array_map( static fn ( Side $side ): string => $side->key, $sides ), $sides );
 		foreach ( $line->sides as $held ) {
-			$mismatch = DesignCheck::mismatch( $this->read( $held->design_id ), $by_key[ $held->key ], $config->blank_id );
+			$design   = $this->read( $held->design_id );
+			$mismatch = DesignCheck::mismatch( $design, $by_key[ $held->key ], $config->blank_id )
+				?? ( DesignCheck::pages_match( $design, $held->page, $line->page_count( $held->key ), $pages ) ? null : DesignCheck::PAGES );
 			if ( null !== $mismatch ) {
 				$this->personalised?->forget( $key );
 				throw new AddRefused( DesignCheck::TEMPLATE_OUTDATED === $mismatch ? Labels::DESIGN_OUTDATED : Labels::DESIGN_MISMATCH );
@@ -655,6 +662,14 @@ final class AddToCart {
 				throw new AddRefused( Labels::DESIGN_REQUIRED );
 			}
 		}
+		$sold = BlankOptionLinks::page_count( $product );
+		foreach ( $ordered as $key => $pages ) {
+			// Refused before any of its pages is committed: the price is for the count sold.
+			if ( is_array( $pages ) && ! DesignCheck::count_sold( count( $pages ), $sold ) ) {
+				$this->logger->warning( sprintf( 'Refused a design for product %d: side "%s" has %d pages, and %d are sold.', $product->get_id(), $key, count( $pages ), (int) $sold ) );
+				throw new AddRefused( Labels::DESIGN_MISMATCH );
+			}
+		}
 
 		$site     = $connection->site;
 		$line_key = Refs::line_key( ProofTokens::by_slot( $ordered ), self::cart_owner() );
@@ -677,7 +692,8 @@ final class AddToCart {
 						throw new AddRefused( Labels::DESIGN_ALREADY_USED );
 					}
 					$ours[]   = $design_id;
-					$mismatch = DesignCheck::mismatch( $design, $side, $config->blank_id );
+					$mismatch = DesignCheck::mismatch( $design, $side, $config->blank_id )
+						?? ( DesignCheck::pages_match( $design, $page, $paged ? count( $ordered[ $side->key ] ) : 0, $sold ) ? null : DesignCheck::PAGES );
 					if ( null !== $mismatch ) {
 						$this->logger->warning(
 							sprintf( 'Refused a design for product %d: its %s does not match side "%s".', $product->get_id(), $mismatch, $side->key ),
@@ -839,11 +855,13 @@ final class AddToCart {
 	}
 
 	/**
-	 * The proof tokens the add-to-cart form posted, by side key.
+	 * The proof tokens the add-to-cart form posted, by side key; a side
+	 * printed as pages has its pages' by page, and is left out when they do
+	 * not run from 1 without a gap.
 	 *
 	 * @param ProductConfig $config The product's configuration.
 	 *
-	 * @return array<string, string>
+	 * @return array<string, string|array<int, string>>
 	 */
 	private function posted_tokens( ProductConfig $config ): array {
 		// The add-to-cart form carries no nonce; WooCommerce's own handler reads it the same way.
@@ -852,13 +870,7 @@ final class AddToCart {
 		if ( is_string( $posted ) && 1 === count( $designed ) ) {
 			$posted = array( $designed[0]->key => $posted );
 		}
-		$tokens = array();
-		foreach ( is_array( $posted ) ? $posted : array() as $side => $token ) {
-			if ( is_string( $side ) && is_string( $token ) ) {
-				$tokens[ $side ] = sanitize_text_field( $token );
-			}
-		}
-		return $tokens;
+		return ProofTokens::stored( map_deep( $posted, static fn ( mixed $token ): mixed => is_string( $token ) ? sanitize_text_field( $token ) : null ) );
 	}
 
 	/**

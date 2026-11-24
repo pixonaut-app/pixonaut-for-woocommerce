@@ -320,6 +320,27 @@ final class ServerReads {
 	}
 
 	/**
+	 * The placements of a blank printed as pages, such as a notebook's inner
+	 * pages.
+	 *
+	 * @param string $blank_id The blank.
+	 * @return list<string> Placement ids.
+	 *
+	 * @throws ApiException When Pixonaut refused or could not be reached.
+	 */
+	public function paged_placements( string $blank_id ): array {
+		// In the language the product pages read the blank in, so both share the kept read.
+		$mockups = json_decode( $this->blank( $blank_id, self::language( null ) )['mockups'], true );
+		$paged   = array();
+		foreach ( is_array( $mockups ) && is_array( $mockups['placements'] ?? null ) ? $mockups['placements'] : array() as $placement ) {
+			if ( is_array( $placement ) && is_string( $placement['id'] ?? null ) && is_array( $placement['pages'] ?? null ) ) {
+				$paged[] = $placement['id'];
+			}
+		}
+		return $paged;
+	}
+
+	/**
 	 * The blank's options as written in Pixonaut, each with its `values`
 	 * and how each looks (`appearances`), from its cached variants read;
 	 * empty when Pixonaut could not be asked.

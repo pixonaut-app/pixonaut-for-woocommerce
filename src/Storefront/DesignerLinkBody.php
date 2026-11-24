@@ -26,6 +26,10 @@ use Pixonaut\WooCommerce\Catalogue\Side;
  * out one the variant is photographed in, or the Design view: absent,
  * Pixonaut shows every view and its Design view too. The link's `layout`
  * covers every side's form; absent, each follows its template.
+ *
+ * A side printed as pages offers the one page count the product or
+ * variation is sold at, so the hosted designer cannot design a book of
+ * another count than the cart charges for.
  */
 final class DesignerLinkBody {
 
@@ -54,8 +58,11 @@ final class DesignerLinkBody {
 	 * @param bool                $frame      Whether the hosted designer frames the print area; see the `print_area_frame` setting.
 	 * @param string|null         $layout     The form's layout, `page` or `steps`; null follows each side's template. See `FormLayout`.
 	 * @param bool                $add_to_cart Whether the store adds the design to the cart on return, which the hosted page's button then says.
+	 * @param int|null            $page_count  The pages a book is sold at; null for none.
+	 * @param string[]            $paged       The blank's placements printed as pages.
+	 * @phpstan-param list<string> $paged
 	 */
-	public static function for_config( ProductConfig $config, string $return_url, ?string $language, ?ProductVariant $variant = null, bool $frame = false, ?string $layout = null, bool $add_to_cart = false ): ?self {
+	public static function for_config( ProductConfig $config, string $return_url, ?string $language, ?ProductVariant $variant = null, bool $frame = false, ?string $layout = null, bool $add_to_cart = false, ?int $page_count = null, array $paged = array() ): ?self {
 		$sides = $config->sides;
 		if ( ! $config->valid || array() === $sides || ( count( $sides ) > 1 && null === $config->blank_id ) ) {
 			return null;
@@ -66,6 +73,12 @@ final class DesignerLinkBody {
 			$part = self::side( $side, $config, $variant );
 			if ( null === $part ) {
 				return null;
+			}
+			if ( null !== $page_count && in_array( $side->placement_id, $paged, true ) ) {
+				$part['pages'] = array(
+					'min' => $page_count,
+					'max' => $page_count,
+				);
 			}
 			$parts[] = $part;
 		}

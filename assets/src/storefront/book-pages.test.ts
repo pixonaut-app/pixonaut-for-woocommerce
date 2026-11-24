@@ -50,7 +50,9 @@ function sold(size: string, pageCount?: number, sides: object = {}) {
 const BOOK = { '11': sold('S', 44), '12': sold('L', 60) };
 
 function start({
-	sdk = fakeSdk(fakeDesigner({ pages: { count: 24, ...COUNTS } })),
+	sdk = fakeSdk(
+		fakeDesigner({ pages: { count: 24, placementId: 'front', ...COUNTS } }),
+	),
 	mounts = MOUNTED as object,
 	variations = BOOK as object | null,
 	pageCount = undefined as string | undefined,
@@ -247,6 +249,77 @@ describe('the pages of a book', () => {
 				'[name="pixonaut_designs[front]"]',
 			)?.value,
 		).toBe('prf_tok_after');
+	});
+
+	it('adds every page’s proof, in page order', async () => {
+		const page = start();
+		await settled();
+		await choose(page, '11');
+		const proof = (number: number) => ({
+			...PROOF,
+			placementId: 'front',
+			page: number,
+			proofToken: `prf_tok_${number}`,
+		});
+		const sides = [proof(1), proof(3), proof(2)];
+		page.book.approve.mockResolvedValue({ ...proof(1), sides });
+		const sent: FormData[] = [];
+		page.form.addEventListener('submit', (event) => {
+			event.preventDefault();
+			sent.push(new FormData(page.form));
+		});
+
+		page.button.click();
+		await settled();
+
+		const tokens = [...(sent.at(-1)?.entries() ?? [])].filter(([name]) =>
+			name.startsWith('pixonaut_designs['),
+		);
+		expect(tokens).toEqual([
+			['pixonaut_designs[front][1]', 'prf_tok_1'],
+			['pixonaut_designs[front][2]', 'prf_tok_2'],
+			['pixonaut_designs[front][3]', 'prf_tok_3'],
+		]);
+		expect(
+			page.form.querySelector<HTMLInputElement>(
+				'[name="pixonaut_fields[front]"]',
+			)?.value,
+		).toBe('[]');
+	});
+
+	it('mounts again on every page’s values, under the blank’s own placement', async () => {
+		const other = { ...PAGES, blankId: 'blank_hoodie', placementId: 'inside' };
+		const page = start({
+			variations: {
+				'11': sold('S', 44),
+				'12': sold('L', 60, {
+					front: { ...other, placements: [{ placementId: 'inside' }] },
+				}),
+			},
+		});
+		await settled();
+		await choose(page, '11');
+		const book = {
+			count: 44,
+			page: 2,
+			pages: [
+				{ templateId: 'mini-tee@2', values: { slogan: { content: 'One' } } },
+				{ templateId: 'mini-tee@2', values: { slogan: { content: 'Two' } } },
+			],
+		};
+		const values = {
+			slogan: { content: 'Two' },
+			$sides: { $pages: { front: book } },
+		};
+		page.book.getState.mockReturnValue({ templateId: 'mini-tee@2', values });
+
+		await choose(page, '12');
+
+		expect(page.mount).toHaveBeenCalledTimes(2);
+		expect(page.mount.mock.calls[1]?.[0].initialValues).toEqual({
+			slogan: { content: 'Two' },
+			$sides: { $pages: { inside: book } },
+		});
 	});
 
 	it('adds nothing at a count Pixonaut does not offer', async () => {

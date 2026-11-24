@@ -22,7 +22,8 @@ Override either by copying it to `yourtheme/woocommerce/pixonaut/storefront/`.
 Keep the ids and the fields: the script mounts each side's preview into
 `#pixonaut-preview-<side>` and its form into `#pixonaut-form-<side>`, and
 writes each side's proof token into `pixonaut_designs[<side>]`, the field
-add to cart reads. A theme with no gallery to replace gets the preview above
+add to cart reads (a side printed as pages into a field per page, see
+[Page count](#page-count)). A theme with no gallery to replace gets the preview above
 the form, and the views above the form too.
 
 ### Server-rendered layout
@@ -1111,6 +1112,20 @@ with `PagesChangedError` is made again, and add to cart at a count Pixonaut
 does not offer shows `design_failed` and sends nothing. A page that edits a
 design leaves it at the pages it was made at.
 
+Add to cart sends a proof token per page, `pixonaut_designs[<side>][<page>]`
+from 1, in place of `pixonaut_designs[<side>]`, and `[]` as the side's field
+values: the form holds the page shown alone. Each page is committed as a
+design of its own (see [Personalise button](#personalise-button)). A product
+or variation sold at a page count takes a book of that count only: another
+number of pages is refused with `design_mismatch` before anything is
+committed, and so is a design of another page, or made for a book of another
+count (`DesignCheck::pages_match()`).
+
+A side mounted again, or switched to another template, keeps every page's
+values (`kept-pages.ts`): the next mount takes them under its own placement,
+and on another template each page is given its values by field key, else by
+layer, as the page shown is.
+
 ### Kept between requests
 
 A variable product's page builds its designer, what WooCommerce tells its
@@ -1503,7 +1518,7 @@ Through `@wordpress/hooks` (`wp.hooks` on the page):
 | --- | --- | --- |
 | `pixonaut.designer.mountOptions` | filter | `options` (the SDK's split mount options), `{productId, side}` |
 | `pixonaut.designer.approved` | action | `{productId, side, result}`, `result` being what `approve()` resolved: the proof (`proofToken`, `proofUrl`, `expiresAt`, …), its `placementId`, and `sides`, the proof of each side the designer approved, the lead first (one, as each side's designer sells one placement) |
-| `pixonaut.cart.beforeSubmit` | action | `{productId, form, designs}`, `designs` being the proof tokens by side, already in their fields |
+| `pixonaut.cart.beforeSubmit` | action | `{productId, form, designs}`, `designs` being the proof tokens by side, already in their fields; a side printed as pages has a list of its pages' tokens, the first page's first |
 | `pixonaut.storefront.label` | filter | `text`, `key`, `context`; see [Label keys](../label-keys/) |
 
 ```js
@@ -1678,7 +1693,11 @@ handler, at `wp_loaded`, the plugin:
    view as `initialView` when it names one; the
    blank variant the product or variation sells as `variants` (that one
    alone, since the cart adds the variation the link was minted for) and
-   `initialVariant`; and `views`, the ticked views of the side's placement,
+   `initialVariant`; on a side printed as pages, `pages`, whose `min` and
+   `max` are both the page count the product or variation is sold at
+   (`Catalogue\BlankOptionLinks::page_count()`; the blank's cached views say
+   which placements are printed as pages, and no link is made while Pixonaut
+   cannot be asked, or at a count nobody can read); and `views`, the ticked views of the side's placement,
    only when they leave out one the variant is photographed in there (absent,
    Pixonaut shows every view and its Design view);
    `returnUrl` (the home page with
@@ -1724,7 +1743,9 @@ null on a link of one side). The pages must run from 1 with none missing or
 repeated, or nothing is committed. Each page's token is committed as a
 side's is, as a design of its own (`Cart\ProofTokens`); the cart line keeps
 each design with its page (`CommittedSide::$page`, its slot `<side key>#<page>`),
-and the line's page count is the number of its pages. The product page offers
+and the line's page count is the number of its pages. A book of another count
+than the product or variation is sold at is refused with `design_mismatch`
+before anything is committed (see [Page count](#page-count)). The product page offers
 a change button per page, which corrects that page alone. A set Pixonaut does not
 know (`404 unknown_proof_set`) is treated as an unknown visit; an expired one
 (`410 proof_set_expired`) drops the retry kept for that set, and no other, and

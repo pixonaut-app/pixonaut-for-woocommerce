@@ -951,6 +951,7 @@ export const REACH = {
 		'src/Storefront/OpeningDefaults.php',
 		'src/Storefront/FormGroupsMount.php',
 		'assets/src/storefront/remount-hold.ts',
+		'assets/src/storefront/kept-pages.ts',
 		'assets/src/storefront/kept-view.ts',
 		'assets/src/storefront/template-carry.ts',
 	],

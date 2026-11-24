@@ -27,6 +27,8 @@ final class Design {
 	 * @param string|null          $blank_id                `blankId`; null for a design on no blank.
 	 * @param string|null          $placement_id            `placementId`.
 	 * @param DesignPrintSize|null $print_size              `printSize`.
+	 * @param int|null             $page                    `page`, the page of a side printed as pages it is; null for any other.
+	 * @param int|null             $page_count              `pageCount`, the pages the item it was proofed for has; null where it was proofed for none.
 	 * @param string|null          $proof_id                `proofId`, naming the proof's bytes.
 	 * @param string|null          $external_ref            `externalRef`, the store's reference for it.
 	 * @param float|null           $personal_data_erased_at `personalDataErasedAt`, epoch milliseconds; null while not erased.
@@ -40,6 +42,8 @@ final class Design {
 		public readonly ?string $blank_id,
 		public readonly ?string $placement_id,
 		public readonly ?DesignPrintSize $print_size,
+		public readonly ?int $page,
+		public readonly ?int $page_count,
 		public readonly ?string $proof_id,
 		public readonly ?string $external_ref,
 		public readonly ?float $personal_data_erased_at,
@@ -74,6 +78,8 @@ final class Design {
 			blank_id: Read::nullable_string( $data, 'blankId', $path ),
 			placement_id: Read::nullable_string( $data, 'placementId', $path ),
 			print_size: Read::nullable_object( $data, 'printSize', $path, DesignPrintSize::from_answer( ... ) ),
+			page: Read::nullable_int( $data, 'page', $path ),
+			page_count: Read::nullable_int( $data, 'pageCount', $path ),
 			proof_id: Read::nullable_string( $data, 'proofId', $path ),
 			external_ref: Read::nullable_string( $data, 'externalRef', $path ),
 			personal_data_erased_at: Read::nullable_float( $data, 'personalDataErasedAt', $path ),
