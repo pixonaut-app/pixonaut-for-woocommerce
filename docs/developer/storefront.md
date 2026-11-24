@@ -16,7 +16,7 @@ product.
 | Template | Printed | Holds |
 | --- | --- | --- |
 | `storefront/preview.php` | In place of the gallery: the classic `woocommerce_show_product_images`, or the output of the `woocommerce/product-image-gallery` or `woocommerce/product-gallery` block (product from the block's `postId` context) | `.pixonaut-preview` with a `.pixonaut-preview__frame` per side holding `#pixonaut-preview-<side>`, a `.pixonaut-spinner[role=status]` over it (label `designer_loading`), the mark target `#pixonaut-mark-<side>` under it and, on a blank whose views the page could read, the views strip `#pixonaut-views-<side>` (the script makes that element under the mark where the page printed none, so the views are always drawn under the preview); then `.pixonaut-preview__images`, hidden, holding the product's featured and gallery images (see [A designer that cannot load](#a-designer-that-cannot-load)), and `p.pixonaut-preview__note` (label `preview_note`). See [Server-rendered layout](#server-rendered-layout) |
-| `storefront/form.php` | At `woocommerce_before_add_to_cart_button`, inside the add-to-cart form | `.pixonaut-form` with `#pixonaut-form-<side>` per side, the mount options in `data-pixonaut-mounts`, the blank variant in `data-pixonaut-variant` (see [Views and variants](#views-and-variants)) or, on a variable product, `data-pixonaut-variations` (see [Variations](#variations)), a `.pixonaut-form__placeholder` (`storefront/form-placeholder.php`) in each `#pixonaut-form-<side>` and the server's reads in `script.pixonaut-reads` (see [Server-rendered layout](#server-rendered-layout)), and a hidden `pixonaut_designs[<side>]` field per side; in the checkbox approval mode, `.pixonaut-approval` with the `pixonaut_approve` box (`.pixonaut-approval__box`) in its `label` a `.pixonaut-approval__proof` button per side (`data-pixonaut-side`), the label's linked word (a label that links none has them after it instead, under a block theme with its button class, as the side tabs) and an empty, hidden `p.pixonaut-approval__error[role=alert]` (see [Checkbox approval](#checkbox-approval)); with more than one side, the side tabs (see [Sides](#sides)); the theme presets in `data-pixonaut-look` (see [Theme look](#theme-look)) and, on a page printed at its opening variation's price, the product's own price in `data-pixonaut-product-price` and the attribute values the printed price is for in `data-pixonaut-opening-choice` (see [Price](#price)) |
+| `storefront/form.php` | At `woocommerce_before_add_to_cart_button`, inside the add-to-cart form | `.pixonaut-form` with `#pixonaut-form-<side>` per side, the mount options in `data-pixonaut-mounts`, the blank variant in `data-pixonaut-variant` (see [Views and variants](#views-and-variants)) and a book's pages in `data-pixonaut-page-count` (see [Page count](#page-count)) or, on a variable product, `data-pixonaut-variations` (see [Variations](#variations)), a `.pixonaut-form__placeholder` (`storefront/form-placeholder.php`) in each `#pixonaut-form-<side>` and the server's reads in `script.pixonaut-reads` (see [Server-rendered layout](#server-rendered-layout)), and a hidden `pixonaut_designs[<side>]` field per side; in the checkbox approval mode, `.pixonaut-approval` with the `pixonaut_approve` box (`.pixonaut-approval__box`) in its `label` a `.pixonaut-approval__proof` button per side (`data-pixonaut-side`), the label's linked word (a label that links none has them after it instead, under a block theme with its button class, as the side tabs) and an empty, hidden `p.pixonaut-approval__error[role=alert]` (see [Checkbox approval](#checkbox-approval)); with more than one side, the side tabs (see [Sides](#sides)); the theme presets in `data-pixonaut-look` (see [Theme look](#theme-look)) and, on a page printed at its opening variation's price, the product's own price in `data-pixonaut-product-price` and the attribute values the printed price is for in `data-pixonaut-opening-choice` (see [Price](#price)) |
 
 Override either by copying it to `yourtheme/woocommerce/pixonaut/storefront/`.
 Keep the ids and the fields: the script mounts each side's preview into
@@ -1028,6 +1028,8 @@ there, its groups and fields that template lacks being passed over, carries
 the mounted one), `drawAtTemplateRatio`
 its canvas shape (absent when the template decides), and `variant` is the
 ref of the blank variant the variation is sold as (absent when it has none).
+`pageCount` is the pages a book sold as the variation has (absent for none,
+see [Page count](#page-count)).
 `plain` is a
 variation bought without a design; `unavailable` one that is personalised
 but cannot mount now (flagged not sellable, no variant of its blank or a
@@ -1059,13 +1061,14 @@ each side of the variation followed it then:
 | template, and perhaps print size | `setTemplate(templateId)`, then `setPrintSize(index)` as above: the preview, form and view strip keep their place while the new template draws. A value on a field key both templates share carries over, and so does one on a field of the same layer id the new template's form offers, with `setValue()`. When `setTemplate()` rejects, the designer is mounted again as in the next row |
 | blank, placement, `placements`, `views`, `variants`, form layout, `formGroups` or `drawAtTemplateRatio` | is destroyed and mounted again with `initialValues` from its `getState().values`, read once its `settled()` resolved, and the variation's variant as `initialVariant`. Until the new designer is shown, an inert copy of what the old one showed (each canvas drawn in, its pictures the old designer's own images, every node marked `data-pixonaut-held`) stands in its preview, form and view strip, each keeping at least its height, and the form's parts it drew wait hidden until the new designer draws them in its form, which it does ahead of its preview: the page neither collapses nor jumps |
 
-and then shows the variation's variant (see [Views and variants](#views-and-variants)).
+and then shows the variation's variant (see [Views and variants](#views-and-variants))
+and its pages (see [Page count](#page-count)).
 
 Any switch, a switch of the variant alone included, drops the side's
 proof, unticks the approval box and removes the side's proof link, so add
 to cart approves again; an `approve()` under way when it happens, or that
-rejects with `PlacementChangedError` or `TemplateChangedError`, is made
-again. A mount that rejects
+rejects with `PlacementChangedError`, `TemplateChangedError` or
+`PagesChangedError`, is made again. A mount that rejects
 with `unknown_placement` makes the chosen variation show
 `personalisation_unavailable` when it has that side: add to cart sends
 nothing, and the variation is reported (see
@@ -1085,6 +1088,28 @@ mode than the checkbox hides `.pixonaut-approval` and disables its box. A
 `plain` variation hides `.pixonaut-form` and `.pixonaut-preview` and sends
 the form as it is, also when no side of the product can mount (the form
 then carries `data-pixonaut-variations` without `data-pixonaut-mounts`).
+
+### Page count
+
+A book's variation is sold at the pages its page count attribute names
+(`Catalogue\BlankOptionLinks::page_count()`), which
+`data-pixonaut-variations` carries as `pageCount`; a product without
+variations carries its one count in `data-pixonaut-page-count`. The designer
+of the side printed as pages shows that many: it mounts with the counts sold
+(`pages`, from the fewest to the most) and the item's (`pageCount`) on its
+placement, when the server's reads say the placement is printed as pages and
+at that count, else `setPageCount()` follows the mount, as it follows a
+switch of variation. Every other side on the blank, such as the cover, is
+told with `setItemPageCount()`; a blank without pages is told nothing.
+
+A count the customer picks in the designer (`on('pages')`) selects the
+variation sold at it in the form, keeping the other choices where it can. A
+count nothing is sold at moves on to the next one sold the way the customer
+stepped, else back to the one the item is sold at. Every proof is made at the
+count sold: each `approve()` first puts the sides at it, one that rejects
+with `PagesChangedError` is made again, and add to cart at a count Pixonaut
+does not offer shows `design_failed` and sends nothing. A page that edits a
+design leaves it at the pages it was made at.
 
 ### Kept between requests
 

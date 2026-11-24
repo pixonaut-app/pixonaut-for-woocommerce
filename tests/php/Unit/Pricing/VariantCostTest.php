@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Tests\Unit\Pricing;
 
 use Pixonaut\WooCommerce\Pricing\VariantCost;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\BlanksVariantsCostsResponseCostsItem;
 use Pixonaut\WooCommerce\Tests\Unit\TestCase;
 
 final class VariantCostTest extends TestCase {
@@ -88,6 +89,38 @@ final class VariantCostTest extends TestCase {
 		$stored = VariantCost::from_array( $at->to_array() );
 		$this->assertNotNull( $stored );
 		$this->assertSame( array( 60, 15100 ), array( $stored->pages, $stored->product ) );
+	}
+
+	public function test_a_book_is_read_as_the_sdk_models_its_cost(): void {
+		$money = static fn ( string $amount ): array => array(
+			'amount'   => $amount,
+			'currency' => 'SEK',
+		);
+		$times = array(
+			'production' => null,
+			'shipping'   => null,
+			'delivery'   => array(
+				'minDays' => 8,
+				'maxDays' => 10,
+			),
+		);
+		$at    = array(
+			'product'  => $money( '12.52' ),
+			'shipping' => $money( '7.45' ),
+			'times'    => $times,
+		);
+		$model = BlanksVariantsCostsResponseCostsItem::fromArray(
+			$at + array(
+				'variant'   => 'v_a5',
+				'region'    => 'SE',
+				'readAt'    => '2026-11-23T12:00:00.000Z',
+				'changedAt' => null,
+				'pages'     => array( $at + array( 'pages' => 44 ) ),
+			)
+		);
+
+		$cost = VariantCost::list_from( array( $model->raw() ) )['v_a5']->at_pages( 44 );
+		$this->assertSame( array( 44, 12520, 7450, 'SE' ), array( $cost->pages, $cost->product, $cost->shipping, $cost->region ) );
 	}
 
 	public function test_a_variant_printed_as_no_pages_is_its_own_cost_at_any_count(): void {

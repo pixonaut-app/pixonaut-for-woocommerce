@@ -11,6 +11,7 @@ import { registerControl } from './control';
 import { registerAreasControl } from './control-areas';
 import { registerCatalogueImportControl } from './control-catalogue-imports';
 import { registerDesignerPixelControl } from './control-designer-pixel';
+import { registerPagesControl } from './control-pages';
 import { registerPictureStorageControl } from './control-picture-storage';
 import { registerTemplateBackgroundControl } from './control-template-background';
 import { registerTemplateFieldKeyControl } from './control-template-field-key';
@@ -255,6 +256,7 @@ export function createFake(options: FakeOptions = {}): Fake {
 
 	registerControl(app, fake);
 	registerAreasControl(app, fake);
+	registerPagesControl(app, fake);
 	registerCatalogueImportControl(app, fake);
 	registerDesignerPixelControl(app, fake);
 	registerTemplateRatioControl(app, fake);

@@ -40,10 +40,14 @@ export type Variation = { priceHtml?: string } & (
 			approvalMode: string;
 			/** The variant ref it is sold as; absent when it has none. */
 			variant?: string;
+			/** The pages an item of it has, on a book; absent for none. */
+			pageCount?: number;
 			sides: Record<string, VariationSide>;
 	  }
 	| { state: 'plain' | 'unavailable'; attributes: Record<string, string> }
 );
+
+type PersonalisedVariation = Extract<Variation, { state: 'personalised' }>;
 
 /** Variations by id. */
 export type Variations = Record<string, Variation>;
@@ -151,13 +155,38 @@ export function variationsSoldAs(
 	form: HTMLFormElement,
 	usable: (id: string) => boolean,
 ): string[] {
+	return variationsThat(
+		variations,
+		(variation) => variation.variant === ref,
+		form,
+		usable,
+	);
+}
+
+/** As `variationsSoldAs()`, the variations sold at `count` pages. */
+export function variationsSoldAt(
+	variations: Variations,
+	count: number,
+	form: HTMLFormElement,
+	usable: (id: string) => boolean,
+): string[] {
+	return variationsThat(
+		variations,
+		(variation) => variation.pageCount === count,
+		form,
+		usable,
+	);
+}
+
+function variationsThat(
+	variations: Variations,
+	wanted: (variation: PersonalisedVariation) => boolean,
+	form: HTMLFormElement,
+	usable: (id: string) => boolean,
+): string[] {
 	const kept = new Map<string, number>();
 	for (const [id, variation] of Object.entries(variations)) {
-		if (
-			variation.state === 'personalised' &&
-			variation.variant === ref &&
-			usable(id)
-		) {
+		if (variation.state === 'personalised' && wanted(variation) && usable(id)) {
 			// An "any" attribute keeps whatever the form holds.
 			kept.set(
 				id,

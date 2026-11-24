@@ -210,6 +210,7 @@ function placementBody(
 		...(p.areas === undefined
 			? {}
 			: { areas: p.areas.map((area) => ({ ...area, row: { ...area.row } })) }),
+		...(p.pages === undefined ? {} : { pages: { ...p.pages } }),
 		views: p.views.map((v) => ({
 			...viewFrame(v, names),
 			photos: v.photos.map((photo) => ({
@@ -483,6 +484,7 @@ export const listBlankMockups: Handler = (context) => {
 			usualHeightMm: area.usualHeightMm,
 		})),
 		coverage: 'within',
+		...(p.pages === undefined ? {} : { pages: { ...p.pages } }),
 		views: p.views.map((v) => ({
 			...viewFrame(v, names),
 			photos: v.photos.map((m) => {

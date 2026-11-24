@@ -353,7 +353,13 @@ export type Placement = {
 	views: View[];
 	/** Its print area per row; left out when it has one area, its own. */
 	areas?: PrintArea[];
+	/** The page counts it is printed at, each page its print area; left out
+	 *  for one page (`POST /__fake/blanks/:id/pages`). */
+	pages?: PrintedPages;
 };
+
+/** From `min` pages to `max`, `step` at a time. */
+export type PrintedPages = { min: number; max: number; step: number };
 
 /** Why a variant is no longer sold: the merchant `retired` it, or its
  *  printshop stopped making it (`no_longer_sold`). */
