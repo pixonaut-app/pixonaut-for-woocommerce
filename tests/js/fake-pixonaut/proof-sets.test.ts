@@ -142,7 +142,7 @@ describe('POST /v1/orders naming pages', () => {
 	function order(designs: Record<string, unknown>[], key: string) {
 		return post(
 			'/v1/orders',
-			{ designs, variant: FIXTURE.variant.teeWhiteS },
+			{ items: [{ designs, variant: FIXTURE.variant.teeWhiteS }] },
 			key,
 		);
 	}
@@ -203,7 +203,12 @@ describe('POST /v1/orders naming pages', () => {
 
 		const missing = await order(named.slice(0, -1), 'o4');
 		expect(missing.status).toBe(422);
-		expect(await missing.json()).toEqual({ error: 'page_missing' });
+		expect(await missing.json()).toEqual({
+			error: 'page_missing',
+			placementId: FIXTURE.placement.back,
+			page: PAGES,
+			itemIndex: 0,
+		});
 		const whole = await order(named, 'o5');
 		expect(whole.status).toBe(201);
 		expect(fake.violations).toEqual([]);
@@ -223,6 +228,8 @@ describe('POST /v1/orders naming pages', () => {
 		expect(response.status).toBe(422);
 		expect(await response.json()).toEqual({
 			error: 'page_on_unpaged_placement',
+			placementId: FIXTURE.placement.front,
+			itemIndex: 0,
 		});
 	});
 });

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-24T00:44:38+00:00\n"
+"POT-Creation-Date: 2026-11-24T03:14:43+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: fi\n"
@@ -6322,7 +6322,7 @@ msgid "Proof by email after payment"
 msgstr "Vedos sähköpostitse maksun jälkeen"
 
 #. translators: 1: product name, 2: Pixonaut's refusal code
-#: src/Cart/AddToCart.php:820
+#: src/Cart/AddToCart.php:833
 #, php-format
 msgid ""
 "Customers cannot add \"%1$s\" to the cart: Pixonaut will not route its "
@@ -7742,7 +7742,7 @@ msgstr ""
 "suunnitelma menee uudelleen hyväksyttäväksi."
 
 #. translators: %s: product name
-#: src/Fulfilment/DesignChanged.php:198 src/Fulfilment/Fulfiller.php:800
+#: src/Fulfilment/DesignChanged.php:198 src/Fulfilment/Fulfiller.php:805
 #, php-format
 msgid ""
 "Pixonaut: the design for \"%s\" was changed in Pixonaut after it was "
@@ -7770,7 +7770,7 @@ msgid "Pixonaut: the design for \"%s\" was changed in Pixonaut."
 msgstr "Pixonaut: tuotteen ”%s” suunnitelmaa muutettiin Pixonautissa."
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/Fulfiller.php:110
+#: src/Fulfilment/Fulfiller.php:115
 #, php-format
 msgid ""
 "Pixonaut: \"%s\" was not sent to the printshop. A plugin or the theme holds "
@@ -7780,7 +7780,7 @@ msgstr ""
 "sen (pixonaut_wc_fulfilment_can_fulfil)."
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/Fulfiller.php:119
+#: src/Fulfilment/Fulfiller.php:124
 #, php-format
 msgid ""
 "Pixonaut: \"%s\" was not sent to the printshop. It was ordered under another "
@@ -7790,7 +7790,7 @@ msgstr ""
 "työtilassa kuin siinä, johon kauppa on nyt yhdistetty."
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/Fulfiller.php:194
+#: src/Fulfilment/Fulfiller.php:199
 #, php-format
 msgid ""
 "Pixonaut: \"%s\" was not sent to the printshop. An earlier attempt sent its "
@@ -7802,7 +7802,7 @@ msgstr ""
 "tilaus. Tarkista tilaus Pixonautissa."
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/Fulfiller.php:212
+#: src/Fulfilment/Fulfiller.php:217
 #, php-format
 msgid ""
 "Pixonaut: \"%s\" was not sent to the printshop. The line has no design for "
@@ -7812,7 +7812,7 @@ msgstr ""
 "suunnitelma yhdeltä sen puolista."
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/Fulfiller.php:265
+#: src/Fulfilment/Fulfiller.php:270
 #, php-format
 msgid ""
 "Pixonaut: \"%s\" was not sent to the printshop. The line does not record how "
@@ -7822,7 +7822,7 @@ msgstr ""
 "miten asiakas hyväksyi suunnitelman."
 
 #. translators: 1: product name of the order line, 2: Pixonaut order id.
-#: src/Fulfilment/Fulfiller.php:754
+#: src/Fulfilment/Fulfiller.php:759
 #, php-format
 msgid ""
 "Pixonaut: a Pixonaut automation already ordered \"%1$s\", as order %2$s. The "
@@ -7832,7 +7832,7 @@ msgstr ""
 "Kauppa otti kyseisen tilauksen hoitoonsa uuden tilauksen tekemisen sijaan."
 
 #. translators: 1: product name of the order line, 2: the reason Pixonaut gave.
-#: src/Fulfilment/Fulfiller.php:829
+#: src/Fulfilment/Fulfiller.php:834
 #, php-format
 msgid ""
 "Pixonaut: the printshop order for \"%1$s\" failed when it was placed: %2$s"
@@ -7840,12 +7840,12 @@ msgstr ""
 "Pixonaut: tuotteen ”%1$s” painotilaus epäonnistui, kun se tehtiin: %2$s"
 
 #. translators: Fills in %2$s of an order note when the printshop order failed without a reason. Ends a sentence; lower case.
-#: src/Fulfilment/Fulfiller.php:832 src/Fulfilment/OrderFailed.php:84
+#: src/Fulfilment/Fulfiller.php:837 src/Fulfilment/OrderFailed.php:84
 msgid "no reason given."
 msgstr "syytä ei annettu."
 
 #. translators: 1: product name of the order line, 2: the order status Pixonaut answered.
-#: src/Fulfilment/Fulfiller.php:847
+#: src/Fulfilment/Fulfiller.php:852
 #, php-format
 msgid ""
 "Pixonaut: the printshop order for \"%1$s\" was placed with the status "
@@ -8618,7 +8618,14 @@ msgstr ""
 "tai painotalo ei valmista sivuista koostuvia tuotteita. Tarkista tuotteen "
 "sivut ja painotalo Pixonautissa ja yritä sitten uudelleen."
 
-#: src/Fulfilment/RetryRefusal.php:94
+#: src/Fulfilment/RetryRefusal.php:96
+msgid ""
+"A page or the cover of the item was designed for another page, or for "
+"another number of pages, than it is ordered with. Check the item's designs "
+"in Pixonaut, then retry."
+msgstr "Tuotteen sivu tai kansi on suunniteltu eri sivulle tai eri sivumäärälle kuin millä tuote tilataan. Tarkista tuotteen suunnitelmat Pixonautissa ja yritä sitten uudelleen."
+
+#: src/Fulfilment/RetryRefusal.php:97
 msgid ""
 "The delivery address lacks the postcode the printshop needs. Add it to the "
 "order's shipping address, then retry."
@@ -8626,7 +8633,7 @@ msgstr ""
 "Toimitusosoitteesta puuttuu painotalon tarvitsema postinumero. Lisää se "
 "tilauksen toimitusosoitteeseen ja yritä sitten uudelleen."
 
-#: src/Fulfilment/RetryRefusal.php:95
+#: src/Fulfilment/RetryRefusal.php:98
 msgid ""
 "The saved address the order ships to is gone in Pixonaut. Check the order's "
 "shipping address, then retry."
@@ -10346,7 +10353,7 @@ msgid "Customers cannot open the designer for %1$s: %2$s"
 msgstr "Asiakkaat eivät voi avata suunnittelutyökalua tuotteelle %1$s: %2$s"
 
 #. translators: %s: how many of the product are in the cart, as a number. Short for pieces, after the size of a cart item: 1 pc, 2 pcs.
-#: src/Storefront/PersonaliseButton.php:519
+#: src/Storefront/PersonaliseButton.php:541
 #, php-format
 msgid "%s pc"
 msgid_plural "%s pcs"

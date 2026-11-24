@@ -1883,7 +1883,7 @@ export interface paths {
         put?: never;
         /**
          * Place an order of one or more items
-         * @description A secret key, an integration key, or a studio member holding `orders:create`. Places ONE order of the items in `items`, each the prints of one physical item (`prints`), or the approved designs they are made of (`designs`), with its `variant` and `quantity`; `recipient`, `shippingAddress` and `shipToAddressId` hold for the whole order, `externalRef` is your reference for the order and `items[].externalRef` for each item. Every item is checked as it is placed, and a refusal of any item refuses the order, answered with the refusal and `itemIndex`, the item's place in `items`. Each item goes to its blank's printshop, or for prints on no blank to the printshop its design was committed with, else its own `printshopId`, else the order's, else the workspace default. On a placement its blank prints as a range of pages, such as a notebook's inner pages, an item holds one print a page, each naming its `page`, and its printshop is handed them in the order one file holds them, by their placements' order on the blank and then by page; a printshop that makes no item of pages is refused `422 printshop_takes_no_pages`; `422 duplicate_page` and `422 page_missing` name a page named twice or left out, `422 page_count_out_of_range` a count off the placement's range or its steps, naming both, and `422 page_on_unpaged_placement` a page on a placement of one page. An item whose prints are still rendering waits `awaiting_prints`; the items of an order of several wait until every item has been placed, and the items bound for one printshop that takes several items in one order go to it together as one printshop order once their prints are done. A partner refusing an item is still a 201: the item is recorded as `failed`. A design has one live item, in any status but `failed` and `cancelled`, whoever ordered it: an item of a design that has one is refused `409 design_already_ordered`, naming the design, its live item and that item's order; `reorder: true` orders it again on purpose. The answer is the order, as `GET /v1/orders/{id}` reads it, its items in the order `items` named them. A repeat with the first request's `Idempotency-Key` is answered with the first order.
+         * @description A secret key, an integration key, or a studio member holding `orders:create`. Places ONE order of the items in `items`, each the prints of one physical item (`prints`), or the approved designs they are made of (`designs`), with its `variant` and `quantity`; `recipient`, `shippingAddress` and `shipToAddressId` hold for the whole order, `externalRef` is your reference for the order and `items[].externalRef` for each item. Every item is checked as it is placed, and a refusal of any item refuses the order, answered with the refusal and `itemIndex`, the item's place in `items`. Each item goes to its blank's printshop, or for prints on no blank to the printshop its design was committed with, else its own `printshopId`, else the order's, else the workspace default. On a placement its blank prints as a range of pages, such as a notebook's inner pages, an item holds one print a page, each naming its `page`, and its printshop is handed them in the order one file holds them, by their placements' order on the blank and then by page; a printshop that makes no item of pages is refused `422 printshop_takes_no_pages`; `422 duplicate_page` and `422 page_missing` name a page named twice or left out, `422 page_count_out_of_range` a count off the placement's range or its steps, naming both, `422 page_on_unpaged_placement` a page on a placement of one page, and `422 page_not_as_proofed` a design proofed as one page of a count (`POST /v1/proofs` with `page` and `pageCount`) held as another page or at another count, naming both, and `422 page_ordered_alone` such a design held on no placement printed as pages. A placement whose area changes with the item's page count, such as a photo book's cover, is printed at the area of the item's count, and a print there whose design was made at a count its area is another size at (`POST /v1/proofs` with `pageCount` alone), at no count, or on an item with no pages, is refused `422 cover_not_at_page_count`, naming the item's count and the design's. An item whose prints are still rendering waits `awaiting_prints`; the items of an order of several wait until every item has been placed, and the items bound for one printshop that takes several items in one order go to it together as one printshop order once their prints are done. A partner refusing an item is still a 201: the item is recorded as `failed`. A design has one live item, in any status but `failed` and `cancelled`, whoever ordered it: an item of a design that has one is refused `409 design_already_ordered`, naming the design, its live item and that item's order; `reorder: true` orders it again on purpose. The answer is the order, as `GET /v1/orders/{id}` reads it, its items in the order `items` named them. A repeat with the first request's `Idempotency-Key` is answered with the first order.
          */
         post: operations["orders.create"];
         delete?: never;
@@ -2209,7 +2209,7 @@ export interface paths {
         };
         /**
          * Read an order as its customer follows it
-         * @description Where the order has got to, how it ships once shipped, when it was placed, and the steps it took. A failed order that was sent again answers as the order that took its place (one that names it as replaced, or a later order of the same print, quantity, reference and variant), under this order's id. Never the printshop, its reference, why an order failed, the recipient or the fulfilment payload.
+         * @description Where the order has got to, how it ships once shipped, when it was placed, the steps it took, its items and its parcels. A failed order that was sent again answers as the order that took its place (one that names it as replaced, or a later order of the same print, quantity, reference and variant), under this order's id. Never the printshop, its reference, why an order failed, the recipient or the fulfilment payload.
          */
         get: operations["orders.progress.get"];
         put?: never;
@@ -2536,6 +2536,46 @@ export interface paths {
          * @description Each connection's id, name, adapter, whether it is active, whether it is the tenant's default printshop and whether its printshop has a catalogue, active first; a member is also answered its `counts`: the blanks it makes, its open orders and all its orders, `blanks` null without `blanks:read` and the order counts null without `orders:read`. `q` keeps the connections whose name holds it, case aside.
          */
         get: operations["printshopConnections.list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/proof-sets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Make a set of approved proofs
+         * @description Holds the proofs one approval made under one short reference, each with its side's key and its page, for a store's return address: a book proofed a page at a time hands back one reference however many pages it has. Every proof token must be this workspace's and live; the set expires with the first of them.
+         */
+        post: operations["proofSets.create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/proof-sets/{proofSet}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read a set of approved proofs
+         * @description Every proof of a set the hosted designer handed back to the store, each with its side's key and its page, by side as the link lists them and each side's pages from 1. Each `proofToken` commits its design as any proof token does. Refused `proof_set_expired` once the set has expired or a proof of it is gone.
+         */
+        get: operations["proofSets.get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -32357,6 +32397,13 @@ export interface operations {
                                     foldMm?: number;
                                     /** @description The tallest print the row takes, in millimetres. */
                                     heightMm: number;
+                                    /** @description Item page counts it holds at (a book's cover); omitted, all. */
+                                    pages?: {
+                                        /** @description Most pages. */
+                                        max: number;
+                                        /** @description Fewest pages. */
+                                        min: number;
+                                    };
                                     /** @description The row: a value for each `areasVaryBy` option, by option name. One area per row per placement. */
                                     row: {
                                         [key: string]: string;
@@ -33297,6 +33344,13 @@ export interface operations {
                                 foldMm?: number;
                                 /** @description The tallest print the row takes, in millimetres. */
                                 heightMm: number;
+                                /** @description Item page counts it holds at (a book's cover); omitted, all. */
+                                pages?: {
+                                    /** @description Most pages. */
+                                    max: number;
+                                    /** @description Fewest pages. */
+                                    min: number;
+                                };
                                 /** @description The row: a value for each `areasVaryBy` option, by option name. One area per row per placement. */
                                 row: {
                                     [key: string]: string;
@@ -34028,6 +34082,13 @@ export interface operations {
                                 /** @description How far in from the print's edge the product folds on the row, where that is the row's own, as a canvas on a thicker frame folds further in; 0 for a row that does not fold on a placement that does. Absent, the placement's. */
                                 foldMm?: number;
                                 heightMm: number;
+                                /** @description The item page counts this area holds at, such as a photo book's cover from 28 to 58 pages, whose spine grows with its pages. Absent, every count. */
+                                pages?: {
+                                    /** @description Most pages. */
+                                    max: number;
+                                    /** @description Fewest pages. */
+                                    min: number;
+                                };
                                 row: {
                                     [key: string]: string;
                                 };
@@ -36719,6 +36780,9 @@ export interface operations {
                         /** @description The tile's width in percent of the print area's width, above 0 and at most 100; the tile keeps the template's shape. A tile that would print under 10 mm on a side is drawn at 10 mm. */
                         size: number;
                     } | null;
+                } & {
+                    /** @description On a blank with a placement printed as pages, the item's page count this design, of another placement, is made at, such as a photo book's cover, whose area grows with the pages: one that placement is printed at. Kept with the design; an order is held to it. */
+                    pageCount?: number;
                 });
             };
         };
@@ -36844,7 +36908,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: idempotency_key_reused, invalid_idempotency_key, invalid_doc, invalid_fulfilment_payload, payload_too_large, missing_fulfilment_keys, spot_plate_required, design_not_stitchable, design_unreadable, unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, constraint_violation, unknown_placement, variant_not_of_blank, variant_row_invalid, variant_required, asset_map_too_large */
+            /** @description Refused: idempotency_key_reused, invalid_idempotency_key, invalid_doc, invalid_fulfilment_payload, payload_too_large, missing_fulfilment_keys, spot_plate_required, design_not_stitchable, design_unreadable, unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, constraint_violation, unknown_placement, variant_not_of_blank, variant_row_invalid, variant_required, page_on_unpaged_placement, page_required, page_count_out_of_range, asset_map_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -36858,6 +36922,8 @@ export interface operations {
                         bytes?: number;
                         /** @description Always sent with `spot_plate_required`. */
                         cause?: string;
+                        /** @description Always sent with `page_count_out_of_range`. */
+                        count?: number;
                         /** @description Always sent with `invalid_doc`. */
                         detail?: unknown;
                         error: string;
@@ -36879,14 +36945,22 @@ export interface operations {
                         }[];
                         /** @description The embroidery machine the design goes to. Always sent with `design_not_stitchable`, `design_unreadable`. */
                         machine?: string;
+                        /** @description Most pages. Always sent with `page_count_out_of_range`. */
+                        max?: number;
                         /** @description Always sent with `payload_too_large`, `asset_map_too_large`. */
                         maxBytes?: number;
+                        /** @description Fewest pages. Always sent with `page_count_out_of_range`. */
+                        min?: number;
                         /** @description Always sent with `missing_fulfilment_keys`. */
                         missing?: string[];
+                        /** @description Always sent with `page_on_unpaged_placement`, `page_required`, `page_count_out_of_range`. */
+                        placementId?: string;
                         /** @description Always sent with `design_not_stitchable`, `design_unreadable`, `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `variant_not_of_blank`, `variant_row_invalid`, `variant_required`. */
                         reason?: string;
                         /** @description Always sent with `spot_plate_required`. */
                         references?: string[];
+                        /** @description Pages added at a time, from `min`. Always sent with `page_count_out_of_range`. */
+                        step?: number;
                         /** @description Always sent with `variant_not_of_blank`. */
                         variant?: string;
                         /** @description Always sent with `constraint_violation`. */
@@ -37694,6 +37768,10 @@ export interface operations {
                             /** @description `link`: a designer link's page made it. `studio`: a member made it, in the studio or through an MCP key. `secret_key` and `publishable_key`: committed with one of your keys. `store`: committed by a connected store, with any key its site was given. */
                             kind: string;
                         };
+                        /** @description On a placement printed as pages, the page the design's proof was of (`page` on `POST /v1/proofs`); an order holds it as that page. Null for a design proofed as no page. */
+                        page: number | null;
+                        /** @description On a placement printed as pages, how many pages the shopper picked when the design was proofed (`pageCount` on `POST /v1/proofs`); an order holds it to that count. Null for a design proofed as no page. */
+                        pageCount: number | null;
                         /** @description When the design's own personal data was erased (`POST /v1/designs/{id}/erase-personal-data`), or null. An erased design's document holds none of the text or pictures its customer put in, and nothing more is printed, ordered or corrected from it. */
                         personalDataErasedAt: number | null;
                         /** @description The colours the shopper picked, by option name, `#rrggbb` each, such as `{"Colour": "#1b2a4a"}`, as the design was committed: a value of its blank that takes any colour is made in its pick. Null when none was picked. */
@@ -39487,6 +39565,10 @@ export interface operations {
                             /** @description `link`: a designer link's page made it. `studio`: a member made it, in the studio or through an MCP key. `secret_key` and `publishable_key`: committed with one of your keys. `store`: committed by a connected store, with any key its site was given. */
                             kind: string;
                         };
+                        /** @description On a placement printed as pages, the page the design's proof was of (`page` on `POST /v1/proofs`); an order holds it as that page. Null for a design proofed as no page. */
+                        page: number | null;
+                        /** @description On a placement printed as pages, how many pages the shopper picked when the design was proofed (`pageCount` on `POST /v1/proofs`); an order holds it to that count. Null for a design proofed as no page. */
+                        pageCount: number | null;
                         /** @description When the design's own personal data was erased (`POST /v1/designs/{id}/erase-personal-data`), or null. An erased design's document holds none of the text or pictures its customer put in, and nothing more is printed, ordered or corrected from it. */
                         personalDataErasedAt: number | null;
                         /** @description The colours the shopper picked, by option name, `#rrggbb` each, such as `{"Colour": "#1b2a4a"}`, as the design was committed: a value of its blank that takes any colour is made in its pick. Null when none was picked. */
@@ -41802,6 +41884,8 @@ export interface operations {
                         personalDataErasedAt: number | null;
                         printshopOrders: {
                             adapter: string;
+                            /** @description Whether its printshop cancels one item of it alone (Printify); `false` where a cancel stops the whole printshop order and every item in it. */
+                            cancelsItems: boolean;
                             /** @description The printshop's reference for it; `null` until the printshop answered with one. */
                             externalOrderRef: string | null;
                             id: string;
@@ -41975,7 +42059,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, embroidery_fee_unacknowledged, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, duplicate_page, page_missing, page_count_out_of_range, page_on_unpaged_placement, printshop_takes_no_pages, idempotency_key_reused, invalid_idempotency_key, payload_too_large */
+            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, embroidery_fee_unacknowledged, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, duplicate_page, page_missing, page_count_out_of_range, page_on_unpaged_placement, page_not_as_proofed, page_ordered_alone, cover_not_at_page_count, printshop_takes_no_pages, idempotency_key_reused, invalid_idempotency_key, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -41987,10 +42071,12 @@ export interface operations {
                         bytes?: number;
                         /** @description Always sent with `spot_plate_required`. */
                         cause?: string;
-                        /** @description Always sent with `page_count_out_of_range`. */
+                        /** @description Always sent with `page_count_out_of_range`, `page_not_as_proofed`. */
                         count?: number;
                         /** @description Always sent with `variant_not_of_design_row`. */
                         designId?: string;
+                        /** @description Always sent with `cover_not_at_page_count`. */
+                        designedAt?: number | null;
                         /** @description Always sent with `print_profile_unavailable`. */
                         detail?: string;
                         error: string;
@@ -42016,8 +42102,10 @@ export interface operations {
                                 name: string;
                             };
                         }[];
-                        /** @description The refused item's place in `items`, the first 0. Sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `missing_fulfilment_keys`, `postal_code_required`, `saved_address_not_found`, `spot_plate_required`, `print_profile_unavailable`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`, `print_without_placement`, `mixed_blanks`, `duplicate_placement`, `print_committed_elsewhere`, `printshop_cannot_combine`, `prints_disagree`, `duplicate_page`, `page_missing`, `page_count_out_of_range`, `page_on_unpaged_placement`, `printshop_takes_no_pages`. */
+                        /** @description The refused item's place in `items`, the first 0. Sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `missing_fulfilment_keys`, `postal_code_required`, `saved_address_not_found`, `spot_plate_required`, `print_profile_unavailable`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`, `print_without_placement`, `mixed_blanks`, `duplicate_placement`, `print_committed_elsewhere`, `printshop_cannot_combine`, `prints_disagree`, `duplicate_page`, `page_missing`, `page_count_out_of_range`, `page_on_unpaged_placement`, `page_not_as_proofed`, `page_ordered_alone`, `cover_not_at_page_count`, `printshop_takes_no_pages`. */
                         itemIndex?: number;
+                        /** @description Always sent with `cover_not_at_page_count`. */
+                        itemPageCount?: number | null;
                         /** @description Always sent with `prints_disagree`. */
                         key?: string;
                         /** @description Always sent with `print_exceeds_position`. */
@@ -42044,11 +42132,11 @@ export interface operations {
                         missing?: string[];
                         /** @description Always sent with `print_profile_unavailable`. */
                         outputProfile?: string;
-                        /** @description Always sent with `duplicate_page`, `page_missing`. */
+                        /** @description Always sent with `duplicate_page`, `page_missing`, `page_not_as_proofed`. */
                         page?: number;
                         /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, `technique_not_offered`, `placement_unfilled`, and may be sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
                         placement?: string;
-                        /** @description Always sent with `duplicate_placement`, `duplicate_page`, `page_missing`, `page_count_out_of_range`, `page_on_unpaged_placement`. */
+                        /** @description Always sent with `duplicate_placement`, `duplicate_page`, `page_missing`, `page_count_out_of_range`, `page_on_unpaged_placement`, `page_not_as_proofed`, `cover_not_at_page_count`. */
                         placementId?: string;
                         /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, and may be sent with `field_value_missing`. */
                         position?: string;
@@ -42063,6 +42151,10 @@ export interface operations {
                         };
                         /** @description Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`. */
                         printshop?: string;
+                        /** @description Always sent with `page_not_as_proofed`, `page_ordered_alone`. */
+                        proofedCount?: number;
+                        /** @description Always sent with `page_not_as_proofed`, `page_ordered_alone`. */
+                        proofedPage?: number;
                         /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`. */
                         reason?: string;
                         /** @description Always sent with `spot_plate_required`. */
@@ -42416,6 +42508,8 @@ export interface operations {
                         personalDataErasedAt: number | null;
                         printshopOrders: {
                             adapter: string;
+                            /** @description Whether its printshop cancels one item of it alone (Printify); `false` where a cancel stops the whole printshop order and every item in it. */
+                            cancelsItems: boolean;
                             /** @description The printshop's reference for it; `null` until the printshop answered with one. */
                             externalOrderRef: string | null;
                             id: string;
@@ -42843,6 +42937,8 @@ export interface operations {
                         personalDataErasedAt: number | null;
                         printshopOrders: {
                             adapter: string;
+                            /** @description Whether its printshop cancels one item of it alone (Printify); `false` where a cancel stops the whole printshop order and every item in it. */
+                            cancelsItems: boolean;
                             /** @description The printshop's reference for it; `null` until the printshop answered with one. */
                             externalOrderRef: string | null;
                             id: string;
@@ -43459,6 +43555,8 @@ export interface operations {
                         personalDataErasedAt: number | null;
                         printshopOrders: {
                             adapter: string;
+                            /** @description Whether its printshop cancels one item of it alone (Printify); `false` where a cancel stops the whole printshop order and every item in it. */
+                            cancelsItems: boolean;
                             /** @description The printshop's reference for it; `null` until the printshop answered with one. */
                             externalOrderRef: string | null;
                             id: string;
@@ -43946,6 +44044,8 @@ export interface operations {
                         personalDataErasedAt: number | null;
                         printshopOrders: {
                             adapter: string;
+                            /** @description Whether its printshop cancels one item of it alone (Printify); `false` where a cancel stops the whole printshop order and every item in it. */
+                            cancelsItems: boolean;
                             /** @description The printshop's reference for it; `null` until the printshop answered with one. */
                             externalOrderRef: string | null;
                             id: string;
@@ -44415,6 +44515,8 @@ export interface operations {
                         personalDataErasedAt: number | null;
                         printshopOrders: {
                             adapter: string;
+                            /** @description Whether its printshop cancels one item of it alone (Printify); `false` where a cancel stops the whole printshop order and every item in it. */
+                            cancelsItems: boolean;
                             /** @description The printshop's reference for it; `null` until the printshop answered with one. */
                             externalOrderRef: string | null;
                             id: string;
@@ -44907,6 +45009,8 @@ export interface operations {
                         personalDataErasedAt: number | null;
                         printshopOrders: {
                             adapter: string;
+                            /** @description Whether its printshop cancels one item of it alone (Printify); `false` where a cancel stops the whole printshop order and every item in it. */
+                            cancelsItems: boolean;
                             /** @description The printshop's reference for it; `null` until the printshop answered with one. */
                             externalOrderRef: string | null;
                             id: string;
@@ -45066,7 +45170,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, embroidery_fee_unacknowledged, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, duplicate_page, page_missing, page_count_out_of_range, page_on_unpaged_placement, printshop_takes_no_pages, reroute_blank_not_found, reroute_same_blank, print_not_of_order, print_not_mapped, print_mapped_twice, placement_not_of_blank, placement_taken, placement_name_differs, print_exceeds_placement, print_short_of_area, technique_differs, technique_unknown, payload_too_large */
+            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, embroidery_fee_unacknowledged, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, duplicate_page, page_missing, page_count_out_of_range, page_on_unpaged_placement, page_not_as_proofed, page_ordered_alone, cover_not_at_page_count, printshop_takes_no_pages, reroute_blank_not_found, reroute_same_blank, print_not_of_order, print_not_mapped, print_mapped_twice, placement_not_of_blank, placement_taken, placement_name_differs, print_exceeds_placement, print_short_of_area, technique_differs, technique_unknown, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -45083,10 +45187,12 @@ export interface operations {
                         bytes?: number;
                         /** @description Always sent with `spot_plate_required`. */
                         cause?: string;
-                        /** @description Always sent with `page_count_out_of_range`. */
+                        /** @description Always sent with `page_count_out_of_range`, `page_not_as_proofed`. */
                         count?: number;
                         /** @description Always sent with `variant_not_of_design_row`. */
                         designId?: string;
+                        /** @description Always sent with `cover_not_at_page_count`. */
+                        designedAt?: number | null;
                         /** @description Always sent with `print_profile_unavailable`. */
                         detail?: string;
                         error: string;
@@ -45112,6 +45218,8 @@ export interface operations {
                                 name: string;
                             };
                         }[];
+                        /** @description Always sent with `cover_not_at_page_count`. */
+                        itemPageCount?: number | null;
                         /** @description Always sent with `prints_disagree`. */
                         key?: string;
                         /** @description Always sent with `print_exceeds_position`, `print_exceeds_placement`. */
@@ -45140,11 +45248,11 @@ export interface operations {
                         named?: string;
                         /** @description Always sent with `print_profile_unavailable`. */
                         outputProfile?: string;
-                        /** @description Always sent with `duplicate_page`, `page_missing`. */
+                        /** @description Always sent with `duplicate_page`, `page_missing`, `page_not_as_proofed`. */
                         page?: number;
                         /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, `technique_not_offered`, `placement_unfilled`, `placement_taken`, `placement_name_differs`, `print_exceeds_placement`, `print_short_of_area`, `technique_differs`, `technique_unknown`, and may be sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
                         placement?: string;
-                        /** @description Always sent with `duplicate_placement`, `duplicate_page`, `page_missing`, `page_count_out_of_range`, `page_on_unpaged_placement`, `placement_not_of_blank`. */
+                        /** @description Always sent with `duplicate_placement`, `duplicate_page`, `page_missing`, `page_count_out_of_range`, `page_on_unpaged_placement`, `page_not_as_proofed`, `cover_not_at_page_count`, `placement_not_of_blank`. */
                         placementId?: string;
                         /** @description Always sent with `technique_differs`, `technique_unknown`. */
                         placementMethod?: string | null;
@@ -45165,6 +45273,10 @@ export interface operations {
                         };
                         /** @description Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`. */
                         printshop?: string;
+                        /** @description Always sent with `page_not_as_proofed`, `page_ordered_alone`. */
+                        proofedCount?: number;
+                        /** @description Always sent with `page_not_as_proofed`, `page_ordered_alone`. */
+                        proofedPage?: number;
                         /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`, `reroute_blank_not_found`, `reroute_same_blank`, `print_not_of_order`, `print_not_mapped`, `print_mapped_twice`, `placement_not_of_blank`, `placement_taken`, `placement_name_differs`, `print_exceeds_placement`, `print_short_of_area`, `technique_differs`, `technique_unknown`. */
                         reason?: string;
                         /** @description Always sent with `spot_plate_required`. */
@@ -45716,6 +45828,8 @@ export interface operations {
                         personalDataErasedAt: number | null;
                         printshopOrders: {
                             adapter: string;
+                            /** @description Whether its printshop cancels one item of it alone (Printify); `false` where a cancel stops the whole printshop order and every item in it. */
+                            cancelsItems: boolean;
                             /** @description The printshop's reference for it; `null` until the printshop answered with one. */
                             externalOrderRef: string | null;
                             id: string;
@@ -45875,7 +45989,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, embroidery_fee_unacknowledged, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, duplicate_page, page_missing, page_count_out_of_range, page_on_unpaged_placement, printshop_takes_no_pages, reroute_blank_not_found, reroute_same_blank, print_not_of_order, print_not_mapped, print_mapped_twice, placement_not_of_blank, placement_taken, placement_name_differs, print_exceeds_placement, print_short_of_area, technique_differs, technique_unknown, payload_too_large */
+            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, embroidery_fee_unacknowledged, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, duplicate_page, page_missing, page_count_out_of_range, page_on_unpaged_placement, page_not_as_proofed, page_ordered_alone, cover_not_at_page_count, printshop_takes_no_pages, reroute_blank_not_found, reroute_same_blank, print_not_of_order, print_not_mapped, print_mapped_twice, placement_not_of_blank, placement_taken, placement_name_differs, print_exceeds_placement, print_short_of_area, technique_differs, technique_unknown, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -45892,10 +46006,12 @@ export interface operations {
                         bytes?: number;
                         /** @description Always sent with `spot_plate_required`. */
                         cause?: string;
-                        /** @description Always sent with `page_count_out_of_range`. */
+                        /** @description Always sent with `page_count_out_of_range`, `page_not_as_proofed`. */
                         count?: number;
                         /** @description Always sent with `variant_not_of_design_row`. */
                         designId?: string;
+                        /** @description Always sent with `cover_not_at_page_count`. */
+                        designedAt?: number | null;
                         /** @description Always sent with `print_profile_unavailable`. */
                         detail?: string;
                         error: string;
@@ -45921,6 +46037,8 @@ export interface operations {
                                 name: string;
                             };
                         }[];
+                        /** @description Always sent with `cover_not_at_page_count`. */
+                        itemPageCount?: number | null;
                         /** @description Always sent with `prints_disagree`. */
                         key?: string;
                         /** @description Always sent with `print_exceeds_position`, `print_exceeds_placement`. */
@@ -45949,11 +46067,11 @@ export interface operations {
                         named?: string;
                         /** @description Always sent with `print_profile_unavailable`. */
                         outputProfile?: string;
-                        /** @description Always sent with `duplicate_page`, `page_missing`. */
+                        /** @description Always sent with `duplicate_page`, `page_missing`, `page_not_as_proofed`. */
                         page?: number;
                         /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, `technique_not_offered`, `placement_unfilled`, `placement_taken`, `placement_name_differs`, `print_exceeds_placement`, `print_short_of_area`, `technique_differs`, `technique_unknown`, and may be sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
                         placement?: string;
-                        /** @description Always sent with `duplicate_placement`, `duplicate_page`, `page_missing`, `page_count_out_of_range`, `page_on_unpaged_placement`, `placement_not_of_blank`. */
+                        /** @description Always sent with `duplicate_placement`, `duplicate_page`, `page_missing`, `page_count_out_of_range`, `page_on_unpaged_placement`, `page_not_as_proofed`, `cover_not_at_page_count`, `placement_not_of_blank`. */
                         placementId?: string;
                         /** @description Always sent with `technique_differs`, `technique_unknown`. */
                         placementMethod?: string | null;
@@ -45974,6 +46092,10 @@ export interface operations {
                         };
                         /** @description Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`. */
                         printshop?: string;
+                        /** @description Always sent with `page_not_as_proofed`, `page_ordered_alone`. */
+                        proofedCount?: number;
+                        /** @description Always sent with `page_not_as_proofed`, `page_ordered_alone`. */
+                        proofedPage?: number;
                         /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`, `reroute_blank_not_found`, `reroute_same_blank`, `print_not_of_order`, `print_not_mapped`, `print_mapped_twice`, `placement_not_of_blank`, `placement_taken`, `placement_name_differs`, `print_exceeds_placement`, `print_short_of_area`, `technique_differs`, `technique_unknown`. */
                         reason?: string;
                         /** @description Always sent with `spot_plate_required`. */
@@ -46356,6 +46478,8 @@ export interface operations {
                         personalDataErasedAt: number | null;
                         printshopOrders: {
                             adapter: string;
+                            /** @description Whether its printshop cancels one item of it alone (Printify); `false` where a cancel stops the whole printshop order and every item in it. */
+                            cancelsItems: boolean;
                             /** @description The printshop's reference for it; `null` until the printshop answered with one. */
                             externalOrderRef: string | null;
                             id: string;
@@ -46840,6 +46964,8 @@ export interface operations {
                         personalDataErasedAt: number | null;
                         printshopOrders: {
                             adapter: string;
+                            /** @description Whether its printshop cancels one item of it alone (Printify); `false` where a cancel stops the whole printshop order and every item in it. */
+                            cancelsItems: boolean;
                             /** @description The printshop's reference for it; `null` until the printshop answered with one. */
                             externalOrderRef: string | null;
                             id: string;
@@ -48935,7 +49061,21 @@ export interface operations {
                 content: {
                     "application/json": {
                         id: string;
-                        /** @description The order's parcels, the first made first: a section each, with how it ships and the items it holds. */
+                        /** @description The order's items, the first placed first: what each is, how many were ordered and where it has got to. Which of them a parcel holds, and how many, is in `parcels`. */
+                        items: {
+                            /** @description The design the item was made from. Its proof, `GET /v1/designs/{id}/proof`, is the item's picture, and the order's order-status link reads it. */
+                            designId: string;
+                            id: string;
+                            /** @description The blank the item is made on; `null` for prints on no blank. */
+                            name: string | null;
+                            /** @description The copies ordered. */
+                            quantity: number;
+                            /** @description Where the item has got to: its latest submission's status. */
+                            status: string;
+                            /** @description The variant's option values in the blank's order, such as `White · M`; `null` without a variant. */
+                            variant: string | null;
+                        }[];
+                        /** @description The order's parcels, the first made first: a section each, with how it ships and the items it holds. The order status page gives each its own section, `#parcel-<id>`, so a link to the page with that fragment opens at the parcel, as `parcel.shipped` names it. */
                         parcels: {
                             deliveredAt: string | null;
                             id: string;
@@ -49358,6 +49498,8 @@ export interface operations {
                         personalDataErasedAt: number | null;
                         printshopOrders: {
                             adapter: string;
+                            /** @description Whether its printshop cancels one item of it alone (Printify); `false` where a cancel stops the whole printshop order and every item in it. */
+                            cancelsItems: boolean;
                             /** @description The printshop's reference for it; `null` until the printshop answered with one. */
                             externalOrderRef: string | null;
                             id: string;
@@ -52941,6 +53083,8 @@ export interface operations {
                         personalDataErasedAt: number | null;
                         printshopOrders: {
                             adapter: string;
+                            /** @description Whether its printshop cancels one item of it alone (Printify); `false` where a cancel stops the whole printshop order and every item in it. */
+                            cancelsItems: boolean;
                             /** @description The printshop's reference for it; `null` until the printshop answered with one. */
                             externalOrderRef: string | null;
                             id: string;
@@ -53098,7 +53242,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, embroidery_fee_unacknowledged, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, duplicate_page, page_missing, page_count_out_of_range, page_on_unpaged_placement, printshop_takes_no_pages, idempotency_key_reused, invalid_idempotency_key, payload_too_large */
+            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, embroidery_fee_unacknowledged, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, duplicate_page, page_missing, page_count_out_of_range, page_on_unpaged_placement, page_not_as_proofed, page_ordered_alone, cover_not_at_page_count, printshop_takes_no_pages, idempotency_key_reused, invalid_idempotency_key, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -53110,10 +53254,12 @@ export interface operations {
                         bytes?: number;
                         /** @description Always sent with `spot_plate_required`. */
                         cause?: string;
-                        /** @description Always sent with `page_count_out_of_range`. */
+                        /** @description Always sent with `page_count_out_of_range`, `page_not_as_proofed`. */
                         count?: number;
                         /** @description Always sent with `variant_not_of_design_row`. */
                         designId?: string;
+                        /** @description Always sent with `cover_not_at_page_count`. */
+                        designedAt?: number | null;
                         /** @description Always sent with `print_profile_unavailable`. */
                         detail?: string;
                         error: string;
@@ -53139,6 +53285,8 @@ export interface operations {
                                 name: string;
                             };
                         }[];
+                        /** @description Always sent with `cover_not_at_page_count`. */
+                        itemPageCount?: number | null;
                         /** @description Always sent with `prints_disagree`. */
                         key?: string;
                         /** @description Always sent with `print_exceeds_position`. */
@@ -53165,11 +53313,11 @@ export interface operations {
                         missing?: string[];
                         /** @description Always sent with `print_profile_unavailable`. */
                         outputProfile?: string;
-                        /** @description Always sent with `duplicate_page`, `page_missing`. */
+                        /** @description Always sent with `duplicate_page`, `page_missing`, `page_not_as_proofed`. */
                         page?: number;
                         /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, `technique_not_offered`, `placement_unfilled`, and may be sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
                         placement?: string;
-                        /** @description Always sent with `duplicate_placement`, `duplicate_page`, `page_missing`, `page_count_out_of_range`, `page_on_unpaged_placement`. */
+                        /** @description Always sent with `duplicate_placement`, `duplicate_page`, `page_missing`, `page_count_out_of_range`, `page_on_unpaged_placement`, `page_not_as_proofed`, `cover_not_at_page_count`. */
                         placementId?: string;
                         /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, and may be sent with `field_value_missing`. */
                         position?: string;
@@ -53184,6 +53332,10 @@ export interface operations {
                         };
                         /** @description Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`. */
                         printshop?: string;
+                        /** @description Always sent with `page_not_as_proofed`, `page_ordered_alone`. */
+                        proofedCount?: number;
+                        /** @description Always sent with `page_not_as_proofed`, `page_ordered_alone`. */
+                        proofedPage?: number;
                         /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`. */
                         reason?: string;
                         /** @description Always sent with `spot_plate_required`. */
@@ -53680,6 +53832,13 @@ export interface operations {
                                     foldMm?: number;
                                     /** @description The tallest print the row takes, in millimetres. */
                                     heightMm: number;
+                                    /** @description Item page counts it holds at (a book's cover); omitted, all. */
+                                    pages?: {
+                                        /** @description Most pages. */
+                                        max: number;
+                                        /** @description Fewest pages. */
+                                        min: number;
+                                    };
                                     /** @description The row: a value for each `areasVaryBy` option, by option name. One area per row per placement. */
                                     row: {
                                         [key: string]: string;
@@ -54572,6 +54731,13 @@ export interface operations {
                                     foldMm?: number;
                                     /** @description The tallest print the row takes, in millimetres. */
                                     heightMm: number;
+                                    /** @description Item page counts it holds at (a book's cover); omitted, all. */
+                                    pages?: {
+                                        /** @description Most pages. */
+                                        max: number;
+                                        /** @description Fewest pages. */
+                                        min: number;
+                                    };
                                     /** @description The row: a value for each `areasVaryBy` option, by option name. One area per row per placement. */
                                     row: {
                                         [key: string]: string;
@@ -55558,6 +55724,248 @@ export interface operations {
             };
         };
     };
+    "proofSets.create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Every proof the shopper approved, in the order the store reads them: by side as the link lists them, each side's pages from 1. */
+                    proofs: {
+                        /** @description The side's key on a link of several sides; null on one side. */
+                        key: string | null;
+                        /** @description The page, from 1, on a side printed as pages; null otherwise. */
+                        page: number | null;
+                        proofToken: string;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            /** @description The set's reference */
+            201: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description When the set expires: with the first of its proofs to expire, in milliseconds since the Unix epoch. */
+                        expiresAt: number;
+                        /** @description The set's reference, for the store's return address: `GET /v1/proof-sets/{proofSet}` reads it with the store's key. */
+                        proofSet: string;
+                    };
+                };
+            };
+            /** @description Refused: bad_request */
+            400: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: unauthorized */
+            401: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: origin_forbidden, feature_disabled */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
+                        feature?: string;
+                    };
+                };
+            };
+            /** @description Refused: unknown_proof, not_found */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: proof_expired */
+            410: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: payload_too_large */
+            422: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        bytes?: number;
+                        error: string;
+                        /** @description Always sent with `payload_too_large`. */
+                        maxBytes?: number;
+                    };
+                };
+            };
+            /** @description Refused: rate_limited */
+            429: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: db_error. A request that failed unexpectedly answers as text instead. */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                    "text/plain": "Internal Server Error";
+                };
+            };
+        };
+    };
+    "proofSets.get": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The set's reference. */
+                proofSet: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The set's proofs */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description When the set expires: with the first of its proofs to expire. */
+                        expiresAt: number;
+                        proofs: {
+                            /** @description When the proof and its token expire, in milliseconds since the Unix epoch. */
+                            expiresAt: number;
+                            /** @description The side's key; null on a link of one side. */
+                            key: string | null;
+                            /** @description The page, from 1, on a side printed as pages; else null. */
+                            page: number | null;
+                            /** @description Commits the design of this side or page: `POST /v1/designs` with it. */
+                            proofToken: string;
+                            proofUrl: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Refused: unauthorized */
+            401: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: origin_forbidden, secret_key_required, feature_disabled, forbidden */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
+                        feature?: string;
+                    };
+                };
+            };
+            /** @description Refused: unknown_proof_set */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: proof_set_expired */
+            410: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: db_error. A request that failed unexpectedly answers as text instead. */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                    "text/plain": "Internal Server Error";
+                };
+            };
+        };
+    };
     "proofs.create": {
         parameters: {
             query?: {
@@ -55629,9 +56037,9 @@ export interface operations {
                         size: number;
                     } | null;
                 } & {
-                    /** @description On a placement printed as pages, the page this proof is of, from 1. */
+                    /** @description On a placement printed as pages, the page this proof is of, from 1. Given with `pageCount`. */
                     page?: number;
-                    /** @description On a placement printed as pages, how many pages the shopper picked: one the placement is printed at, and through a designer link one its side offers. */
+                    /** @description How many pages the shopper picked: one the blank's placement printed as pages is printed at, and through a designer link one its side offers. With `page`, the count that page is one of; alone, on another placement of the blank, the count the item is made at, such as a photo book's cover, whose area grows with its pages. */
                     pageCount?: number;
                 } & {
                     /** @description The view of the blank's placement the customer previewed the proof in, by id. Kept with the proof and read with the design's proof as `proofViewId`, for display only. */
@@ -55722,7 +56130,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: constraint_violation, unknown_placement, variant_not_of_blank, variant_row_invalid, asset_map_too_large, page_on_unpaged_placement, page_count_out_of_range, payload_too_large */
+            /** @description Refused: constraint_violation, unknown_placement, variant_not_of_blank, variant_row_invalid, asset_map_too_large, page_on_unpaged_placement, page_required, page_count_out_of_range, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -55741,7 +56149,7 @@ export interface operations {
                         maxBytes?: number;
                         /** @description Fewest pages. Always sent with `page_count_out_of_range`. */
                         min?: number;
-                        /** @description Always sent with `page_on_unpaged_placement`, `page_count_out_of_range`. */
+                        /** @description Always sent with `page_on_unpaged_placement`, `page_required`, `page_count_out_of_range`. */
                         placementId?: string;
                         /** @description Always sent with `variant_not_of_blank`, `variant_row_invalid`. */
                         reason?: string;
@@ -59310,6 +59718,8 @@ export interface operations {
             query?: {
                 blankId?: string;
                 placementId?: string;
+                /** @description The item's page count, on a blank with a placement printed as pages: a placement whose area changes with it, such as a photo book's cover, is answered at that count. */
+                pageCount?: number;
             };
             header?: never;
             path: {

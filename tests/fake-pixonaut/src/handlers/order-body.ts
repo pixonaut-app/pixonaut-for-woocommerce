@@ -166,6 +166,8 @@ export function orderBody(state: State, order: Order): Record<string, unknown> {
 			printshopConnectionId: printshopOrder.printshopId,
 			printshopName: printshopOrder.printshopName,
 			adapter: printshopOrder.adapter,
+			// A printshop of the fake's stops orders whole.
+			cancelsItems: false,
 			externalOrderRef: printshopOrder.externalOrderRef,
 			// The fake's printshops make an order in one place.
 			parts: [],

@@ -94,7 +94,7 @@ final class BookFulfilmentTest extends FulfilmentTestCase {
 				),
 				array( 'designId' => self::STANDING_ID ),
 			),
-			$this->order_bodies()[0]['designs'] ?? null
+			$this->order_bodies()[0]['items'][0]['designs'] ?? null
 		);
 		$this->assertSame( LineState::ORDERED, LineState::of( new WC_Order_Item_Product( $item->get_id() ) )->state() );
 	}
@@ -105,8 +105,12 @@ final class BookFulfilmentTest extends FulfilmentTestCase {
 		$this->recorder->json(
 			422,
 			array(
-				'error'    => 'page_not_as_proofed',
-				'designId' => 'd_pages#2',
+				'error'        => 'page_not_as_proofed',
+				'placementId'  => 'pages',
+				'page'         => 2,
+				'proofedPage'  => 1,
+				'proofedCount' => 2,
+				'itemIndex'    => 0,
 			)
 		);
 

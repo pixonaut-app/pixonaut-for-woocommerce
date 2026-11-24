@@ -115,45 +115,48 @@ export function refusePages(
 ): HandlerResult | null {
 	/** Each book's pages named, and its page count, by placement. */
 	const books = new Map<string, { named: Set<number>; pageCount: number }>();
+	const refused = (error: string, details: Record<string, unknown>) => ({
+		status: UNPROCESSABLE_STATUS,
+		body: { error, ...details },
+	});
 	for (const [index, print] of prints.entries()) {
 		const proof = findDesign(context.state, print.designId, storeId)?.proof;
 		const proofed = proof?.page;
 		const page = pages[index];
+		const placementId = proof?.placementId ?? '';
 		if (proofed === undefined) {
 			if (page !== undefined) {
-				return refusal(UNPROCESSABLE_STATUS, 'page_on_unpaged_placement');
+				return refused('page_on_unpaged_placement', { placementId });
 			}
 			continue;
 		}
-		if (page !== proofed.page) {
-			return {
-				status: UNPROCESSABLE_STATUS,
-				body: {
-					error: 'page_not_as_proofed',
-					designId: print.designId,
-					page: page ?? null,
-					proofedPage: proofed.page,
-				},
-			};
+		if (page === undefined) {
+			return refused('page_missing', { placementId, page: proofed.page });
 		}
-		const placement = proof?.placementId ?? '';
-		const book = books.get(placement) ?? {
+		const book = books.get(placementId) ?? {
 			named: new Set<number>(),
 			pageCount: proofed.pageCount,
 		};
-		if (book.pageCount !== proofed.pageCount) {
-			// Pages of one placement proofed at other counts are not one book.
-			return refusal(UNPROCESSABLE_STATUS, 'page_not_as_proofed');
+		// Pages of one placement proofed at other counts are not one book.
+		if (page !== proofed.page || book.pageCount !== proofed.pageCount) {
+			return refused('page_not_as_proofed', {
+				placementId,
+				page,
+				proofedPage: proofed.page,
+				proofedCount: proofed.pageCount,
+			});
 		}
 		if (book.named.has(page)) {
-			return refusal(UNPROCESSABLE_STATUS, 'duplicate_page');
+			return refused('duplicate_page', { placementId, page });
 		}
 		book.named.add(page);
-		books.set(placement, book);
+		books.set(placementId, book);
 	}
-	for (const book of books.values()) {
-		if (book.named.size !== book.pageCount) {
-			return refusal(UNPROCESSABLE_STATUS, 'page_missing');
+	for (const [placementId, book] of books) {
+		for (let page = 1; page <= book.pageCount; page++) {
+			if (!book.named.has(page)) {
+				return refused('page_missing', { placementId, page });
+			}
 		}
 	}
 	return null;

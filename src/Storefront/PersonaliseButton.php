@@ -11,6 +11,7 @@ namespace Pixonaut\WooCommerce\Storefront;
 
 use Closure;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
 use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use Pixonaut\WooCommerce\Api\Answers\ProofSet;
@@ -135,16 +136,6 @@ final class PersonaliseButton {
 	 * reads the same in every language.
 	 */
 	private const PAGE_NAME = '%1$s %2$d';
-
-	/**
-	 * Pixonaut's refusal of a proof set it did not make for this workspace.
-	 */
-	private const UNKNOWN_PROOF_SET = 'unknown_proof_set';
-
-	/**
-	 * Pixonaut's refusal of a proof set past its expiry, or one whose proof is gone.
-	 */
-	private const PROOF_SET_EXPIRED = 'proof_set_expired';
 
 	/**
 	 * The query argument naming the cart line whose product page opens with
@@ -856,10 +847,10 @@ final class PersonaliseButton {
 		try {
 			$set = ProofSet::get( $this->pixonaut, $proof_set );
 		} catch ( ApiException $error ) {
-			if ( self::UNKNOWN_PROOF_SET === $error->errorCode ) {
+			if ( ErrorCode::UNKNOWN_PROOF_SET === $error->errorCode ) {
 				return $this->unknown_visit();
 			}
-			if ( self::PROOF_SET_EXPIRED === $error->errorCode ) {
+			if ( ErrorCode::PROOF_SET_EXPIRED === $error->errorCode ) {
 				// Only the try kept for this set: another may be pending for the same product.
 				if ( null !== $kept && $this->visits->kept_for( $kept, $proof_set ) ) {
 					$this->visits->take( $kept );

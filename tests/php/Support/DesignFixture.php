@@ -76,6 +76,8 @@ final class DesignFixture {
 					'widthMm'  => self::WIDTH_MM,
 					'heightMm' => self::HEIGHT_MM,
 				),
+				'page'                 => null,
+				'pageCount'            => null,
 				'variantRow'           => null,
 				'externalRef'          => null,
 				'previewOpened'        => null,
