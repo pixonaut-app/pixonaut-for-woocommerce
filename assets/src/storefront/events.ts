@@ -1,5 +1,6 @@
 import { applyFilters, doAction } from '@wordpress/hooks';
 import type { Approved, MountOptions } from '../types/sdk';
+import type { DesignTokens } from './pages';
 
 /** Filters a side's mount options, targets included, before it mounts. */
 export const MOUNT_OPTIONS_FILTER = 'pixonaut.designer.mountOptions';
@@ -33,8 +34,9 @@ export type ApprovedDetail = SideContext & { result: Approved };
 export type BeforeSubmitDetail = {
 	productId: number;
 	form: HTMLFormElement;
-	/** Proof tokens by side key. */
-	designs: Record<string, string>;
+	/** Proof tokens by side key; a side printed as pages has its pages', in
+	 *  page order. */
+	designs: Record<string, DesignTokens>;
 };
 
 export type PriceDetail = {

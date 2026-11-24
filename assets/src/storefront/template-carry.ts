@@ -25,7 +25,7 @@ export function carryUnkeyedValues(
 	before: Values,
 ): void {
 	const now = designer.getState().values;
-	const keyed = keyedFields(designer);
+	const keyed = fieldKeys(designer);
 	for (const step of designer.getFormSchema().steps) {
 		for (const { layerId, prop } of step.fields) {
 			const given = before[layerId];
@@ -42,16 +42,17 @@ export function carryUnkeyedValues(
 	}
 }
 
-/** The fields the shown template gives a field key, as `<layerId>:<prop>`. */
-function keyedFields(designer: PixonautDesigner): Set<string> {
+/** The field key of each field the shown template gives one, by
+ *  `<layerId>:<prop>`. */
+export function fieldKeys(designer: PixonautDesigner): Map<string, string> {
 	const { layers } = designer.getTemplate() as { layers?: unknown };
-	const keyed = new Set<string>();
+	const keys = new Map<string, string>();
 	for (const layer of Array.isArray(layers) ? (layers as KeyedLayer[]) : []) {
 		for (const [prop, spec] of Object.entries(layer.props ?? {})) {
 			if (typeof spec?.fieldKey === 'string' && spec.fieldKey !== '') {
-				keyed.add(`${String(layer.id)}:${prop}`);
+				keys.set(`${String(layer.id)}:${prop}`, spec.fieldKey);
 			}
 		}
 	}
-	return keyed;
+	return keys;
 }

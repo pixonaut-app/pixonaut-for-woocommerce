@@ -46,6 +46,11 @@ final class DesignCheck {
 	public const PRINT_SIZE = 'print_size';
 
 	/**
+	 * The design is another page, or of a book of another page count, than the line holds it as.
+	 */
+	public const PAGES = 'pages';
+
+	/**
 	 * What does not match, or null when the design is what the side sells.
 	 *
 	 * @param Design      $design   The design, as Pixonaut answered it.
@@ -72,6 +77,50 @@ final class DesignCheck {
 			return self::PRINT_SIZE;
 		}
 		return null;
+	}
+
+	/**
+	 * Whether a design is the page a line holds it as, of a book of the
+	 * pages the line holds and the product is sold at.
+	 *
+	 * @param Design   $design The design, as Pixonaut answered it.
+	 * @param int|null $page   The page the line holds it as; null on a side of one design.
+	 * @param int      $held   How many pages the line holds of its side; 0 on a side of one design.
+	 * @param int|null $sold   The pages the design must be made for (`book_count()`); null for any.
+	 */
+	public static function pages_match( Design $design, ?int $page, int $held, ?int $sold ): bool {
+		if ( $design->page !== $page ) {
+			return false;
+		}
+		if ( null !== $page && ( $design->page_count !== $held || ! self::count_sold( $held, $sold ) ) ) {
+			return false;
+		}
+		// A cover is made for a book of a count too.
+		return null === $design->page_count || self::count_sold( $design->page_count, $sold );
+	}
+
+	/**
+	 * The page count each design of a line must be made for: the one sold,
+	 * else the one the line's sides printed as pages hold; null for none, and
+	 * for sides of different counts.
+	 *
+	 * @param int|null   $sold The pages the product or variation is sold at; null when it names none.
+	 * @param array<int> $held How many pages each side of the line holds; 0 for a side of one design.
+	 */
+	public static function book_count( ?int $sold, array $held ): ?int {
+		$counts = array_values( array_unique( array_filter( $held ) ) );
+		return $sold ?? ( 1 === count( $counts ) ? $counts[0] : null );
+	}
+
+	/**
+	 * Whether a book of a page count is what is sold: any count is where the
+	 * product or variation names none.
+	 *
+	 * @param int      $count The book's page count.
+	 * @param int|null $sold  The pages the product or variation is sold at; null when it names none.
+	 */
+	public static function count_sold( int $count, ?int $sold ): bool {
+		return null === $sold || $count === $sold;
 	}
 
 	/**

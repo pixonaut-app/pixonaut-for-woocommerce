@@ -145,6 +145,55 @@ final class DesignCheckTest extends TestCase {
 		$this->assertSame( DesignCheck::TEMPLATE, self::mismatch( array( 'templateBaseId' => 'mug' ) ) );
 	}
 
+	/**
+	 * @dataProvider pages
+	 *
+	 * @param int|null $page       The design's page.
+	 * @param int|null $page_count The design's page count.
+	 * @param int|null $slot_page         The page the line holds it as.
+	 * @param int      $held       The pages the line holds.
+	 * @param int|null $sold       The pages sold.
+	 * @param bool     $matches    Whether it is what the line holds.
+	 */
+	public function test_a_design_is_the_page_the_line_holds_of_the_book_sold( ?int $page, ?int $page_count, ?int $slot_page, int $held, ?int $sold, bool $matches ): void {
+		$design = Design::from_answer(
+			DesignFixture::design(
+				array(
+					'page'      => $page,
+					'pageCount' => $page_count,
+				)
+			)
+		);
+
+		$this->assertSame( $matches, DesignCheck::pages_match( $design, $slot_page, $held, $sold ) );
+	}
+
+	/**
+	 * @return array<string, array{int|null, int|null, int|null, int, int|null, bool}>
+	 */
+	public static function pages(): array {
+		return array(
+			'no pages at all'                => array( null, null, null, 0, null, true ),
+			'a product sold at no count'     => array( 2, 44, 2, 44, null, true ),
+			'the count sold'                 => array( 2, 44, 2, 44, 44, true ),
+			'another count than sold'        => array( 2, 60, 2, 60, 44, false ),
+			'a page of a longer book'        => array( 2, 60, 2, 44, 44, false ),
+			'another page'                   => array( 3, 44, 2, 44, 44, false ),
+			'one page alone of a book'       => array( 1, 44, null, 0, 44, false ),
+			'a whole design as a page'       => array( null, null, 1, 44, 44, false ),
+			'a cover made for the count'     => array( null, 44, null, 0, 44, true ),
+			'a cover made for another count' => array( null, 60, null, 0, 44, false ),
+			'a side proofed for no count'    => array( null, null, null, 0, 44, true ),
+		);
+	}
+
+	public function test_designs_are_made_for_the_count_sold_else_the_one_the_book_holds(): void {
+		$this->assertSame( 44, DesignCheck::book_count( 44, array( 0, 60 ) ) );
+		$this->assertSame( 60, DesignCheck::book_count( null, array( 0, 60, 60 ) ) );
+		$this->assertNull( DesignCheck::book_count( null, array( 44, 60 ) ) );
+		$this->assertNull( DesignCheck::book_count( null, array( 0 ) ) );
+	}
+
 	public function test_refuses_another_blank_or_placement(): void {
 		$this->assertSame( DesignCheck::BLANK, self::mismatch( array( 'blankId' => 'blank_hoodie' ) ) );
 		$this->assertSame( DesignCheck::BLANK, self::mismatch( array( 'blankId' => null ) ) );

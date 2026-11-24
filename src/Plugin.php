@@ -1386,7 +1386,7 @@ final class Plugin {
 	 * Each product's kept designer link.
 	 */
 	public function designer_links(): KeptDesignerLinks {
-		$this->designer_links ??= new KeptDesignerLinks( new DesignerLinks( $this->sdk(), new WcLogger() ), $this->designer_link_withdrawals(), $this->connection(), $this->settings(), $this->notices(), new WcLogger() );
+		$this->designer_links ??= new KeptDesignerLinks( new DesignerLinks( $this->sdk(), new WcLogger() ), $this->designer_link_withdrawals(), $this->connection(), $this->settings(), $this->notices(), new WcLogger(), fn ( string $blank_id ): array => $this->server_reads()->paged_placements( $blank_id ) );
 		return $this->designer_links;
 	}
 

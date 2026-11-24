@@ -11,7 +11,7 @@
 //
 // A test approves a side as a book of pages by adding `pages=<count>` (the
 // only side of a link of one side) or `pages[<key>]=<count>` to the approve
-// address. The approval then makes a proof per page, keeps every proof of the
+// address; else it makes as many as the link offers fewest. The approval then makes a proof per page, keeps every proof of the
 // approval as a proof set, and returns `proofSet` in place of tokens.
 import type { Context, Hono } from 'hono';
 import type { Fake } from './app';
@@ -162,7 +162,7 @@ export function registerHostedDesigner(app: Hono, fake: Fake): void {
 		const url = back(link, tripState(c));
 		const made: { key: string | null; proof: Proof }[] = [];
 		for (const side of link.sides) {
-			const pageCount = pagesAsked(c, side.key);
+			const pageCount = pagesAsked(c, side.key) ?? side.pages?.min;
 			const pages =
 				pageCount === undefined
 					? [undefined]

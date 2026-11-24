@@ -50,9 +50,18 @@ import {
 	shapeOf,
 	shapeOnceDrawn,
 } from './frame-shape';
+import {
+	carryPageValues,
+	type KeptPages,
+	keptPagesOf,
+	withKeptPages,
+} from './kept-pages';
 import { type KeptView, listsView, shownViewOf } from './kept-view';
 import { withStandIns } from './lent-parts';
 import {
+	type DesignTokens,
+	designTokens,
+	expiryOf,
 	nextPageCount,
 	pageCount,
 	pageCountsSold,
@@ -379,6 +388,9 @@ export class ProductDesigner {
 	/** The values of a side's designer removed to mount it again, which its
 	 *  next mount starts from, until one succeeds. */
 	private readonly keptValues = new Map<string, DesignerState['values']>();
+	/** The pages a side's designer last held, which its next mount takes, for
+	 *  good: a blank of one page in between keeps none itself. */
+	private readonly keptPages = new Map<string, KeptPages>();
 	/** The view each side's designer showed when it was destroyed to mount
 	 *  again, which the next one opens on. */
 	private readonly keptViews = new Map<string, KeptView>();
@@ -386,6 +398,9 @@ export class ProductDesigner {
 	/** Set for good once a lasting reason says the product cannot be
 	 *  personalised on this page. */
 	private unavailable = false;
+
+	/** The hidden token fields of each side printed as pages, a page each. */
+	private readonly pageFields = new Map<string, HTMLInputElement[]>();
 
 	/** Reasons already reported, so retries do not report them again. */
 	private readonly reported = new Set<UnavailableReason>();
@@ -553,6 +568,7 @@ export class ProductDesigner {
 	private async mountSide(sdk: PixonautSdk, side: string): Promise<void> {
 		await this.releasing;
 		const kept = this.keptValues.get(side);
+		const keptPages = kept === undefined ? undefined : this.keptPages.get(side);
 		// Shown from the start, rather than switched to once mounted.
 		const ref = variantRef(this.container, this.variations, this.variation);
 		const own = this.mounts[side];
@@ -579,7 +595,9 @@ export class ProductDesigner {
 				...(ref === undefined || !this.onBlank(side)
 					? {}
 					: { initialVariant: ref }),
-				...(kept === undefined ? {} : { initialValues: kept }),
+				...(kept === undefined
+					? {}
+					: { initialValues: withKeptPages(kept, keptPages, own) }),
 				// A side mounted again opens on the view it showed, where the
 				// views it is mounted with may hold it.
 				...(keptView === undefined ||
@@ -705,6 +723,9 @@ export class ProductDesigner {
 			followDrawnShape(frame, designer);
 		}
 		this.designers.set(side, designer);
+		if (keptPages !== undefined) {
+			this.carryPages(designer, keptPages);
+		}
 		try {
 			// Mounted without the server's reads, it starts at the fewest pages;
 			// a cover mounted before the pages hears of them now.
@@ -1487,6 +1508,7 @@ export class ProductDesigner {
 		// An upload under way lands in the values carried over.
 		await designer.settled();
 		const before = designer.getState().values;
+		const pages = keptPagesOf(designer);
 		try {
 			await designer.setTemplate(target.templateId);
 		} catch (error) {
@@ -1502,7 +1524,33 @@ export class ProductDesigner {
 			// The new template shows; a value it refused stays its own.
 			console.error('Pixonaut: a value could not be carried over.', error);
 		}
+		if (pages !== undefined) {
+			this.carryPages(designer, pages);
+		}
 		return true;
+	}
+
+	/** Gives each page of a book the values it held in `kept`, on the template
+	 *  the designer shows now. */
+	private carryPages(designer: PixonautDesigner, kept: KeptPages): void {
+		try {
+			carryPageValues(designer, kept, (count) => {
+				// Before the SDK reports it, so it is not taken for a pick.
+				this.pageCounts.set(designer, count);
+				designer.setPageCount(count);
+			});
+		} catch (error) {
+			console.error('Pixonaut: a page could not be carried over.', error);
+		}
+	}
+
+	/** Keeps what the customer designed on the side for its next mount. */
+	private keepDesign(side: string, designer: PixonautDesigner): void {
+		this.keptValues.set(side, designer.getState().values);
+		const pages = keptPagesOf(designer);
+		if (pages !== undefined) {
+			this.keptPages.set(side, pages);
+		}
 	}
 
 	/**
@@ -1537,7 +1585,7 @@ export class ProductDesigner {
 	): Promise<void> {
 		// An upload under way lands in the values the side mounts again with.
 		await designer.settled();
-		this.keptValues.set(side, designer.getState().values);
+		this.keepDesign(side, designer);
 		const keptView = shownViewOf(designer);
 		if (keptView === undefined) {
 			this.keptViews.delete(side);
@@ -1758,7 +1806,7 @@ export class ProductDesigner {
 			hidden.map(async ([side, designer]) => {
 				// An upload under way lands in the values the side mounts again with.
 				await designer.settled().catch(() => undefined);
-				this.keptValues.set(side, designer.getState().values);
+				this.keepDesign(side, designer);
 				this.destroyDesigner(designer);
 			}),
 		).then(() => releasing);
@@ -1813,7 +1861,7 @@ export class ProductDesigner {
 		let side = '';
 		let locked = false;
 		try {
-			let designs: Record<string, string> | null = null;
+			let designs: Record<string, DesignTokens> | null = null;
 			let values: Record<string, FieldValue[]> = {};
 			let opened: Record<string, boolean | null> = {};
 			// A variation chosen while the proofs were made has sides of its
@@ -1845,7 +1893,7 @@ export class ProductDesigner {
 					await this.saveEdit(this.edit);
 					return;
 				}
-				const proofs: Record<string, string> = {};
+				const proofs: Record<string, DesignTokens> = {};
 				const fields: Record<string, FieldValue[]> = {};
 				const previews: Record<string, boolean | null> = {};
 				for (const key of this.activeSides()) {
@@ -1854,8 +1902,12 @@ export class ProductDesigner {
 					if (designer === undefined) {
 						throw new Error(`Side ${side} is not mounted.`);
 					}
-					proofs[side] = (await this.approveSide(side, designer)).proofToken;
-					fields[side] = fieldValues(designer);
+					const tokens = designTokens(await this.approveSide(side, designer));
+					proofs[side] = tokens;
+					// The form holds the page shown alone, whose values are no
+					// other page's: a book lists none.
+					fields[side] =
+						typeof tokens === 'string' ? fieldValues(designer) : [];
 					// Only the box has a preview to open before it.
 					previews[side] = this.approval?.ticked()
 						? designer.wasPreviewOpened()
@@ -1875,8 +1927,8 @@ export class ProductDesigner {
 			this.approved.clear();
 			// A side the variation does not have sends no design.
 			this.clearDesignFields();
-			for (const [key, token] of Object.entries(designs)) {
-				this.designField(key).value = token;
+			for (const [key, tokens] of Object.entries(designs)) {
+				this.writeTokens(key, tokens);
 				this.hiddenField(`${FIELD_VALUES_NAME}[${key}]`).value = JSON.stringify(
 					values[key] ?? [],
 				);
@@ -1916,7 +1968,7 @@ export class ProductDesigner {
 		const kept = this.approved.get(side);
 		if (
 			kept !== undefined &&
-			kept.expiresAt - PROOF_EXPIRY_MARGIN_MS > Date.now()
+			expiryOf(kept) - PROOF_EXPIRY_MARGIN_MS > Date.now()
 		) {
 			return kept;
 		}
@@ -2049,7 +2101,7 @@ export class ProductDesigner {
 			throw new Error(`Side ${side} could not be opened again.`);
 		}
 		await designer.settled();
-		this.keptValues.set(side, designer.getState().values);
+		this.keepDesign(side, designer);
 		this.destroyDesigner(designer);
 		this.designers.delete(side);
 		this.mounts[side] = options;
@@ -2335,7 +2387,7 @@ export class ProductDesigner {
 	 *  preview the SDK no longer takes them from the printed inputs. */
 	private keepValues(): void {
 		for (const [side, designer] of this.designers) {
-			this.keptValues.set(side, designer.getState().values);
+			this.keepDesign(side, designer);
 		}
 	}
 
@@ -2419,10 +2471,31 @@ export class ProductDesigner {
 
 	private clearDesignFields(): void {
 		for (const key of Object.keys(this.mounts)) {
-			this.designField(key).value = '';
+			this.writeTokens(key, '');
 			this.hiddenField(`${FIELD_VALUES_NAME}[${key}]`).value = '';
 			this.hiddenField(`${PREVIEW_OPENED_NAME}[${key}]`).value = '';
 		}
+	}
+
+	/** Writes a side's proof token into its hidden field, or the tokens of a
+	 *  side printed as pages into a field per page, `[1]` for the first, the
+	 *  side's own sent with the form only when it holds the token. */
+	private writeTokens(side: string, tokens: DesignTokens): void {
+		const own = this.designField(side);
+		for (const field of this.pageFields.get(side) ?? []) {
+			field.remove();
+		}
+		const pages = typeof tokens === 'string' ? [] : tokens;
+		own.value = typeof tokens === 'string' ? tokens : '';
+		own.disabled = pages.length > 0;
+		this.pageFields.set(
+			side,
+			pages.map((token, index) => {
+				const field = this.hiddenField(`${own.name}[${index + 1}]`);
+				field.value = token;
+				return field;
+			}),
+		);
 	}
 
 	/** The side's hidden token field, added when a theme's form left it out. */

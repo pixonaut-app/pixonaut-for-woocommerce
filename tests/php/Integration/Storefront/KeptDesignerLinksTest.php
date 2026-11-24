@@ -320,6 +320,7 @@ final class KeptDesignerLinksTest extends PersonalisedCartTestCase {
 			$this->plugin->settings(),
 			$this->plugin->notices(),
 			new WcLogger(),
+			static fn (): array => array(),
 			static function () use ( &$naps, $product_id, $minted ): void {
 				// The other request keeps the link while this one waits.
 				if ( 1 === ++$naps ) {

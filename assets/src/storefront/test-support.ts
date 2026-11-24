@@ -36,7 +36,12 @@ export function requestError(status: number, code: string): Error {
 }
 
 /** The side printed as pages, as the SDK reports it. */
-export type FakePages = { count: number; min: number; max: number };
+export type FakePages = {
+	count: number;
+	min: number;
+	max: number;
+	placementId?: string;
+};
 
 export type FakeDesigner = {
 	approve: ReturnType<typeof vi.fn>;
