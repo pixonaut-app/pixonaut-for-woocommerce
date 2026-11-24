@@ -248,7 +248,7 @@ final class ProductPrices {
 				),
 				'flag'            => array(
 					'type'        => array( 'string', 'null' ),
-					'description' => __( 'Why the rule cannot price it or suggests another price: margin, rule (a level of the rule changed), no_cost, unread, currency, rate_stale, no_step or sale; null when nothing does.', 'pixonaut-for-woocommerce' ),
+					'description' => __( 'Why the rule cannot price it or suggests another price: margin, rule (a level of the rule changed), no_cost, no_shipping (a price but no shipping to the store’s country), unread, currency, rate_stale, no_step or sale; null when nothing does.', 'pixonaut-for-woocommerce' ),
 				),
 				'flag_message'    => array( 'type' => array( 'string', 'null' ) ),
 				'rule_at'         => array(

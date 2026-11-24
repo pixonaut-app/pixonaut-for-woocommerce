@@ -165,7 +165,7 @@ final class MarginFloorTest extends PricingTestCase {
 		$this->plugin->settings()->set( Settings::PRICE_CURRENCY_BUFFER, '0' );
 		$this->plugin->settings()->set( Settings::PRICE_MARGIN_FLOOR, '30' );
 		$id = $this->simple_product( 'v_a3', '250' );
-		$this->script_costs( array( 'v_a3' => '20' ), null, 'EUR' );
+		$this->script_costs( array( 'v_a3' => '20' ), '0', 'EUR' );
 
 		// 230 SEK against 250: 8 %.
 		$this->pricing->refresh( $this->product( $id ) );

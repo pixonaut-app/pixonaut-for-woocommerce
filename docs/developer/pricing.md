@@ -18,7 +18,10 @@ integration key and the shop's base country, and reads each row as a
 `Pricing\VariantCost`: the product's price and the cheapest shipping, each
 with its currency, and how long the printshop says that shipping takes
 ([Delivery times](#delivery-times)). A variant the printshop publishes no price for has a cost
-without one.
+without one, and the rule prices nothing on it (`PriceState::FLAG_NO_COST`). A
+cost with a price and no shipping to the store's country is not priced either
+(`FLAG_NO_SHIPPING`): on the product alone, the variation would be sold as if
+shipping were free.
 
 Pixonaut reports the printshop's billing currency. `Pricing\CostConverter`
 turns a cost into the store's currency (`Pricing\StoreCost`): a part charged

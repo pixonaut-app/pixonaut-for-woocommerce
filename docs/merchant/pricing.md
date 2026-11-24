@@ -102,6 +102,8 @@ the sale price first.
 A row the rule cannot price says why, and keeps the price it has:
 
 - the printshop publishes no price for it;
+- the printshop gives a price but no shipping to your store's country:
+  priced without it, the variation would sell as if shipping were free;
 - its cost is in a currency there is no exchange rate for, or the exchange
   rate is over a week old (see [Costs in another currency](#costs-in-another-currency));
 - no price step lies between the lowest and the highest price.

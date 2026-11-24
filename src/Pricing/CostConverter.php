@@ -51,8 +51,9 @@ final class CostConverter {
 	/**
 	 * A cost in the store's currency: the product and its shipping, each
 	 * converted when it is charged in another currency. It prices nothing
-	 * without a cost, without a published price, without an exchange rate
-	 * for its currency, or with rates over a week old.
+	 * without a cost, without a published price, without a published
+	 * shipping, without an exchange rate for its currency, or with rates
+	 * over a week old.
 	 *
 	 * @param VariantCost|null $cost The cost as Pixonaut reported it.
 	 */
@@ -63,13 +64,13 @@ final class CostConverter {
 		if ( null === $cost->product ) {
 			return new StoreCost( null, PriceState::FLAG_NO_COST );
 		}
+		if ( null === $cost->shipping ) {
+			return new StoreCost( null, PriceState::FLAG_NO_SHIPPING );
+		}
 		$store     = get_woocommerce_currency();
 		$total     = 0;
 		$converted = false;
 		foreach ( array( array( $cost->product, $cost->currency ), array( $cost->shipping, $cost->shipping_currency ) ) as list( $amount, $currency ) ) {
-			if ( null === $amount ) {
-				continue;
-			}
 			if ( $currency === $store ) {
 				$total += $amount;
 				continue;

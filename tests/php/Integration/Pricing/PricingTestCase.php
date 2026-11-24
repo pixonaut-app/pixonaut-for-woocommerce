@@ -224,11 +224,11 @@ abstract class PricingTestCase extends WP_UnitTestCase {
 	 * Scripts the answer of one read of the blank's costs.
 	 *
 	 * @param array<string, string|null> $products Each variant's product price by ref; null for one the printshop publishes none for.
-	 * @param string|null                $shipping Every variant's shipping; null for none.
+	 * @param string|null                $shipping Every variant's shipping, 0 unless a test names one; null for none, which the rule prices nothing on.
 	 * @param string|null                $currency The costs' currency; the store's when null.
 	 * @param array<string, mixed>|null  $times    Every variant's `times`, as the answer writes them; null for a printshop that tells none.
 	 */
-	protected function script_costs( array $products, ?string $shipping = null, ?string $currency = null, ?array $times = null ): void {
+	protected function script_costs( array $products, ?string $shipping = '0', ?string $currency = null, ?array $times = null ): void {
 		$currency ??= get_woocommerce_currency();
 		$money      = static fn ( ?string $amount ): ?array => null === $amount ? null : array(
 			'amount'   => $amount,

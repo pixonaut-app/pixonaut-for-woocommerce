@@ -61,7 +61,7 @@ final class CurrencyConversionTest extends PricingTestCase {
 		$this->store_rule();
 		$this->plugin->settings()->set( Settings::PRICE_CURRENCY_BUFFER, '0' );
 		$id = $this->simple_product( 'v_mug', '' );
-		$this->script_costs( array( 'v_mug' => '23' ), null, 'USD' );
+		$this->script_costs( array( 'v_mug' => '23' ), '0', 'USD' );
 
 		$this->pricing->refresh( $this->product( $id ) );
 
@@ -84,8 +84,8 @@ final class CurrencyConversionTest extends PricingTestCase {
 
 	public function test_the_rates_are_read_once_a_day(): void {
 		$id = $this->simple_product( 'v_mug', '' );
-		$this->script_costs( array( 'v_mug' => '16.71' ), null, 'EUR' );
-		$this->script_costs( array( 'v_mug' => '16.71' ), null, 'EUR' );
+		$this->script_costs( array( 'v_mug' => '16.71' ), '0', 'EUR' );
+		$this->script_costs( array( 'v_mug' => '16.71' ), '0', 'EUR' );
 
 		$this->pricing->refresh( $this->product( $id ) );
 		$this->pricing->refresh( $this->product( $id ) );
@@ -170,7 +170,7 @@ final class CurrencyConversionTest extends PricingTestCase {
 		$id = $this->simple_product( 'v_mug', '300' );
 		// The source answers, but with a list of ten days ago.
 		$this->rates_date = gmdate( 'Y-m-d', $this->now - 10 * DAY_IN_SECONDS );
-		$this->script_costs( array( 'v_mug' => '16.71' ), null, 'EUR' );
+		$this->script_costs( array( 'v_mug' => '16.71' ), '0', 'EUR' );
 
 		$this->pricing->refresh( $this->product( $id ) );
 
@@ -216,7 +216,7 @@ final class CurrencyConversionTest extends PricingTestCase {
 	public function test_a_currency_without_a_rate_prices_nothing(): void {
 		$this->store_rule();
 		$id = $this->simple_product( 'v_mug', '300' );
-		$this->script_costs( array( 'v_mug' => '16.70' ), null, 'XTS' );
+		$this->script_costs( array( 'v_mug' => '16.70' ), '0', 'XTS' );
 
 		$this->pricing->refresh( $this->product( $id ) );
 		$this->assertSame( 0, $this->pricing->apply( $this->product( $id ) ) );
