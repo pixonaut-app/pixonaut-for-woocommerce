@@ -98,6 +98,8 @@ test('a mixed order ships its personalised items at different times and is never
 	// The first ships; the order stays open.
 	await ship(fake, firstLine, FIRST_TRACKING);
 	await runJobs(request);
+	// The item's event carries no tracking: the read of the order it queued finds its parcel's.
+	await runJobs(request);
 	const partly = await readOrder(request, orderId);
 	expect(partly.status).toBe('processing');
 	expect(partly.lines.map((l) => l.state)).toEqual(['shipped', 'ordered']);

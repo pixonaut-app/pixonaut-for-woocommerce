@@ -412,6 +412,7 @@ final class CatalogueProductLinkTest extends ProductPanelTestCase {
 					'productKind'      => null,
 					'hasImportedBlank' => null !== $imported,
 					'importedBlankId'  => $imported,
+					'madeIn'           => null,
 				),
 			),
 		);
