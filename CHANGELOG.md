@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.31.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.30.4...v1.31.0) (2026-11-24)
+
+
+### Features
+
+* **cart:** a book's pages come back as a proof set, and its order names each page ([#389](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/389)) ([2f81bf5](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/2f81bf5e009a1c1272018f7dc821be603dc47519)), closes [#388](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/388)
+* **fulfilment:** place one Pixonaut order per WooCommerce order, with an item per line ([#391](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/391)) ([1e001c2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/1e001c279438720a767516e4fcf6a9cc7927e16e))
+* **fulfilment:** tell the customer once per parcel, not once per line ([#381](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/381)) ([bad8946](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/bad8946526d0d2c8e7e5b4d7bb937b2c7474e80f)), closes [#379](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/379)
+* **pricing:** a book's price follows the page count the shopper chooses ([#387](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/387)) ([cffe208](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/cffe208ebc1962c47bf17fbab9d80234aac64a02)), closes [#386](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/386)
+
+
+### Bug Fixes
+
+* **e2e:** scroll to an edited design's photo until it draws ([#395](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/395)) ([3e81de2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/3e81de23991458920ec93e90c78bc6eca690b0c6))
+* **release:** build a tagged release's zips again, drop the check dispatch ([#385](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/385)) ([56d7a8a](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/56d7a8ad5037e64ed5835ae14cce3f436a193ada)), closes [#380](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/380)
+* **storefront:** a book keeps its page count and every page in both designers ([#396](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/396)) ([ae0648c](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/ae0648c12daa4359e68abf4b1639040f218ae5d7)), closes [#394](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/394)
+
 ## [1.30.4](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.30.3...v1.30.4) (2026-11-23)
 
 
