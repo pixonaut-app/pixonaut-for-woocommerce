@@ -11,6 +11,7 @@ namespace Pixonaut\WooCommerce\Fulfilment;
 
 use Pixonaut\WooCommerce\Api\Answers\Order;
 use Pixonaut\WooCommerce\Api\Answers\OrderDetail;
+use Pixonaut\WooCommerce\Api\Answers\OrderItem;
 use Pixonaut\WooCommerce\Api\Answers\OrderHistoryEntry;
 use Pixonaut\WooCommerce\Api\Answers\OrderRecipient;
 use Pixonaut\WooCommerce\Api\Answers\OrderShippingAddress;
@@ -48,14 +49,31 @@ final class AdoptedOrder {
 	}
 
 	/**
-	 * Whether the line may take an order on: an automation placed it, and it
-	 * makes the line's item as the customer bought it.
+	 * The live item a refusal names, when Pixonaut refused an order because
+	 * the design has one.
 	 *
-	 * @param LineState   $line  The line.
-	 * @param OrderDetail $order `GET /v1/orders/{id}`'s answer.
+	 * @param ApiException $error A refusal of `POST /v1/orders` or a retry.
+	 *
+	 * @return string|null The item's id; null when the refusal names none.
 	 */
-	public static function takes( LineState $line, OrderDetail $order ): bool {
-		return self::VIA_AUTOMATION === self::created( $order )?->via && self::fits( $line, $order->order );
+	public static function item_named_by( ApiException $error ): ?string {
+		$item_id = $error->details['itemId'] ?? null;
+		return ErrorCode::DESIGN_ALREADY_ORDERED === $error->errorCode && is_string( $item_id ) && '' !== $item_id ? $item_id : null;
+	}
+
+	/**
+	 * The item of an order the line may take on: an automation placed the
+	 * order, and the item makes the line's item as the customer bought it.
+	 *
+	 * @param LineState   $line    The line.
+	 * @param OrderDetail $order   `GET /v1/orders/{id}`'s answer.
+	 * @param string|null $item_id The item a refusal named; null for the order's single item.
+	 *
+	 * @return OrderItem|null Null when the line may not take it on.
+	 */
+	public static function takes( LineState $line, OrderDetail $order, ?string $item_id ): ?OrderItem {
+		$item = $order->order->item( $item_id, null );
+		return null !== $item && self::VIA_AUTOMATION === self::created( $order )?->via && self::fits( $line, $item ) ? $item : null;
 	}
 
 	/**
@@ -68,17 +86,17 @@ final class AdoptedOrder {
 	 * order holding one of the designs, so an order of the front alone, or of
 	 * fewer copies, is not one the line can take on.
 	 *
-	 * @param LineState $line  The line.
-	 * @param Order     $order The order.
+	 * @param LineState $line The line.
+	 * @param OrderItem $item The order's item.
 	 */
-	private static function fits( LineState $line, Order $order ): bool {
+	private static function fits( LineState $line, OrderItem $item ): bool {
 		$wanted = array();
 		foreach ( $line->sides() as $side ) {
 			$wanted[] = $line->side_ref( $side, LineState::SIDE_DESIGN_ID ) . '@' . $line->side_ref( $side, LineState::SIDE_REVISION );
 		}
 		$standing = array_map( static fn ( StandingSide $side ): string => $side->design_id, $line->standing() );
 		$held     = array();
-		foreach ( $order->prints as $print ) {
+		foreach ( $item->prints as $print ) {
 			// A fill print, of an optional placement the order left undesigned,
 			// is made from no design and holds no side of the line.
 			if ( null === $print->design_id ) {
@@ -99,21 +117,23 @@ final class AdoptedOrder {
 		$variant   = $line->ref( LineState::REF_VARIANT );
 		$printshop = $line->ref( LineState::REF_PRINTSHOP );
 		return $wanted === $held
-			&& max( 1, $line->item()->get_quantity() ) === $order->quantity
-			&& ( ! is_string( $variant ) || '' === $variant || $order->variant_ref === $variant )
-			&& ( ! is_string( $printshop ) || '' === $printshop || $order->printshop_connection_id === $printshop );
+			&& max( 1, $line->item()->get_quantity() ) === $item->quantity
+			&& ( ! is_string( $variant ) || '' === $variant || $item->variant_ref === $variant )
+			&& ( ! is_string( $printshop ) || '' === $printshop || $item->printshop_connection_id === $printshop );
 	}
 
 	/**
-	 * Stores the automation that placed an order the line takes on, and the
-	 * ref the order was placed under when that is not the line's. The caller
-	 * saves the line.
+	 * Stores the automation that placed an order the line takes on, the
+	 * line's item in it, and the ref the order was placed under when that is
+	 * not the line's. The caller saves the line.
 	 *
 	 * @param LineState   $line  The line, about to hold the order's id.
 	 * @param OrderDetail $order `GET /v1/orders/{id}`'s answer.
+	 * @param OrderItem   $item  The line's item in it.
 	 */
-	public static function record( LineState $line, OrderDetail $order ): void {
+	public static function record( LineState $line, OrderDetail $order, OrderItem $item ): void {
 		$line->set_ref( LineState::REF_ORDER_AUTOMATION, self::created( $order )?->automation->name ?? '' );
+		$line->set_ref( LineState::REF_ORDER_ITEM_ID, $item->id );
 		$ref = $order->order->external_ref;
 		$line->set_ref( LineState::REF_ORDER_EXTERNAL_REF, null !== $ref && $ref !== $line->ref( LineState::REF_EXTERNAL_REF ) ? $ref : null );
 	}

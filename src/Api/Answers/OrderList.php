@@ -14,15 +14,14 @@ use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\UnexpectedResponse;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
 
 /**
- * The fields of `GET /v1/orders` the store reads. A line's ref names at most
- * a few orders (the one it placed, and those a retry placed for it), so the
- * first page holds them all.
+ * The fields of `GET /v1/orders` the store reads. A ref names at most a few
+ * orders, so the first page holds them all.
  */
 final class OrderList {
 
 	/**
-	 * @param Order[] $orders `orders`.
-	 * @phpstan-param list<Order> $orders
+	 * @param OrderListRow[] $orders `orders`.
+	 * @phpstan-param list<OrderListRow> $orders
 	 */
 	public function __construct(
 		public readonly array $orders,
@@ -48,6 +47,6 @@ final class OrderList {
 	 * @throws UnexpectedResponse When a field is missing or of another type.
 	 */
 	public static function from_answer( array $data, string $path = '$' ): self {
-		return new self( Read::objects( $data, 'orders', $path, Order::from_answer( ... ) ) );
+		return new self( Read::objects( $data, 'orders', $path, OrderListRow::from_answer( ... ) ) );
 	}
 }

@@ -107,7 +107,7 @@ final class MadeInPixonautTest extends FulfilmentTestCase {
 		yield 'of fewer copies' => array( static fn ( array $order ): array => array( 'quantity' => 1 ) + $order );
 		yield 'of another revision' => array(
 			static function ( array $order ): array {
-				$order['prints'][0]['designRevision'] = self::REVISION + 1;
+				$order['items'][0]['prints'][0]['designRevision'] = self::REVISION + 1;
 				return $order;
 			},
 		);
@@ -156,7 +156,9 @@ final class MadeInPixonautTest extends FulfilmentTestCase {
 		$line = $this->line();
 		$line->set_ref( LineState::REF_PRINTSHOP, 'ps_signs' );
 		$line->save();
-		$this->answer_up_to_the_refusal()->json( 200, array( 'printshopConnectionId' => 'ps_signs' ) + $this->automation_order( 'submitted' ) );
+		$order                                     = $this->automation_order( 'submitted' );
+		$order['items'][0]['printshopConnectionId'] = 'ps_signs';
+		$this->answer_up_to_the_refusal()->json( 200, $order );
 
 		do_action( 'woocommerce_payment_complete', $this->order->get_id() );
 		ActionSchedulerRunner::run_pending( FulfilmentJobs::ACTION );
@@ -182,10 +184,10 @@ final class MadeInPixonautTest extends FulfilmentTestCase {
 	public function test_an_automation_order_of_every_side_standing_ones_included_is_taken_on(): void {
 		$this->stand_back();
 		$order             = $this->automation_order( 'submitted' );
-		$order['prints'][] = array(
+		$order['items'][0]['prints'][] = array(
 			'designId'       => self::STANDING_BACK,
 			'designRevision' => self::STANDING_REVISION,
-		) + $order['prints'][0];
+		) + $order['items'][0]['prints'][0];
 		$this->answer_up_to_the_refusal()->json( 200, $order );
 
 		do_action( 'woocommerce_payment_complete', $this->order->get_id() );
@@ -198,7 +200,7 @@ final class MadeInPixonautTest extends FulfilmentTestCase {
 
 	public function test_an_automation_order_with_a_fill_print_is_taken_on(): void {
 		$order             = $this->automation_order( 'submitted' );
-		$order['prints'][] = array(
+		$order['items'][0]['prints'][] = array(
 			'printId'         => 'prt_fill',
 			'placementId'     => 'sleeve',
 			'printedAs'       => 'Sleeve',
@@ -263,10 +265,10 @@ final class MadeInPixonautTest extends FulfilmentTestCase {
 				'quantity' => self::QUANTITY,
 			)
 		);
-		$order['prints'][0] = array(
+		$order['items'][0]['prints'][0] = array(
 			'designId'       => self::DESIGN,
 			'designRevision' => self::REVISION,
-		) + $order['prints'][0];
+		) + $order['items'][0]['prints'][0];
 		return FulfilmentAnswers::placed_by( $order, AdoptedOrder::VIA_AUTOMATION, self::AUTOMATION );
 	}
 

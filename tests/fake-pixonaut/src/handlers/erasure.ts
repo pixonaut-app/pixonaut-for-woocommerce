@@ -1,10 +1,11 @@
 // Erasing personal data: what a customer put into a design, and the delivery
 // an order was sent to. An erased design is never printed, ordered or retried
-// again (`409 design_erased`); an order is erased only once it has shipped,
-// failed or been cancelled.
+// again (`409 design_erased`); an order is erased only once each of its items has
+// shipped, failed or been cancelled.
 import { readDesign } from './designs';
 import { findDesign, wasDeleted } from './designs-store';
-import { FINAL_STATUSES, orderBody, pathOrder } from './orders';
+import { orderBody } from './order-body';
+import { orderFinal, pathOrder } from './order-model';
 import { callerOf, type Handler, refusal } from './types';
 
 const NO_CONTENT_STATUS = 204;
@@ -44,13 +45,15 @@ export const eraseOrder: Handler = (context) => {
 	if (order === undefined) {
 		return refusal(NOT_FOUND_STATUS, 'order_not_found');
 	}
-	if (!FINAL_STATUSES.includes(order.status)) {
+	if (!orderFinal(order)) {
 		return refusal(CONFLICT_STATUS, 'order_in_flight');
 	}
 	if (order.personalDataErasedAt === null) {
 		order.recipient = null;
 		order.shippingAddress = null;
-		order.lastError = null;
+		for (const item of order.items) {
+			item.lastError = null;
+		}
 		for (const entry of order.history) {
 			entry.reason = null;
 		}

@@ -16,7 +16,7 @@ use Pixonaut\WooCommerce\Tests\Support\ScriptedClient;
 use Pixonaut\WooCommerce\Tests\Unit\TestCase;
 use Pixonaut\WooCommerce\Vendor\Nyholm\Psr7\Response;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
-use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\OrdersUpdateRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\OrdersPrintshopOrdersUpdateRequest;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
 
 final class OrderTest extends TestCase {
@@ -33,96 +33,124 @@ final class OrderTest extends TestCase {
 		$this->sdk       = $this->transport->sdk( ScriptedClient::credentials(), new RecordingLogger() );
 	}
 
-	public function test_reads_the_fields_the_store_uses_of_a_listed_order(): void {
+	public function test_reads_the_fields_the_store_uses_of_an_order_and_its_item(): void {
 		$this->transport->json(
 			200,
-			FulfilmentAnswers::orders(
+			FulfilmentAnswers::order(
+				'o_1',
+				array( 'p_front' ),
+				self::REF,
 				array(
-					FulfilmentAnswers::order(
-						'o_1',
-						array( 'p_front' ),
-						self::REF,
-						array(
-							'status'                => 'queued',
-							'quantity'              => 2,
-							'variantRef'            => 'v_red_m',
-							'printshopConnectionId' => 'pc_1',
-							'hold'                  => array(
-								'reason'    => 'monthly_order_limit',
-								'limit'     => 25,
-								'periodEnd' => '2027-01-01T00:00:00Z',
-							),
-							'tracking'              => array( 'number' => 'PN1' ),
-							'recipient'             => array( 'name' => 'Ada Lovelace' ),
-							'shippingAddress'       => array(
-								'line1'   => 'Storgatan 1',
-								'city'    => 'Stockholm',
-								'country' => 'SE',
-							),
-						)
+					'status'                => 'queued',
+					'quantity'              => 2,
+					'variantRef'            => 'v_red_m',
+					'printshopConnectionId' => 'pc_1',
+					'hold'                  => array(
+						'reason'    => 'monthly_order_limit',
+						'limit'     => 25,
+						'periodEnd' => '2027-01-01T00:00:00Z',
+					),
+					'tracking'              => array( 'number' => 'PN1' ),
+					'recipient'             => array( 'name' => 'Ada Lovelace' ),
+					'shippingAddress'       => array(
+						'line1'   => 'Storgatan 1',
+						'city'    => 'Stockholm',
+						'country' => 'SE',
 					),
 				)
 			)
 		);
 
-		$orders = OrderList::under( $this->sdk, self::REF )->orders;
+		$order = OrderDetail::get( $this->sdk, 'o_1' )->order;
 
-		$this->assertStringEndsWith( '/v1/orders?externalRef=' . rawurlencode( self::REF ), $this->transport->sent[0]['url'] );
-		$this->assertCount( 1, $orders );
-		$order = $orders[0];
 		$this->assertSame( 'o_1', $order->id );
-		$this->assertSame( 'queued', $order->status );
+		$this->assertSame( 'open', $order->status );
 		$this->assertSame( self::REF, $order->external_ref );
-		$this->assertSame( 2, $order->quantity );
-		$this->assertSame( 'v_red_m', $order->variant_ref );
-		$this->assertSame( 'pc_1', $order->printshop_connection_id );
-		$this->assertSame( 'd_of_p_front', $order->prints[0]->design_id );
-		$this->assertSame( 1.0, $order->prints[0]->design_revision );
+		$item = $order->item( null, self::REF );
+		$this->assertNotNull( $item );
+		$this->assertSame( FulfilmentAnswers::item_id( 'o_1' ), $item->id );
+		$this->assertSame( 'queued', $item->status );
+		$this->assertSame( 2, $item->quantity );
+		$this->assertSame( 'v_red_m', $item->variant_ref );
+		$this->assertSame( 'pc_1', $item->printshop_connection_id );
+		$this->assertSame( 'po_' . $item->id, $item->printshop_order_id() );
+		$this->assertSame( 'd_of_p_front', $item->prints[0]->design_id );
+		$this->assertSame( 1.0, $item->prints[0]->design_revision );
 		$this->assertSame( array( 'monthly_order_limit', 25, '2027-01-01T00:00:00Z' ), array( $order->hold?->reason, $order->hold?->limit, $order->hold?->period_end ) );
-		$this->assertSame( array( 'PN1', null, null ), array( $order->tracking?->number, $order->tracking?->carrier, $order->tracking?->url ) );
+		$tracking = $order->shipped_parcel_of( $item->id )?->tracking;
+		$this->assertSame( array( 'PN1', null, null ), array( $tracking?->number, $tracking?->carrier, $tracking?->url ) );
 		$this->assertSame( array( 'Ada Lovelace', null, null ), array( $order->recipient?->name, $order->recipient?->email, $order->recipient?->phone ) );
 		$this->assertNull( $order->shipping_address?->postal_code );
 		$this->assertSame( 'Stockholm', $order->shipping_address?->city );
 		$this->assertNull( $order->ship_to );
 		$this->assertNull( $order->delivery );
-		$this->assertSame( 'queued', $order->as_sent['status'] ?? null );
+		$this->assertSame( 'open', $order->as_sent['status'] ?? null );
+	}
+
+	public function test_an_order_finds_a_lines_item_by_its_id_its_ref_or_as_its_only_item(): void {
+		$items = array(
+			FulfilmentAnswers::item( 'oi_front', array( 'p_front' ), self::REF ),
+			FulfilmentAnswers::item( 'oi_back', array( 'p_back' ), self::REF . ':2' ),
+		);
+		$order = Order::from_answer( FulfilmentAnswers::order_of_items( 'o_1', 'wc:site:order:7', $items ) );
+
+		$this->assertSame( 'oi_back', $order->item( 'oi_back', self::REF )?->id );
+		$this->assertSame( 'oi_front', $order->item( null, self::REF )?->id );
+		$this->assertNull( $order->item( 'oi_gone', self::REF ), 'An item id the line keeps is not looked for by ref.' );
+		$this->assertNull( $order->item( null, 'another-ref' ), 'An order of several items holds no item of another ref.' );
+		// An order placed for one line before orders held items: its item is the line's.
+		$alone = Order::from_answer( FulfilmentAnswers::order( 'o_2', array( 'p_front' ), self::REF ) );
+		$this->assertSame( FulfilmentAnswers::item_id( 'o_2' ), $alone->item( null, 'another-ref' )?->id );
+	}
+
+	public function test_reads_the_orders_listed_under_a_ref_with_their_items_refs(): void {
+		$this->transport->json( 200, FulfilmentAnswers::orders( array( FulfilmentAnswers::order( 'o_1', array( 'p_front' ), self::REF ) ) ) );
+
+		$orders = OrderList::under( $this->sdk, self::REF )->orders;
+
+		$this->assertStringEndsWith( '/v1/orders?externalRef=' . rawurlencode( self::REF ), $this->transport->sent[0]['url'] );
+		$this->assertCount( 1, $orders );
+		$this->assertSame( 'o_1', $orders[0]->id );
+		$this->assertSame( FulfilmentAnswers::item_id( 'o_1' ), $orders[0]->item_under( self::REF ) );
+		$this->assertNull( $orders[0]->item_under( 'another-ref' ) );
+		$this->assertSame( FulfilmentAnswers::item_id( 'o_1' ), $orders[0]->item_under( 'another-ref', true ), 'An order listed under the line\'s own ref is the line\'s.' );
 	}
 
 	public function test_a_fill_print_reads_without_a_design_or_revision(): void {
 		$order = FulfilmentAnswers::order( 'o_1', array( 'p_front' ), self::REF );
-		$fill  = $order['prints'][0];
+		$fill  = $order['items'][0]['prints'][0];
 		unset( $fill['designRevision'] );
-		$order['prints'][] = array(
+		$order['items'][0]['prints'][] = array(
 			'designId'   => null,
 			'fillColour' => '#ffffff',
 		) + $fill;
-		$this->transport->json( 200, FulfilmentAnswers::orders( array( $order ) ) );
+		$this->transport->json( 200, $order );
 
-		$prints = OrderList::under( $this->sdk, self::REF )->orders[0]->prints;
+		$prints = OrderDetail::get( $this->sdk, 'o_1' )->order->items[0]->prints;
 
 		$this->assertNull( $prints[1]->design_id );
 		$this->assertNull( $prints[1]->design_revision );
 	}
 
 	public function test_a_listed_order_without_a_field_the_store_does_not_use_reads(): void {
-		$order = FulfilmentAnswers::order( 'o_1', array( 'p_front' ), self::REF );
-		unset( $order['adapter'], $order['printshopAsPlaced'], $order['blank'] );
-		$this->transport->off_spec( self::answer( FulfilmentAnswers::orders( array( $order ) ) ) );
+		$listed = FulfilmentAnswers::orders( array( FulfilmentAnswers::order( 'o_1', array( 'p_front' ), self::REF ) ) );
+		unset( $listed['orders'][0]['printshopNames'], $listed['orders'][0]['items'][0]['blank'] );
+		$this->transport->off_spec( self::answer( $listed ) );
 
 		$this->assertSame( 'o_1', OrderList::under( $this->sdk, self::REF )->orders[0]->id );
 	}
 
 	public function test_an_order_without_a_field_the_store_reads_is_unexpected(): void {
 		$order = FulfilmentAnswers::order( 'o_1', array( 'p_front' ), self::REF );
-		unset( $order['quantity'] );
-		$this->transport->off_spec( self::answer( FulfilmentAnswers::orders( array( $order ) ) ) );
+		unset( $order['items'][0]['quantity'] );
+		$this->transport->off_spec( self::answer( $order ) );
 
 		try {
-			OrderList::under( $this->sdk, self::REF );
-			$this->fail( 'An order without its quantity was read.' );
+			OrderDetail::get( $this->sdk, 'o_1' );
+			$this->fail( 'An order without its item\'s quantity was read.' );
 		} catch ( ApiException $error ) {
 			$this->assertSame( ApiException::UNEXPECTED_RESPONSE, $error->errorCode );
-			$this->assertStringContainsString( '$.orders[0]: missing required field "quantity"', (string) $error->getPrevious()?->getMessage() );
+			$this->assertStringContainsString( '$.items[0]: missing required field "quantity"', (string) $error->getPrevious()?->getMessage() );
 		}
 	}
 
@@ -142,29 +170,43 @@ final class OrderTest extends TestCase {
 				'name' => 'Order approved designs',
 			)
 		);
-		unset( $read['reroutes'], $read['varnishLeftOut'] );
+		unset( $read['items'][0]['reroutes'], $read['items'][0]['varnishLeftOut'] );
 		$this->transport->off_spec( self::answer( $read ) );
 
 		$order = OrderDetail::get( $this->sdk, 'o_1' );
 
 		$this->assertStringEndsWith( '/v1/orders/o_1', $this->transport->sent[0]['url'] );
 		$this->assertSame( 'o_1', $order->order->id );
-		$this->assertTrue( $order->can_retry );
-		$this->assertSame( array( 'submitted', 'failed' ), $order->status_moves );
+		$this->assertTrue( $order->order->items[0]->can_retry );
+		$this->assertSame( array( 'submitted', 'failed' ), $order->order->items[0]->status_moves );
 		$this->assertSame( 'automation', $order->history[0]->via );
 		$this->assertSame( 'Order approved designs', $order->history[0]->automation?->name );
 		$this->assertSame( 'order.created', $order->history[0]->type );
-		$this->assertTrue( $order->order->as_sent['canRetry'] ?? null, 'The filter is handed the whole read, as sent.' );
+		$this->assertTrue( $order->order->as_sent['items'][0]['canRetry'] ?? null, 'The filter is handed the whole read, as sent.' );
 	}
 
-	public function test_a_move_sends_the_body_and_reads_the_answer(): void {
+	public function test_a_move_of_a_printshop_order_sends_the_body_and_reads_the_answer(): void {
 		$this->transport->json( 200, FulfilmentAnswers::order( 'o_1', array( 'p_front' ), self::REF, array( 'status' => 'shipped' ) ) );
 
-		$moved = Order::update( $this->sdk, 'o_1', new OrdersUpdateRequest( status: 'shipped' ) );
+		$moved = Order::update_printshop_order( $this->sdk, 'o_1', 'po_1', new OrdersPrintshopOrdersUpdateRequest( status: 'shipped' ) );
 
 		$this->assertSame( 'PATCH', $this->transport->sent[0]['method'] );
+		$this->assertStringEndsWith( '/v1/orders/o_1/printshop-orders/po_1', $this->transport->sent[0]['url'] );
 		$this->assertSame( array( 'status' => 'shipped' ), json_decode( (string) $this->transport->sent[0]['body'], true ) );
-		$this->assertSame( 'shipped', $moved->status );
+		$this->assertSame( 'shipped', $moved->items[0]->status );
+	}
+
+	public function test_a_retry_and_a_cancel_name_the_item(): void {
+		$this->transport
+			->json( 201, FulfilmentAnswers::order( 'o_1', array( 'p_front' ), self::REF, array( 'status' => 'awaiting_prints' ) ) )
+			->json( 200, FulfilmentAnswers::order( 'o_1', array( 'p_front' ), self::REF, array( 'status' => 'cancelled' ) ) + array( 'cancelledItemIds' => array( 'oi_1' ) ) );
+
+		Order::retry( $this->sdk, 'o_1', 'oi_1' );
+		Order::cancel_item( $this->sdk, 'o_1', 'oi_1' );
+
+		$this->assertSame( array( 'POST', 'POST' ), array_column( $this->transport->sent, 'method' ) );
+		$this->assertStringEndsWith( '/v1/orders/o_1/items/oi_1/retry', $this->transport->sent[0]['url'] );
+		$this->assertStringEndsWith( '/v1/orders/o_1/items/oi_1/cancel', $this->transport->sent[1]['url'] );
 	}
 
 	public function test_an_answer_that_is_not_an_object_is_unexpected(): void {

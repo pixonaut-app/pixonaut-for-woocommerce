@@ -205,7 +205,6 @@ use Pixonaut\WooCommerce\Fulfilment\OrderHeld;
 use Pixonaut\WooCommerce\Fulfilment\OrderReleased;
 use Pixonaut\WooCommerce\Fulfilment\OrderStatusChanged;
 use Pixonaut\WooCommerce\Fulfilment\OrderSubmitted;
-use Pixonaut\WooCommerce\Fulfilment\OrderTrackingChanged;
 use Pixonaut\WooCommerce\Fulfilment\Shipments;
 use Pixonaut\WooCommerce\Migrations\MigrationRunner;
 use Pixonaut\WooCommerce\Migrations\Migrations;
@@ -1094,21 +1093,18 @@ final class Plugin {
 	 * Handles webhook events, each type by its handler.
 	 */
 	public function webhook_processor(): Processor {
-		$failed                    = new OrderFailed( $this->order_event_lines() );
 		$cancelled                 = new OrderCancelled( $this->order_event_lines() );
-		$tracking_changed          = new OrderTrackingChanged( $this->order_event_lines() );
 		$this->webhook_processor ??= new Processor(
 			new EventStore(),
 			array(
 				OrderStatusChanged::TYPE      => array( $this->order_status_changed(), 'handle' ),
-				OrderFailed::TYPE             => array( $failed, 'handle' ),
+				OrderFailed::TYPE             => array( new OrderFailed( $this->order_event_lines() ), 'handle' ),
 				OrderHeld::TYPE               => array( new OrderHeld( $this->order_event_lines() ), 'handle' ),
-				OrderReleased::TYPE           => array( new OrderReleased( $this->order_event_lines(), $this->order_status_changed(), $failed, $cancelled ), 'handle' ),
+				OrderReleased::TYPE           => array( new OrderReleased( $this->order_event_lines(), $cancelled ), 'handle' ),
 				OrderCancelled::TYPE          => array( $cancelled, 'handle' ),
-				OrderSubmitted::TYPE          => array( new OrderSubmitted( $this->order_event_lines(), $this->order_status_changed(), $this->line_actions() ), 'handle' ),
+				OrderCancelled::ITEM_TYPE     => array( $cancelled, 'handle' ),
+				OrderSubmitted::TYPE          => array( new OrderSubmitted( $this->order_event_lines(), $this->line_actions() ), 'handle' ),
 				OrderDeliveryChanged::TYPE    => array( new OrderDeliveryChanged( $this->order_event_lines() ), 'handle' ),
-				OrderTrackingChanged::ADDED   => array( $tracking_changed, 'handle' ),
-				OrderTrackingChanged::CHANGED => array( $tracking_changed, 'handle' ),
 				DesignChanged::EDITED         => array( $this->design_changed(), 'handle' ),
 				DesignChanged::DELETED        => array( $this->design_changed(), 'handle' ),
 				DesignChanged::ERASED         => array( $this->design_changed(), 'handle' ),

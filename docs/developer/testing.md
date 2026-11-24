@@ -142,9 +142,9 @@ and changes nothing.
 | `POST /__fake/proofs` | `{store?, templateId?, blankId?, placementId?, printSize?, variant?, viewId?, lifetimeMs?}` | Mints a proof token as the storefront's SDK would, for the main store, the live template `mini-tee@2`, blank `blank_tee` and placement `front` unless named. `printSize` (`{widthMm, heightMm}`) defaults to the template fitted into the placement's default box; `null` makes a tampered proof without one. `variant` and `viewId` are kept with the proof, as the design's `proofVariant` and `proofViewId`. Answers `{proofToken, proofId, expiresAt, printSize}`; a proof can be committed for an hour of the fake's clock unless `lifetimeMs` says otherwise. |
 | `POST /__fake/designs` | `{store?, id?, revision?, status?, templateId?, blankId?, placementId?}` | Seeds a design for a store (the main store's when `store` is absent): `committed` at revision 1 by default, or `approved` (at its revision) or `rejected`, on a template of the store's tenant (its first live one by default) and optionally a blank and one of its placements. Answers the record: `{storeId, id, tenantId, revision, status, approvedRevision, consent, templateId, blankId, placementId, externalRef}` |
 | `GET /__fake/designs/<id>` | | Any store's design, as `POST /__fake/designs` answers it; `404` once it is deleted |
-| `POST /__fake/orders/fail` | `{reason?, times?}` | The next `times` orders placed (one by default) answer `201` with status `failed` and `lastError` `reason`, as when the printshop turns an order down |
-| `POST /__fake/orders/outcome-unknown` | `{times?}` | The next `times` orders placed (one by default) answer `201` with status `outcome_unknown`, as when the printshop's answer to the submission was lost. Arming it replaces an armed `orders/fail`, and the other way round |
-| `POST /__fake/orders/hold` | `{reason?, limit?, periodEnd?, times?}` | The next `times` orders placed (one by default) answer `201` with status `held` and `hold` `{reason, limit, periodEnd}` (`monthly_order_limit`, 25 and `2026-11-01T00:00:00.000Z` by default), as for a free workspace past its monthly order limit. Arming it replaces an armed `orders/fail` or `orders/outcome-unknown` |
+| `POST /__fake/orders/fail` | `{reason?, times?, itemExternalRef?}` | The next `times` items sent to their printshop (one by default), placed or retried, fail with `lastError` `reason`, as when the printshop turns an item down; with `itemExternalRef`, only items of that `externalRef` count. The order still answers `201` |
+| `POST /__fake/orders/outcome-unknown` | `{times?, itemExternalRef?}` | The next `times` items sent to their printshop (one by default), placed or retried, are `outcome_unknown`, as when the printshop's answer to the submission was lost; `itemExternalRef` picks them as for `orders/fail`. Arming it replaces an armed `orders/fail`, and the other way round |
+| `POST /__fake/orders/hold` | `{reason?, limit?, periodEnd?, times?}` | The next `times` orders placed (one by default) answer `201` with every item `held` and the order's `hold` `{reason, limit, periodEnd}` (`monthly_order_limit`, 25 and `2026-11-01T00:00:00.000Z` by default), as for a free workspace past its monthly order limit. Arming it replaces an armed `orders/fail` or `orders/outcome-unknown` |
 | `GET /__fake/requests` | | Every request since the reset: method, path, operation, status |
 | `GET /__fake/violations` | | Every contract violation since the reset |
 
@@ -219,9 +219,9 @@ project's `checkout` option sets the cookie.
 
 `tests/e2e/specs/journey.spec.ts` runs the whole loop on both projects:
 connect, link a product in wp-admin, personalise and add to cart as a guest,
-pay at the project's checkout, check the checkout started the line's job, run the jobs (approve, print, one grouped
-printshop order, also after a payment reported twice), move the order to
-`shipped` with `POST /__fake/orders/move`, and run the jobs again: the line
+pay at the project's checkout, check the checkout started the line's job, run the jobs (approve, print, one Pixonaut
+order with an item per line, also after a payment reported twice), move its
+items to `shipped` with `POST /__fake/orders/move`, and run the jobs again: the line
 is shipped and the order completed.
 
 ## Running in parallel
@@ -371,11 +371,11 @@ answers the same, and an approved design is refused `409 not_committed`.
 `personalDataErasedAt` and emits `design.personal_data_erased`; erasing it
 again answers it unchanged and emits nothing. A design the store deleted
 answers `204`. An erased design is refused `409 design_erased` by
-`POST /v1/orders` and `POST /v1/orders/{id}/retry`.
+`POST /v1/orders` and `POST /v1/orders/{id}/items/{itemId}/retry`.
 `POST /v1/orders/{id}/erase-personal-data` is refused `409 order_in_flight`
-until the order is `shipped`, `failed` or `cancelled`; then it clears the
-order's `recipient`, `shippingAddress` and failure reasons and sets
-`personalDataErasedAt`.
+until each of the order's items is `shipped`, `failed` or `cancelled`; then
+it clears the order's `recipient`, `shippingAddress` and its items' failure
+reasons and sets `personalDataErasedAt`.
 
 ## Designs
 
@@ -394,18 +394,34 @@ store's design answers `404`.
 
 ## Orders
 
-`POST /v1/orders` with `designs` makes a print of each design, finished at
-once, so the order goes on as an order of `prints` would; naming both or
-neither is `400`. A design with a live order (any status but `failed` and
+`POST /v1/orders` places one order of `items`. An item with `designs` makes
+a print of each design, finished at once, so it goes on as an item of
+`prints` would; naming both or neither, or no item at all, is `400`. A
+refusal of one item names it with `itemIndex`; a malformed request is
+refused whole. A design with a live item (any status but `failed` and
 `cancelled`) refuses another order `409 design_already_ordered`, naming the
-design and its newest live order, unless the body sends `reorder: true`. A
-test seeds a print that is still rendering straight into the fake's state
-(`seedPrint` in `tests/js/fake-pixonaut/support.ts`); an order of it is
-placed `awaiting_prints` and stays there: it is never handed to a
-printshop, `POST /v1/orders/{id}/cancel` cancels it at once, and
-`PATCH /v1/orders/{id}/delivery` gives it the new address as `carried`
-without asking its printshop. Every order
-the fake places answers `failureKind: null`.
+design, its newest live item (`itemId`) and that item's `orderId`, unless
+the item sends `reorder: true`. Items whose printshop answered alike go in
+one printshop order; the fake sends nothing to a printshop, and an item
+stays `submitted` until a test moves it. A test seeds a print that is still
+rendering straight into the fake's state (`seedPrint` in
+`tests/js/fake-pixonaut/support.ts`); an item of it is placed
+`awaiting_prints` and stays there: it is never handed to a printshop,
+`POST /v1/orders/{id}/items/{itemId}/cancel` cancels it at once, and
+`PATCH /v1/orders/{id}/delivery` gives the order the new address as
+`carried` while every item waits for its prints.
+
+`POST /v1/orders/{id}/items/{itemId}/retry` sends a failed item no printshop
+has again, as a new submission to the printshop it went to (`409
+retry_refused` otherwise); a failed print is drawn again and the item waits
+for it. `PATCH /v1/orders/{id}/printshop-orders/{printshopOrderId}` moves
+every item still in that printshop order. `POST
+/v1/orders/{id}/items/{itemId}/cancel` cancels the item alone while no
+printshop has it, else with every item sent in its printshop order, as a
+printshop that stops orders whole does; `POST /v1/orders/{id}/cancel`
+cancels every item not yet cancelled. An item `printed` or `shipped` is
+refused `409 order_at_printshop`. Every order the fake places answers
+`failureKind: null`.
 
 ## Webhook deliveries
 
@@ -454,9 +470,9 @@ adds others.
 | `POST /__fake/webhooks/retry` | `{}` | Sends every pending delivery again, with the same `id` and a fresh timestamp |
 | `POST /__fake/webhooks/drop` | `{store?, drop}` | While `drop` is `true`, an event emitted to the store is recorded in its event stream and its delivery `failed` at once, counted in `failedCount`, with nothing sent; pending and requeued deliveries are still sent on retry. Answers `{storeId, dropping}`; a reset stops dropping |
 | `GET /__fake/webhooks/deliveries` | | `{endpoints, deliveries, attempts}`: each endpoint with its `failedCount` and whether its store's deliveries are `dropping`, each delivery with its status, every request sent with its headers, body and the status it got |
-| `POST /__fake/orders/move` | `{orderId, printId?, externalRef?, from?, to?, tracking?, store?, order?, seed?}` | Moves an order (`printId` defaults to the lead print of an order the fake placed) along `submitted`, `queued`, `printed`, `shipped` (from `submitted` to `shipped` by default) and emits one `order.status_changed` per step, as `emit` does; the step to `shipped` carries `tracking` (`{carrier?, number, url?}`, a fixture tracking number when absent) |
+| `POST /__fake/orders/move` | `{orderId, itemId?, itemExternalRef?, printId?, externalRef?, from?, to?, tracking?, store?, order?, seed?}` | Moves items of an order along `submitted`, `queued`, `printed`, `shipped` (from `submitted` to `shipped` by default) and emits, as `emit` does, one `item.status_changed` per step of each item, then `order.status_changed` whenever the order's own status changes. `itemId`, `itemExternalRef`, `printId`, or an `externalRef` that is an item's, picks the items; without one every item not cancelled moves. For an order the fake placed, its items move in its state too, and the step to `shipped` puts them in a parcel with `tracking` (`{carrier?, number, url?}`, a fixture tracking number when absent); no parcel event is sent. An order the fake did not place is moved as one item, named by `itemId` or `printId` |
 | `POST /__fake/orders/held-event` | `{orderId, store?}` | Emits `order.held` for an order the fake placed held, as `emit` does |
-| `POST /__fake/orders/release` | `{orderId, releasedBy?, status?, store?, order?, seed?}` | Releases an order the fake placed held: moves it to `status` (`awaiting_prints` by default, the status Pixonaut releases to), clears its `hold`, records `order.released` in its history and emits `order.released` with `releasedBy` (`upgrade` by default, or `month_reset`) and no `order.status_changed` |
+| `POST /__fake/orders/release` | `{orderId, releasedBy?, status?, store?, order?, seed?}` | Releases an order the fake placed held: moves its held items to the item status `status` (`awaiting_prints` by default, the status Pixonaut releases to), clears its `hold`, records `order.released` in its history and emits `order.released` with `releasedBy` (`upgrade` by default, or `month_reset`) and the order's status, and no other event |
 | `POST /__fake/designs/edit` | `{design, store?}` | Corrects the store's design as the studio would: its `revision` goes up by one and any approval is cleared (`status` back to `committed`). Emits `design.edited` `{designId, revision}` and answers `{attempts}`. A rejected or erased design is refused |
 | `POST /__fake/designs/delete` | `{design, store?}` | Deletes the design (`GET /v1/designs/{id}` answers `404`), emits `design.deleted` `{designId}` and answers `{attempts}` |
 | `POST /__fake/designs/erase` | `{design, store?}` | Sets the design's `personalDataErasedAt` (no longer editable), emits `design.personal_data_erased` `{designId}` and answers `{attempts}` |
@@ -540,8 +556,8 @@ The `default` set (`tests/fake-pixonaut/src/fixtures.ts`; its ids and keys in
   with no placements yet. Every blank is `ready`: the fake imports
   nothing. Each placement is shown in views of the blank's
   mockup photos; the tee's front has a second, dark view. A print on a blank
-  goes to the blank's printshop; one on no blank to the printshop the order
-  names, else the workspace default. An order sent to a disconnected
+  goes to the blank's printshop; one on no blank to the printshop the item
+  names, else the workspace default. An item sent to a disconnected
   printshop nobody named is placed as `failed`; a named one, or a retry's,
   is refused with `printshop_disconnected`.
 - Variants (`GET /v1/blanks/{id}/variants`, refs in `FIXTURE.variant`): the
@@ -554,7 +570,7 @@ The `default` set (`tests/fake-pixonaut/src/fixtures.ts`; its ids and keys in
   and `GET /v1/blanks/{id}/variants`): `Färg` and `Storlek`, `Vit`, `Svart`
   and `Röd`, and the views `Framsida` and `Baksida`; everything else, every
   other language, and `GET /v1/blanks/{id}` itself read as written.
-  An order on a blank names its variant (`variant`): one of another blank is
+  An item on a blank names its variant (`variant`): one of another blank is
   refused `variant_not_of_blank`, a retired one `variant_retired`, and none
   `variant_required` unless the blank has only one, which is ordered.
 - Printshops `ps_main` ("Fixture Print AB", the workspace default) and

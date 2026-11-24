@@ -118,7 +118,8 @@ final class LineReader {
 	 */
 	public static function queue( int $item_id ): bool {
 		$args = self::args( $item_id, 1 );
-		return as_has_scheduled_action( self::ACTION, $args, self::GROUP ) || 0 !== as_enqueue_async_action( self::ACTION, $args, self::GROUP, true );
+		// Not `unique`: Action Scheduler would match any read of the group, so another line's read would drop this one.
+		return as_has_scheduled_action( self::ACTION, $args, self::GROUP ) || 0 !== as_enqueue_async_action( self::ACTION, $args, self::GROUP );
 	}
 
 	/**
@@ -169,7 +170,9 @@ final class LineReader {
 			return;
 		}
 		$line = LineState::of( $item );
-		if ( ( 1 === $attempt && in_array( $line->state(), LineState::FINAL, true ) ) || ! $this->design->belongs_here( $line ) ) {
+		// A line that shipped without tracking is read for its parcel's, and for nothing else.
+		$untracked = 1 === $attempt && LineState::SHIPPED === $line->state() && null === $line->ref( LineState::REF_TRACKING );
+		if ( ( 1 === $attempt && in_array( $line->state(), LineState::FINAL, true ) && ! $untracked ) || ! $this->design->belongs_here( $line ) ) {
 			return;
 		}
 		$order_id = $line->ref( LineState::REF_ORDER_ID );
@@ -178,6 +181,9 @@ final class LineReader {
 			if ( null !== $order ) {
 				$this->order_status->apply_read( $line, $order );
 			}
+		}
+		if ( $untracked ) {
+			return;
 		}
 		foreach ( LineState::of( $item )->sides() as $side ) {
 			$this->read_design( $item, $side );

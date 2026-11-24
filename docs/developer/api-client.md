@@ -130,9 +130,11 @@ Refs and keys are built by `Refs`, and always start `wc:<site>:`:
 |---|---|---|
 | `Refs::commit_key()` | `wc:<site>:commit:<sha256 of the proof token>` | `Idempotency-Key` of a design commit |
 | `Refs::cart_ref()` | `wc:<site>:cart:<line key>` | `externalRef` of a design while it is in a cart; the line key hashes the cart owner (the session's customer) and the line's proof tokens, so a repeated add from the same cart sends the same body and another cart never shares the ref |
-| `Refs::order_item_ref()` | `wc:<site>:order:<order id>:item:<item id>` | `externalRef` once the line is in a placed order, of its printshop order, and the approval's consent `ref` |
+| `Refs::order_item_ref()` | `wc:<site>:order:<order id>:item:<item id>` | `externalRef` once the line is in a placed order, of its item in the Pixonaut order, and the approval's consent `ref` |
+| `Refs::store_order_ref()` | `wc:<site>:order:<order id>` | `externalRef` of the Pixonaut order of a WooCommerce order's lines |
 | `Refs::print_key()` | `wc:<site>:print:<design id>:<revision>` | `Idempotency-Key` of a design's print, one per revision |
-| `Refs::order_key()` | `wc:<site>:item:<item id>` | `Idempotency-Key` of a line's printshop order |
+| `Refs::order_key()` | `wc:<site>:item:<item id>` | `Idempotency-Key` of the Pixonaut order of a line placed alone |
+| `Refs::order_lines_key()` | `wc:<site>:items:<item id>.<item id>…` | `Idempotency-Key` of the Pixonaut order of several lines placed together, hashed when longer than 255 characters |
 
 ## Hosts
 

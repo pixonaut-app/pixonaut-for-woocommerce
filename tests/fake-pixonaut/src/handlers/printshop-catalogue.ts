@@ -91,6 +91,8 @@ export const listCatalogueProducts: Handler = (context) => {
 					holds: { colours: null, sizes: null, variants: product.variantCount },
 					// The fake's printshop says no kind of product, as most do.
 					productKind: null,
+					// The fake's printshop tells no product's country of origin.
+					madeIn: null,
 					hasImportedBlank: imported !== undefined,
 					importedBlankId: imported?.id ?? null,
 				};

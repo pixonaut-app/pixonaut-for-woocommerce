@@ -1,19 +1,24 @@
 // Changing an order's address after it was sent (`PATCH
 // /v1/orders/{id}/delivery`). The fake's printshops answer at once: one that
 // takes address changes accepts every change, one that does not is refused
-// before it is asked. An order still waiting for its prints takes the change
-// without asking its printshop, which has not been sent it (`carried`). An order that has shipped, failed, been cancelled or
-// erased, whose outcome is unknown, or that its printshop is making is past
-// changing. The fake emits no `order.delivery_changed`: a test emits it
-// through the control API.
+// before it is asked. An order whose items all still wait for their prints
+// takes the change without asking a printshop, which has not been sent it
+// (`carried`). An order with an item that has shipped, failed, been cancelled,
+// whose outcome is unknown, or that its printshop is making, or an erased one,
+// is past changing. The fake emits no `order.delivery_changed`: a test emits
+// it through the control API.
 import type { State } from '../state';
+import { orderBody } from './order-body';
 import {
 	type Address,
+	AWAITING_PRINTS,
+	CANCELLED,
+	type Item,
 	type Order,
-	orderBody,
 	pathOrder,
 	type Recipient,
-} from './orders';
+	recordForEach,
+} from './order-model';
 import { type Handler, refusal } from './types';
 
 const NOT_FOUND_STATUS = 404;
@@ -35,8 +40,6 @@ const ACCEPTED = 'accepted';
 /** What a change to an order still waiting for its prints shows as: the
  *  printshop has not been sent it, so the order takes the address there. */
 const CARRIED = 'carried';
-/** The status of an order still waiting for its prints. */
-const AWAITING_PRINTS = 'awaiting_prints';
 
 type ChangeDeliveryRequest = {
 	recipient: Recipient;
@@ -49,23 +52,40 @@ export function deliveryChangeRefusal(
 	state: State,
 	order: Order,
 ): Record<string, unknown> | null {
-	if (
-		order.personalDataErasedAt !== null ||
-		PAST_ADDRESS_CHANGE.includes(order.status)
-	) {
+	const past = pastItem(order);
+	if (order.personalDataErasedAt !== null || past !== undefined) {
 		return {
 			code: 'order_past_address_change',
-			status: order.status,
+			status: past?.status ?? CANCELLED,
 			unanswered: false,
 		};
 	}
-	if (
-		order.status !== AWAITING_PRINTS &&
-		state.printshops.get(order.printshopId)?.acceptsAddressUpdates !== true
-	) {
+	if (refusingItem(state, order) !== undefined) {
 		return { code: 'address_change_not_accepted' };
 	}
 	return null;
+}
+
+/** The items a change of address still reaches: every one not cancelled. */
+function liveItems(order: Order): Item[] {
+	return order.items.filter((item) => item.status !== CANCELLED);
+}
+
+/** The first item past taking a new address; one when none is left. */
+function pastItem(order: Order): Item | { status: string } | undefined {
+	const live = liveItems(order);
+	return live.length === 0
+		? { status: CANCELLED }
+		: live.find((item) => PAST_ADDRESS_CHANGE.includes(item.status));
+}
+
+/** The first item sent to a printshop that takes no address changes. */
+function refusingItem(state: State, order: Order): Item | undefined {
+	return liveItems(order).find(
+		(item) =>
+			item.status !== AWAITING_PRINTS &&
+			state.printshops.get(item.printshopId)?.acceptsAddressUpdates !== true,
+	);
 }
 
 export const changeOrderDelivery: Handler = (context) => {
@@ -79,7 +99,7 @@ export const changeOrderDelivery: Handler = (context) => {
 			status: CONFLICT_STATUS,
 			body: {
 				error: 'order_past_address_change',
-				status: order.status,
+				status: refused.status,
 				words: null,
 			},
 		};
@@ -89,7 +109,7 @@ export const changeOrderDelivery: Handler = (context) => {
 			status: CONFLICT_STATUS,
 			body: {
 				error: 'address_change_not_accepted',
-				printshop: order.printshopName,
+				printshop: refusingItem(context.state, order)?.printshopName,
 			},
 		};
 	}
@@ -99,7 +119,11 @@ export const changeOrderDelivery: Handler = (context) => {
 	order.recipient = request.recipient;
 	order.shippingAddress = request.shippingAddress;
 	// No printshop is asked about an order it has not been sent.
-	const outcome = order.status === AWAITING_PRINTS ? CARRIED : ACCEPTED;
+	const outcome = liveItems(order).every(
+		(item) => item.status === AWAITING_PRINTS,
+	)
+		? CARRIED
+		: ACCEPTED;
 	order.delivery = { state: outcome, words: null, at: now };
 	order.deliveryChanges.push({
 		at: now,
@@ -108,16 +132,6 @@ export const changeOrderDelivery: Handler = (context) => {
 		outcome,
 		words: null,
 	});
-	order.updatedAt = now;
-	order.history.push({
-		seq: order.history.length + 1,
-		at: now,
-		type: 'order.delivery_changed',
-		status: order.status,
-		reason: null,
-		via: BY_STORE_KEY,
-		automation: null,
-		releasedBy: null,
-	});
+	recordForEach(order, now, { type: 'order.delivery_changed' });
 	return { status: 200, body: orderBody(context.state, order) };
 };

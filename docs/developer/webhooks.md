@@ -117,11 +117,15 @@ queues one job per line that is not `shipped` or `cancelled`
 (`pixonaut_wc_line_read`, `Fulfilment\LineReader`), 100 lines at a time
 (`LineReader::QUEUE_BATCH`); when a page is full it queues itself for the
 page after, so a large backlog is never queued in one request. Each read job
-reads the line's printshop order, when it has one, with `GET /v1/orders/{id}`,
-and the design of each side with `GET /v1/designs/{id}`. The order's `status`
-is applied as `order.status_changed` would apply it, its `history` giving the
-status before; the design's revision, a `404` and `personalDataErasedAt`
-as `design.edited`, `design.deleted` and `design.personal_data_erased` would.
+reads the line's Pixonaut order, when it has one, with `GET /v1/orders/{id}`,
+and the design of each side with `GET /v1/designs/{id}`. The `status` of the
+line's item is applied as `item.status_changed` would apply it, the item's
+entries in the order's `history` giving the status before, and a shipped
+line takes the tracking of the parcel its item left in; the design's
+revision, a `404` and `personalDataErasedAt` as `design.edited`,
+`design.deleted` and `design.personal_data_erased` would. The same job reads
+a line whose item shipped without tracking, and every line of an order
+`order.released` names.
 
 A read that fails (Pixonaut cannot be reached, answers an error, or the line
 keeps changing while a change is applied) is logged with the order item id
@@ -157,14 +161,13 @@ ones included.
 
 | Event | Handler |
 |---|---|
-| `order.status_changed` | `Fulfilment\OrderStatusChanged` |
-| `order.failed` | `Fulfilment\OrderFailed` |
+| `item.status_changed` | `Fulfilment\OrderStatusChanged` |
+| `item.failed` | `Fulfilment\OrderFailed` |
+| `item.submitted` | `Fulfilment\OrderSubmitted` |
+| `item.cancelled`, `order.cancelled` | `Fulfilment\OrderCancelled` |
 | `order.held` | `Fulfilment\OrderHeld` |
 | `order.released` | `Fulfilment\OrderReleased` |
-| `order.cancelled` | `Fulfilment\OrderCancelled` |
-| `order.submitted` | `Fulfilment\OrderSubmitted` |
 | `order.delivery_changed` | `Fulfilment\OrderDeliveryChanged` |
-| `order.tracking_added`, `order.tracking_changed` | `Fulfilment\OrderTrackingChanged` |
 | `design.edited`, `design.deleted`, `design.personal_data_erased` | `Fulfilment\DesignChanged` |
 | `design.approved` | `Approval\DesignApproved` |
 | `design.changes_requested` | `Approval\ChangesRequested` |
@@ -172,13 +175,34 @@ ones included.
 | `template.published`, `template.live_changed`, `template.deleted`, `blank.updated`, `blank.deleted`, `blank.restored` | `Catalogue\ProductRecheck` |
 | `share_link.revoked`, `share_link.regenerated` | `Storefront\DesignerLinkChanges` |
 
-### `order.status_changed`
+### Finding the lines
 
-- The line is found by the Pixonaut `orderId` it stored when it placed the
-  order (order item meta `_pixonaut_order_id`, kept in step with the line
-  state). An `orderId` the store holds no line for changes nothing.
-- A line is left alone when its `externalRef` differs from the event's, or
-  when it belongs to another workspace than the connected one.
+A WooCommerce order's Pixonaut lines are placed as one Pixonaut order, an
+item per line, so an order's events concern several lines
+(`Fulfilment\OrderEventLines`):
+
+- The lines are found by the Pixonaut `orderId` they stored when the order
+  was placed (order item meta `_pixonaut_order_id`, kept in step with the
+  line state). An `orderId` the store holds no line for changes nothing. A
+  line the index finds is acted on only when its own `orderId` ref matches,
+  and every save of a line brings the index back in step.
+- An `item.*` event names its item (`itemId`): only the line whose
+  `orderItemId` ref is that id is kept. A line placed before orders held
+  items, with an order of its own and no `orderItemId`, holds the order's
+  only item, so it is kept whatever item the event names. An `order.*` event
+  concerns every line holding the order.
+- A line is left alone when it belongs to another workspace than the
+  connected one, or when the event's `externalRef` (the order's, the store
+  order ref `wc:<site>:order:<order id>`) differs from the ref the line's
+  order was placed under: its `orderExternalRef` ref, else, for an order
+  placed for the line alone, the line's own `externalRef`.
+
+### `item.status_changed`
+
+The line follows its item's status; the order's own status (`held`, `open`,
+`partly_shipped`, `shipped`, `needs_attention`, `cancelled`, `done`) is not
+applied to any line.
+
 - A change with `via: "store_key"` is the echo of a change the store made
   with its own key, applied when it was made, and is ignored.
 - A change applies only when it moves the line on: its `previousStatus` is
@@ -190,15 +214,15 @@ ones included.
   deliveries in any order end in the same line state. The status applied is kept in the line's
   `orderStatus` ref.
 
-| Pixonaut status | Line state | Also |
+| Item status | Line state | Also |
 |---|---|---|
 | `held` | `ordered` | the order box shows "Held by Pixonaut", with why and when it goes ahead |
 | `awaiting_prints` | `ordered` | the order box shows "Waiting for prints" |
 | `submitted`, `queued` | `ordered` | |
 | `printed` | `ordered` | order note |
-| `shipped` | `shipped` | `tracking` (`carrier`, `number`, `url`) in the line's `tracking` ref, unless it holds newer tracking (see `order.tracking_added`), order note with it |
-| `failed` | unchanged | `order.failed` moves the line |
-| `outcome_unknown`, `cancelled` | unchanged | |
+| `shipped` | `shipped` | order note, with the line's tracking when it has some |
+| `outcome_unknown` | `needs_attention` | reason `outcome_unknown`, order note |
+| `failed`, `cancelled` | unchanged | `item.failed` and `item.cancelled` move the line |
 | any other | unchanged | order note naming the status |
 
 A line state never moves backwards, whatever the map says
@@ -213,108 +237,90 @@ without that ref does it then, so a run that stopped part way is finished;
 for a line with it, the order is only checked for completion again. The
 line's own shipped note is not repeated.
 
+Tracking belongs to the order's parcels, not to the item's event. A line
+that ships without tracking queues a read of its order
+([Reading open lines](#reading-open-lines)), which keeps the tracking of the
+parcel its item left in on the line's `tracking` ref, without another note.
+A read that ships the line itself keeps the parcel's tracking with the
+parcel's `shippedAt` in `trackingAt`.
+
+An `outcome_unknown` whose `previousStatus` is not the status last applied
+is older than a change applied since and is left alone; so is one created
+before the line's last transition once the line has left `needs_attention`:
+the merchant settled the outcome after Pixonaut reported it. The line is
+never sent again on its own.
+
 The line is written only over the version this job read. When another request
 writes it in between, the job reads it again and retries, three times; after
-that the handler throws and the event is tried again later. A line the
-`_pixonaut_order_id` index finds is acted on only when its own `orderId` ref
-matches, and every save of a line brings the index back in step.
+that the handler throws and the event is tried again later.
 
-### `order.failed`
+### `item.failed`
 
-The lines are found as for `order.status_changed` (`Fulfilment\OrderEventLines`).
-Each moves to `needs_attention` with the reason `order_failed`, its
-`orderStatus` ref set to `failed` and an order note carrying the event's
-`reason`; the store's notice and email follow from the state change. A line
-that is final, or in `needs_attention` already, is left as it is, so a
-repeated failure is noted once.
+The line of the item moves to `needs_attention` with the reason
+`order_failed`, its `orderStatus` ref set to `failed` and an order note
+carrying the event's `reason`; the store's notice and email follow from the
+state change. A line that is final, or in `needs_attention` already, is left
+as it is, so a repeated failure is noted once. The order's other items go on.
+
+### `item.submitted`
+
+Pixonaut handed the item to its printshop: once its prints were done, or
+again after a retry, made in the store or in Pixonaut, of a submission that
+failed. A retry keeps the order and the item, so the line is found by its
+ids as for any `item.*` event. Unless it is final, the line is brought in
+step with the order as Pixonaut has it (`LineActions::current()`,
+`GET /v1/orders/{id}`): event jobs need not run in the order Pixonaut sent
+the events, so a status whose event was handled first, such as an unknown
+outcome of the hand-on, is applied too, and a retried item moves its line
+out of `needs_attention` back to `ordered`. Nothing is written before the
+order is read, so a read that fails leaves the event to be tried again.
 
 ### `order.held` and `order.released`
 
 A free Pixonaut workspace's orders past its plan's monthly limit are not
-refused: `POST /v1/orders` answers `201` with `status: "held"` and a `hold`
-(`reason`, `limit`, `periodEnd`). The line is `ordered` with the order's id,
+refused: `POST /v1/orders` answers `201` with its items `held` and a `hold`
+(`reason`, `limit`, `periodEnd`). Each line is `ordered` with the order's id,
 its `orderStatus` ref `held` and the hold in its `hold` ref
-(`Fulfilment\OrderHold`), and its order gets one note saying why and when it
-goes ahead. It is not a failure: no `needs_attention`, no retry, no email. A
-`reason` the plugin does not know (only `monthly_order_limit` is known) shows
-as held without one.
+(`Fulfilment\OrderHold`), and its order gets one note per line saying why
+and when it goes ahead. It is not a failure: no `needs_attention`, no retry,
+no email. A `reason` the plugin does not know (only `monthly_order_limit` is
+known) shows as held without one.
 
-`order.held` (`reason`, `limit`, `periodEnd`) is applied the same way when the
-store did not know yet. For a line shown as held already, or one released or
-moved on since, it changes nothing. A read of the order
-(`OrderStatusChanged::apply_read()`, `LineActions::reconcile()`) or a retry
-Pixonaut answers held keeps its `hold` the same way (`OrderHold::keep()`):
-once, and never after the release.
+`order.held` (`reason`, `limit`, `periodEnd`) is applied the same way to
+every line of the order when the store did not know yet. For a line shown as
+held already, or one released or moved on since, it changes nothing. A read
+of the order (`OrderStatusChanged::apply_read()`, `LineActions::reconcile()`)
+or a retry Pixonaut answers held keeps its `hold` the same way
+(`OrderHold::keep()`): once, and never after the release.
 
 `order.released` (`releasedBy`: `upgrade` or `month_reset`; `status`) is the
-move out of `held`: Pixonaut sends no `order.status_changed` for it. The line
-moves on to `status` as a change from `held` would move it, so later
-`order.status_changed` events apply from there and a release delivered after a
-later change does not move the line back. Pixonaut releases to
-`awaiting_prints` and hands the order on later with `order.status_changed`;
-the spec allows any order status, so the plugin applies whichever it names.
-`periodEnd` is ISO 8601 with milliseconds (`2026-11-01T00:00:00.000Z`) and is
-parsed, never compared as a string. A release straight to `failed` or
-`cancelled` is applied by `OrderFailed` or `OrderCancelled`, as their events
-would be: the line needs attention, or is cancelled, with that outcome's note.
-The release is recorded in the line's `releasedBy` ref, its `hold` ref is
-cleared and its order gets one note naming what released it, which says it
-goes on to the printshop only when it does. A release delivered again, or
-before the hold, is applied once, and a hold delivered after it changes
-nothing.
+move out of `held`. Its `status` is the order's, not the items', so it moves
+no line itself: the release is recorded in each line's `releasedBy` ref, its
+`hold` ref is cleared, its order gets one note naming what released it, and
+a read of the line's order is queued
+([Reading open lines](#reading-open-lines)), which applies the item's status
+as `item.status_changed` would. A release to `cancelled` cancels each line
+instead, as `order.cancelled` would, and the note says the order does not go
+on to the printshop. `periodEnd` is ISO 8601 with milliseconds
+(`2026-11-01T00:00:00.000Z`) and is parsed, never compared as a string. A
+release delivered again, or before the hold, is recorded once, and a hold
+delivered after it changes nothing.
 
-### `order.submitted`
+### `order.cancelled` and `item.cancelled`
 
-The order the store placed itself, with no `replacesOrderId`, matters only
-while it waits for its prints: Pixonaut sends `order.submitted` when it hands
-such an order to the printshop. A line whose `orderStatus` ref is
-`awaiting_prints` is then brought in step with the order as Pixonaut has it
-(`LineActions::current()`), so a status whose event was handled first, such
-as an unknown outcome of the hand-on, is applied too; nothing is written
-before the order is read, so a read that fails leaves the event to be tried
-again. Any other line took its order's status when the order was placed,
-and is left as it is.
-
-A retry is an order that replaced a failed one, `replacesOrderId` naming it,
-placed when the order was retried in Pixonaut. The line holding the replaced order's id is found as for
-`order.status_changed`, so a line whose `externalRef` differs from the
-event's is left alone. Unless it is final, the line takes on the new order:
-its `orderId` ref becomes the new id, the replaced one is added to its
-`replacedOrderIds` ref, its `orderStatus`, `hold` and `releasedBy` refs are
-cleared, and an order note
-names the new order. Then `submitted` is applied as `order.status_changed`
-would apply it, which moves the line from `needs_attention` back to
-`ordered`. The new order's later events, delivered or pulled, and the read
-of open lines all find the line by the new id; an event for the replaced id
-no longer does, and one found before the handoff is dropped when it comes to
-write the line. A retry of the new order hands the line on again. The
-store's own **Retry** takes the new order on the same way. A line whose
-`order.submitted` never arrived still moves: the next read of its failed
-order (`LineActions::reconcile()`) follows its `replacedByOrderId`.
-
-Event jobs need not run in the order Pixonaut sent the events, so the
-handler then reads the new order (`GET /v1/orders/{id}`) and brings the line
-in step with it, as the order screen does: a status whose event was handled
-first, and matched no line then, is applied now, and when the new order
-failed and was retried in turn, the line follows that replacement too,
-through its `replacedByOrderId`. A read that fails throws, and the event is
-tried again. Handling the event again finishes a run that stopped part way,
-also when the line's document was written but its `_pixonaut_order_id`
-index was not.
-
-### `order.cancelled`
-
-The lines are found as for `order.status_changed`. Each that is not final
-moves to `cancelled`, its `orderStatus` ref set to `cancelled` and its
-`cancel` ref dropped, with an order note. The event is applied whoever
-asked for the cancel, `via: "store_key"` included: the store's own cancel
-already cancelled the line, so the event changes nothing then, and when the
-store's answer was lost it finishes the job. Refunding the customer stays the
-merchant's.
+`item.cancelled` concerns the item's line; `order.cancelled` every line of
+the order. Each line that is not final moves to `cancelled`, its
+`orderStatus` ref set to `cancelled` and its `cancel` ref dropped, with an
+order note. The event is applied whoever asked for the cancel, `via:
+"store_key"` included: the store's own cancel already cancelled the line, so
+the event changes nothing then, and when the store's answer was lost it
+finishes the job. A printshop that stops whole orders cancels the items sent
+to it together, and each of their lines follows its own `item.cancelled`.
+Refunding the customer stays the merchant's.
 
 ### `order.delivery_changed`
 
-The lines are found as for `order.status_changed`. The event's `outcome`
+Every line of the order is found as above. The event's `outcome`
 (`sending`, `accepted`, `refused` or `carried`) and the printshop's `words`
 are kept in the line's `delivery` ref for the order screen, unless the ref
 holds an outcome from later than the event's `createdAt`. A change the
@@ -328,34 +334,6 @@ compare with, so only a later change of it in WooCommerce is sent. An event
 about a line whose order's personal data was erased is left out. The event
 never carries the address. See
 [Changing the delivery address](../#changing-the-delivery-address).
-
-### `order.tracking_added` and `order.tracking_changed`
-
-Pixonaut sends `order.tracking_added` when the printshop gives tracking for an
-order that shipped without any, and `order.tracking_changed` when it corrects
-a shipped order's tracking; both carry the order's `tracking` as it now is.
-The lines are found as for `order.status_changed`. Each takes the tracking in
-its `tracking` ref, with the event's `createdAt` in its `trackingAt` ref. For a
-shipped line the order gets a note with the tracking (and, for a correction,
-the tracking it had), and the customer the `pixonaut_tracking_changed` email,
-one per WooCommerce order listing each line whose tracking changed.
-
-Events need not arrive in the order Pixonaut sent them. An event created
-before the one that set the line's tracking, or one bringing the tracking the
-line has, changes nothing, so a repeat or a late older event is neither noted
-nor emailed again. A line that has not shipped yet, the event having overtaken
-the `order.status_changed` that ships it, keeps the tracking silently; the
-shipment then keeps it too, unless it carries newer tracking itself, and is
-noted with it. A newer event bringing the tracking the line has only moves
-`trackingAt` on, so an older event delivered after it cannot bring back what
-came between. A shipped line holds the `trackingNotice` ref from the save
-until the customer was emailed: handling the event again after a run that
-stopped part way sends the email then, and no second note. A read of the
-order (`OrderStatusChanged::apply_read()`) that ships the line dates its
-tracking by the `at` of the last `order.tracking_added`,
-`order.tracking_changed` or shipping entry of the order's history, and keeps
-the line's tracking when an event set newer. `previousTracking` is not
-compared.
 
 ### Designs changed in Pixonaut
 
@@ -419,7 +397,7 @@ approved its proof page.
   for the event to be handled again. The store does not approve the design
   again: the proof page did.
 
-Like `order.status_changed`, the line is written only over the version this
+Like `item.status_changed`, the line is written only over the version this
 job read, with three tries before the handler throws.
 
 ### `design.changes_requested`
@@ -621,8 +599,8 @@ event is handled again later.
 |---|---|---|
 | `pixonaut_wc_webhooks_event_types` | filter | The event types the endpoint is narrowed to after a connect |
 | `pixonaut_wc_webhook_handle` | filter | Return `false` to take an event over; the plugin's handler then does not run |
-| `pixonaut_wc_webhook_<type>` | action | After an event was handled, with its dots as underscores: `pixonaut_wc_webhook_order_status_changed( $payload, $event, $handled )` |
-| `pixonaut_wc_fulfilment_order_status_map` | filter | The line state each Pixonaut order status puts a line in |
+| `pixonaut_wc_webhook_<type>` | action | After an event was handled, with its dots as underscores: `pixonaut_wc_webhook_item_status_changed( $payload, $event, $handled )` |
+| `pixonaut_wc_fulfilment_order_status_map` | filter | The line state each status of a Pixonaut order item puts its line in |
 | `pixonaut_wc_fulfilment_complete_order` | filter | Whether a shipped line completes an order whose every line is a Pixonaut line |
 | `pixonaut_wc_events_baseline_set` | action | Once per connection, after the event stream's first cursor was set: read the store's state afresh |
 
@@ -636,8 +614,8 @@ Each hook's parameters and an example are in the [hooks reference](../hooks/).
 ## Testing
 
 The fake Pixonaut delivers signed events to the tests site
-(`POST /__fake/webhooks/emit`), moves an order along its statuses,
-emitting `order.status_changed` for each step
+(`POST /__fake/webhooks/emit`), moves the items of an order along their
+statuses, emitting `item.status_changed` for each step of each item
 (`POST /__fake/orders/move`), holds the next orders placed as a free
 workspace past its limit (`POST /__fake/orders/hold`), sends `order.held`
 for a held order (`POST /__fake/orders/held-event`) and releases one with

@@ -280,39 +280,73 @@ state:
    longer waiting (`design_not_waiting`), or at another revision than the
    line's (`design_changed`), does too. `design.approved` resumes the line (see
    [Webhooks](./webhooks/)).
-3. `GET /v1/orders?externalRef=` adopts an order placed under the line's ref;
-   otherwise `GET /v1/designs/{id}` per side checks that every design is
+3. The order's Pixonaut lines are placed together, as one Pixonaut order
+   with an item per line, once no line of the order still waits to be
+   approved (`committed` or `awaiting_customer`), nor waits for its own job
+   to move its designs' refs: the last line approved places them all, and
+   the others' jobs end without sending anything. A line that needs
+   attention or is cancelled does not hold the order back: when a line
+   leaves the wait that way, the order's `approved` or `printed` lines
+   without an order are scheduled (`FulfilmentJobs::release_waiting()`, on
+   `pixonaut_wc_fulfilment_transition`), and placed without it. A line being
+   cancelled, or holding an order already, is left out.
+   `GET /v1/orders?externalRef=<store order ref>` first adopts an order an
+   earlier attempt placed holding one of the lines; otherwise
+   `GET /v1/designs/{id}` per side checks that every design of every line is
    still `approved` at the line's revision. A design stays editable after it
    is approved and the order names no revision, so one edited since (its
-   `design.edited` not yet applied) is not ordered: the line drops its order
-   request and needs attention (`design_edited`) with an order note. Then
-   `POST /v1/orders` with the sides' designs as `designs:
-   [{designId}]` in side order (the first leads), placed as soon as they are
-   approved: Pixonaut renders their prints and holds the order
-   (`awaiting_prints`) until they are done, then hands it to the printshop
-   (`order.submitted`). A print that fails, or prints not done within an
-   hour, fail the order (`order.failed`, `failureKind` `print_failed` or
-   `prints_timed_out`), and the line needs attention (`order_failed`). A
-   line an earlier version stored as `printed` names its prints (`prints:
-   [{printId}]`) instead. The body carries the line's quantity, `externalRef`, `variant` (the ref the
-   line's product sold when it was added to the cart, kept as the line's
-   `variant` ref), and `recipient` and
-   `shippingAddress` from `OrderAddress` (filter
-   `pixonaut_wc_fulfilment_order_address`), and `shipToAddressId: null`, so
-   a workspace that sends every order to a saved address still ships this
-   one to the customer. It never sends `printshopId`: the
-   order goes to the printshop of the design's blank. A design that has a
-   live order the line did not place, for example one placed in the studio,
-   is refused `409 design_already_ordered` (naming that `orderId`): the line
-   drops its order request and needs attention with that reason, the order
-   note names that Pixonaut order, and the
-   order screen offers **Order again anyway**, which sets the line's
-   `reorder` ref and sends the order again with `reorder: true` under the
-   key `wc:<site>:item:<item id>:reorder`. An order
-   whose `status` is `awaiting_prints`, `submitted`, `queued`, `printed` or `shipped` makes the
-   line `ordered`; one placed (or adopted) as `failed`, or with any other
-   status, keeps its id on the line and moves it to `needs_attention`
-   (reason `order_failed` or `order_status`).
+   `design.edited` not yet applied) is not ordered: that line needs
+   attention (`design_edited`) with an order note, the others drop their
+   order request, and they are placed without it. Then `POST /v1/orders`
+   with `externalRef` the store order ref (`wc:<site>:order:<order id>`),
+   the order's `recipient` and `shippingAddress` from `OrderAddress` (filter
+   `pixonaut_wc_fulfilment_order_address`), `shipToAddressId: null`, so a
+   workspace that sends every order to a saved address still ships this one
+   to the customer, and `items`, one per line in the order's item order.
+   Each item carries the line's `externalRef`, its sides' designs as
+   `designs: [{designId}]` in side order (the first leads), its quantity,
+   `variant` (the ref the line's product sold when it was added to the
+   cart, kept as the line's `variant` ref) and, for a product on no blank,
+   the `printshopId` it chose; a blank decides its own printshop. A line an
+   earlier version stored as `printed` names its prints (`prints:
+   [{printId}]`) instead. Pixonaut renders the prints and holds each item
+   (`awaiting_prints`) until they are done, then hands it to its printshop
+   (`item.submitted`); items for one printshop go to it together. A print
+   that fails, or prints not done within an hour, fail the item
+   (`item.failed`, `failureKind` `print_failed` or `prints_timed_out`), and
+   its line needs attention (`order_failed`).
+
+   Each line stores the order's `id` as `orderId`, its item's `id` as
+   `orderItemId`, and the order's `externalRef` as `orderExternalRef`, and
+   takes its item's status: `held`, `awaiting_prints`, `submitted`,
+   `queued`, `printed` or `shipped` makes it `ordered`; `failed`, or any
+   other status, moves it to `needs_attention` (reason `order_failed` or
+   `order_status`). The order's own status is not applied to lines.
+
+   A refusal naming one item (`itemIndex`) is that line's: the line is taken
+   off and the others are placed again without it, in a request of their
+   own. A design that has a live item the line did not place, for example
+   one ordered in the studio, is refused `409 design_already_ordered`
+   (naming that `orderId` and `itemId`): when one of the workspace's
+   automations placed that item and it makes the line as bought (every
+   side's print at the line's revision, its quantity, variant and printshop;
+   `Fulfilment\AdoptedOrder`), the line takes that item on, with an order
+   note, and ships where the automation sent it; otherwise the line needs
+   attention with that reason, the order note names that Pixonaut order,
+   and the order screen offers **Order again anyway**, which sets the
+   line's `reorder` ref and places it again with `reorder: true`. Any other
+   refusal of an item moves its line to `needs_attention` with the code. A
+   refusal of the whole order that is not retried flags every line of it;
+   one `RetryPolicy` retries schedules the job again, which sends the stored
+   request again.
+
+   A line that still keeps a request an earlier version stored (an order of
+   the line alone, under the line's ref, whose answer was lost) is settled
+   first: `GET /v1/orders?externalRef=<line ref>` finds the order it placed,
+   whose only item becomes the line's; when there is none, the request is
+   dropped and the line is placed with the order's other lines. An order
+   placed for one line before orders held items keeps working as it is: the
+   line keeps no `orderItemId`, and the order's only item is the line's.
 
 The first run stores the line's refs and keys, built from the current
 connection's `<site>` (`Refs`); every later run reads them back,
@@ -320,17 +354,26 @@ so a reconnect never changes them:
 
 | Ref | Value |
 |---|---|
-| `externalRef`, and the consent's `ref` | `wc:<site>:order:<order id>:item:<item id>` |
-| `orderKey`, the order's `Idempotency-Key` | `wc:<site>:item:<item id>` |
+| `externalRef` (the line's item's), and the consent's `ref` | `wc:<site>:order:<order id>:item:<item id>` |
+| `orderKey`, the `Idempotency-Key` of an order of this line alone | `wc:<site>:item:<item id>` |
 | `orderKey` after **Order again anyway** | `wc:<site>:item:<item id>:reorder` |
 
-The order request is stored as a snapshot (`orderRequest`) before it is first
-sent, and sent from the snapshot on every later attempt, byte for byte. The
-snapshot is dropped once the order's `id` is stored, so the customer's name
-and address in `orderRequest` stay only while the order's outcome is unknown.
-A lookup answer the plugin cannot read (a row that is not an object, an order
-without an `id`) fails the job rather than reading as "no order", so it never
-places a second one. Nothing is sent while the store is not
+The order's own `externalRef` is the store order ref,
+`wc:<site>:order:<order id>` (`Refs::store_order_ref()`). An order of one
+line is sent under the line's `orderKey`; one of several under
+`wc:<site>:items:<item id>.<item id>…` for those lines in the order sent
+(`Refs::order_lines_key()`, hashed when it would pass 255 characters), so
+another set of lines is another request.
+
+The order request is stored as a snapshot (`orderRequest`) on every line it
+holds before it is first sent, and sent from the snapshot on every later
+attempt, byte for byte; a line keeping a request is placed only with the
+lines keeping the same one. The snapshot is dropped once the line's order
+`id` is stored, so the customer's name and address in `orderRequest` stay
+only while the order's outcome is unknown. An answer that holds no item for
+a line, or a lookup answer the plugin cannot read (a row that is not an object,
+an order without an `id`) fails the job rather than reading as "no order",
+so it never places a second one. Nothing is sent while the store is not
 connected or its connection is paused, nor for a line whose `tenantId` is not
 the connected workspace's.
 
@@ -349,48 +392,48 @@ once no line of the order is in that state, and sends the store the
 `pixonaut_needs_attention` email (`Fulfilment\AttentionAlerts`). The job
 itself never fails on a Pixonaut error.
 
-An order that answers `outcome_unknown`, when placed or in
-`order.status_changed`, moves the line to `needs_attention` with the reason
+An item that answers `outcome_unknown`, when placed or in
+`item.status_changed`, moves its line to `needs_attention` with the reason
 `outcome_unknown`, and is never sent again on its own.
 
-An order that answers `held` (a free workspace past its plan's monthly
-orders) is taken: the line is `ordered`, shows as held with the order's
+An order whose items answer `held` (a free workspace past its plan's monthly
+orders) is taken: each line is `ordered`, shows as held with the order's
 `hold`, and gets one order note. It is no failure, so nothing is retried and
 nothing needs attention; `order.released` moves it on (see
 [Webhooks](./webhooks/#orderheld-and-orderreleased)).
 
 The order screen's Pixonaut box (`Admin\OrderBox`) offers what
 `Fulfilment\LineActions` allows for each line, read from `GET
-/v1/orders/{id}` each time it renders: **Retry** (`POST
-/v1/orders/{id}/retry`) while `canRetry`, adopting `newerOrderId` on `409
-order_superseded`; for a line stopped before its order, the store's own next
-job from the state it stopped in, and for a line of a paid order in
-`committed`, `approved` or `printed` with no job pending or running, its job
-scheduled again. For `outcome_unknown`, the settling moves
-(`PATCH /v1/orders/{id}` to `submitted` with `reason` and an optional
-`externalOrderRef`, or to `failed` with `reason` followed by a retry) when
-`statusMoves` lists them, and cancel (`POST /v1/orders/{id}/cancel`). On a
-sandbox connection, every move in `statusMoves` the line can follow is
-offered as a rehearsal. Pixonaut sends the events of these moves `via:
-store_key`, which the webhook handlers skip, so each action applies
-Pixonaut's answer to the line itself. When that answer is lost, the next read
-reconciles the line (`LineActions::reconcile()`): a status other than the
-one last applied goes through `OrderStatusChanged` or `OrderFailed` (a
-`cancelled` cancels the line), and a `failed` order with `canRetry: false`
-hands the line to the order its `replacedByOrderId` names, read with
-`GET /v1/orders/{id}` and followed on while that one was replaced too, as
-long as each has the line's `externalRef`. An action that got no answer
-(`transport_failed`) reports `unreachable` rather than a refusal. A
-replacement order already on its way is applied as `order.status_changed`
-would be, so one that shipped ships the line. In one render, the first read
-that fails without an answer or with a retryable error stops the reads of
-the remaining lines. Refused actions are logged as warnings, lines the store
+/v1/orders/{id}` each time it renders; what it offers, and the status it
+shows, are those of the line's item. **Retry** (`POST
+/v1/orders/{id}/items/{itemId}/retry`) while the item's `canRetry`: the item
+is sent again in the same order, to the printshop it went to, and the line
+takes its status from there; `409 retry_refused` (the printshop has the item
+already, or it is no longer failed) is noted and the box shows what applies
+now. A retry refused `design_already_ordered` takes on the item an
+automation placed, as placing it does. For a line stopped before its order,
+**Retry** is the store's own next job from the state it stopped in, and for a
+line of a paid order in `committed`, `approved` or `printed` with no job
+pending or running, its job scheduled again. For `outcome_unknown`, the
+settling moves (`PATCH /v1/orders/{id}/printshop-orders/{printshopOrderId}`
+to `submitted` with `reason` and an optional `externalOrderRef`, or to
+`failed` with `reason` followed by a retry of the item) when the item's
+`statusMoves` lists them, and cancel (`POST
+/v1/orders/{id}/items/{itemId}/cancel`). The printshop order is the one the
+item's latest submission not struck went to; an item no printshop order
+holds yet offers no move. On a sandbox connection, every move in
+`statusMoves` the line can follow is offered as a rehearsal, sent the same
+way. Pixonaut sends the events of these moves `via: store_key`, which the
+webhook handlers skip, so each action applies Pixonaut's answer to the line
+itself. When that answer is lost, the next read reconciles the line
+(`LineActions::reconcile()`): an item status other than the one last applied
+goes through `OrderStatusChanged` or `OrderFailed` (a `cancelled` cancels the
+line). An action that got no answer (`transport_failed`) reports
+`unreachable` rather than a refusal. In one render, the first read that
+fails without an answer or with a retryable error stops the reads of the
+remaining lines. Refused actions are logged as warnings, lines the store
 could not save as errors. Actions need `manage_woocommerce`; the filter
 `pixonaut_wc_fulfilment_line_actions` changes what is offered.
-
-An `order.status_changed` to `outcome_unknown` created before the line's
-last transition is skipped once the line has left `needs_attention`: the
-outcome was settled after Pixonaut reported it.
 
 ### Cancelling and refunding
 
@@ -411,8 +454,10 @@ fulfilment job leaves a line with a `cancel` ref alone. The job acts by how
 far the line got:
 
 - **An order sent, its answer lost** (an `orderRequest` but no `orderId`).
-  `GET /v1/orders?externalRef=` finds the order, which the line takes on and
-  cancels as below. When none is found the job looks once more after the
+  `GET /v1/orders?externalRef=` under the ref the stored request names (the
+  store order ref, or the line's own for a request an earlier version made)
+  finds the order holding the line's item, which the line takes on with its
+  item and cancels as below. When none is found the job looks once more after the
   first wait, so an order still on its way is not missed, then goes on as
   for no Pixonaut order and drops the `orderRequest`.
 - **No Pixonaut order.** When the line (or the state it left for
@@ -422,8 +467,12 @@ far the line got:
   meanwhile) is fine. An
   approved or printed line sends nothing. The line moves to `cancelled`.
   A reject refused for good still cancels the line, with an order note.
-- **A Pixonaut order.** `POST /v1/orders/{id}/cancel`. `200` records the
-  order's status and moves the line to `cancelled`. `409 order_at_printshop`
+- **A Pixonaut order.** `POST /v1/orders/{id}/items/{itemId}/cancel` for
+  the line's item; `POST /v1/orders/{id}/cancel` for a line keeping no
+  `orderItemId`, whose order was placed for it alone. `200` records the
+  item's status and moves the line to `cancelled`. A printshop that stops
+  whole orders cancels the items sent to it together; their lines follow
+  from their own `item.cancelled`. `409 order_at_printshop`
   leaves the line as it is, with an order note giving the `cause` (`made`,
   `begun`, `cannot_cancel`, `not_connected`, `status_moved`).
   `409 order_status_not_allowed` from `failed` cancels the line in the store
@@ -515,8 +564,8 @@ for each line whose address is neither the printshop order's, the one
 Pixonaut is telling the printshop, nor a refused one, such as an address the
 store could not send while it was not connected.
 
-`Fulfilment\OrderDeliveryChanged` handles `order.delivery_changed`: the
-lines are found as for `order.status_changed`, and the event's `outcome`,
+`Fulfilment\OrderDeliveryChanged` handles `order.delivery_changed`: every
+line holding the order is found as for the order's other events, and the event's `outcome`,
 `words` and `createdAt` replace the line's unless it holds a later one or
 the order's personal data was erased. A change the store made (`by:
 store_key`) is noted only when the outcome is new; once the printshop
@@ -628,16 +677,19 @@ is paid or has a `date_paid`, or the line has an `orderId` or `orderRequest`.
 - **Otherwise**, at once: `POST /v1/designs/{id}/erase-personal-data` for each
   side without `erasedAt`, which records Pixonaut's `personalDataErasedAt`
   (`204`, a deleted design, and `404` record now); then
-  `POST /v1/orders/{id}/erase-personal-data` for the line's `orderId` and
-  every other order `GET /v1/orders?externalRef=` finds under the line's ref
-  (a failed order a retry replaced), which records `orderErasedAt`
+  `POST /v1/orders/{id}/erase-personal-data` for the line's `orderId`, the
+  orders it took over from (`replacedOrderIds`), and every order
+  `GET /v1/orders?externalRef=` finds under the line's own ref (orders
+  placed for the line alone before orders held items), which records
+  `orderErasedAt`
   (`order_not_found` counts as erased). The `erase` ref
   is then dropped and the order gets a note. A line paid for while its
   designs are being erased stops before the next side, keeps its `erase`
   ref, and waits as above.
 
-`409 order_in_flight` and any failure `RetryPolicy` retries schedule the job
-again on the fulfilment waits, counted in the `erase` ref, and the eraser
+`409 order_in_flight` (another item of the order, another line's, is still on
+its way: an order is erased once each of its items is finished) and any
+failure `RetryPolicy` retries schedule the job again on the fulfilment waits, counted in the `erase` ref, and the eraser
 reports the line retained. Past the last wait, on any other refusal, or for a
 line of another workspace or with no connection, the `erase` ref is dropped
 and an order note says why; running the request again starts over. A line is

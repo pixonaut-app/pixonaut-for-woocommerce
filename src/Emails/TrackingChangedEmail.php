@@ -14,7 +14,7 @@ use WC_Order;
 use WC_Order_Item_Product;
 
 /**
- * Sent to the customer by OrderTrackingChanged when the printshop gives
+ * Sent to the customer when the printshop gives
  * tracking for personalised lines that shipped without any, or corrects
  * their tracking. One email per order, with each line whose tracking changed
  * and its tracking as it now is.

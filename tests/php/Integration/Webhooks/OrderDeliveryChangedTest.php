@@ -29,8 +29,6 @@ final class OrderDeliveryChangedTest extends OrderEventsTestCase {
 	 */
 	private const AWAITED = 'd4e5f6';
 
-	private int $sequence = 0;
-
 	public function test_the_answer_to_the_stores_own_change_still_being_told_is_kept_and_noted(): void {
 		$item = $this->line_with( array( DeliveryChange::FIELD_STATE => DeliveryChange::SENDING ) );
 
@@ -148,22 +146,15 @@ final class OrderDeliveryChangedTest extends OrderEventsTestCase {
 	 * @return array{id: string, type: string, payload: array<string, mixed>, createdAt: int}
 	 */
 	private function event( string $by, string $outcome, ?string $words = null ): array {
-		++$this->sequence;
-		$created = time() * 1000 + $this->sequence;
-		return array(
-			'id'        => "{$created}-3c4d5e6f-7a8b-4c9d-8e0f-1a2b3c4d5e" . str_pad( (string) $this->sequence, 2, '0', STR_PAD_LEFT ),
-			'type'      => 'order.delivery_changed',
-			'payload'   => array(
-				'orderId'     => self::ORDER_ID,
-				'printId'     => self::PRINT_ID,
-				'printIds'    => array( self::PRINT_ID ),
-				'externalRef' => self::EXTERNAL_REF,
-				'added'       => false,
-				'by'          => $by,
-				'outcome'     => $outcome,
-				'words'       => $words,
-			),
-			'createdAt' => $created,
+		return $this->order_event(
+			'order.delivery_changed',
+			array(
+				'added'            => false,
+				'by'               => $by,
+				'outcome'          => $outcome,
+				'printshopOrderId' => null,
+				'words'            => $words,
+			)
 		);
 	}
 }

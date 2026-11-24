@@ -67,6 +67,7 @@ final class FulfilmentJobs {
 		add_action( 'woocommerce_payment_complete', array( $this, 'schedule_order' ) );
 		add_action( 'woocommerce_order_status_changed', array( $this, 'schedule_paid' ), 10, 3 );
 		add_action( self::ACTION, array( $this, 'run' ) );
+		add_action( 'pixonaut_wc_fulfilment_transition', array( $this, 'release_waiting' ), 10, 3 );
 	}
 
 	/**
@@ -173,6 +174,59 @@ final class FulfilmentJobs {
 			$this->fulfiller->fulfil( $item );
 		} catch ( ApiException $e ) {
 			$this->failed( $item, $e );
+		} catch ( OrderRefused $e ) {
+			$this->order_refused( $item, $e );
+		}
+	}
+
+	/**
+	 * A refusal of the order the line was placed in. A refusal of one item
+	 * is its line's, and the order's other lines are placed again without
+	 * it; a refusal of the whole order is every line's.
+	 *
+	 * @param WC_Order_Item_Product $item    The line whose job placed the order.
+	 * @param OrderRefused          $refusal The refusal.
+	 */
+	private function order_refused( WC_Order_Item_Product $item, OrderRefused $refusal ): void {
+		foreach ( $refusal->lines as $line ) {
+			$this->failed( $line, $refusal->error );
+		}
+		if ( $refusal->whole ) {
+			return;
+		}
+		// The refused line, flagged, released the others (release_waiting()); this job's own line counts as scheduled while it runs.
+		$refused = array_map( static fn ( WC_Order_Item_Product $line ): int => (int) $line->get_id(), $refusal->lines );
+		if ( ! in_array( (int) $item->get_id(), $refused, true ) && ! $this->schedule_again( (int) $item->get_id() ) ) {
+			$this->logger->error( 'Fulfilment job could not be scheduled.', array( 'item' => $item->get_id() ) );
+		}
+	}
+
+	/**
+	 * Schedules the order's lines that wait for another line to be approved
+	 * once that line leaves the wait another way, cancelled or needing the
+	 * merchant: they are placed without it.
+	 *
+	 * @param string                $to   The state the line moved to.
+	 * @param string                $from The state it left.
+	 * @param WC_Order_Item_Product $item The line.
+	 */
+	public function release_waiting( string $to, string $from, WC_Order_Item_Product $item ): void {
+		$waited_for = in_array( $from, LineState::FULFILLABLE, true ) || LineState::AWAITING_CUSTOMER === $from;
+		if ( ! $waited_for || ! in_array( $to, LineState::REACHABLE_ANYTIME, true ) ) {
+			return;
+		}
+		$order = wc_get_order( $item->get_order_id() );
+		if ( ! $order instanceof WC_Order ) {
+			return;
+		}
+		foreach ( $order->get_items() as $other ) {
+			if ( ! $other instanceof WC_Order_Item_Product || $other->get_id() === $item->get_id() || ! LineState::is_tracked( $other ) ) {
+				continue;
+			}
+			$line = LineState::of( $other );
+			if ( in_array( $line->state(), array( LineState::APPROVED, LineState::PRINTED ), true ) && null === $line->ref( LineState::REF_ORDER_ID ) && ! self::schedule( $other->get_id() ) ) {
+				$this->logger->error( 'Fulfilment job could not be scheduled.', array( 'item' => $other->get_id() ) );
+			}
 		}
 	}
 

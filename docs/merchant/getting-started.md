@@ -56,22 +56,22 @@ workspace, this order is printed and shipped.
 Once the order is paid (WooCommerce marks it **Processing** or
 **Completed**), the store
 approves the design, has Pixonaut render its print file, and places one
-printshop order for the line, for the variant it sells, sent to the
-order's shipping address. This
+Pixonaut order for it, with an item for the line in the variant it sells,
+sent to the order's shipping address. This
 runs in the background, as a job under **WooCommerce > Status > Scheduled
 Actions** (`pixonaut_fulfil_item`). See
 [How orders flow](../how-orders-flow/) for each step and what happens when
 one cannot run.
 
-A payment notice that arrives twice still places one printshop order.
+A payment notice that arrives twice still places one order.
 
 ## 5. Follow it to the customer
 
 As the printshop works on the item, Pixonaut tells the store, and the order
-notes say when it is printed and when it ships, with the carrier and
-tracking number. When every item of the order has shipped, the order is
-marked **Completed**, and the customer's *Completed order* email lists the
-tracking. See [Printing and shipping](../how-orders-flow/#printing-and-shipping).
+notes say when it is printed and when it ships; the carrier and tracking
+number then show with the item. When every item of the order has shipped,
+the order is marked **Completed**, and the customer gets WooCommerce's
+*Completed order* email. See [Printing and shipping](../how-orders-flow/#printing-and-shipping).
 If a step cannot run, the order's **Pixonaut** box says why; see
 [Troubleshooting](../troubleshooting/).
 

@@ -88,6 +88,8 @@ export const listVariantCosts: Handler = (context): HandlerResult => {
 									? DELIVERY_DAYS
 									: cost.delivery,
 					},
+					// No fixture placement is printed as pages.
+					pages: [],
 					region,
 					readAt,
 					changedAt:

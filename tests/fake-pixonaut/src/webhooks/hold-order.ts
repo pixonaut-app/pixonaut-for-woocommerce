@@ -1,9 +1,9 @@
 // The control API's holds: a free workspace past its monthly order limit,
 // whose next orders Pixonaut takes as `held`, and the release of one held
 // order, by an upgrade or at the month's reset, with the `order.released`
-// Pixonaut sends for it. The release moves the order to `awaiting_prints`, as
-// Pixonaut's always does, unless the test names another status, and sends no
-// `order.status_changed`.
+// Pixonaut sends for it. The release moves the order's held items to
+// `awaiting_prints`, as Pixonaut's always does, unless the test names another
+// item status, and sends no other event.
 import type { Hono } from 'hono';
 import type { Fake } from '../app';
 import {
@@ -15,7 +15,18 @@ import {
 	readTimes,
 	refused,
 } from '../control';
-import { HELD, ORDERS, type Order } from '../handlers/orders';
+import {
+	AWAITING_PRINTS,
+	FORWARD_STATUSES,
+	HELD,
+	ITEM_STATUSES,
+	ORDERS,
+	type Order,
+	orderStatus,
+	recordForEach,
+	setItemStatus,
+	submitItems,
+} from '../handlers/order-model';
 import { allOwned, type Hold, type OrderHeld } from '../state';
 import { ORDERS as DELIVERY_ORDERS, type EmitEvent } from './deliveries';
 
@@ -30,8 +41,8 @@ export const MONTHLY_ORDER_LIMIT = 'monthly_order_limit';
 /** What releases a held order. */
 export const RELEASED_BY = ['upgrade', 'month_reset'] as const;
 
-/** Where a released order goes when the test names no status. */
-const DEFAULT_RELEASE_STATUS = 'awaiting_prints';
+/** Where a released order's items go when the test names no status. */
+const DEFAULT_RELEASE_STATUS = AWAITING_PRINTS;
 
 type Release = {
 	store: string;
@@ -94,8 +105,9 @@ function readHeldOrder(
 		return refused(`no store placed an order ${orderId.value} it may release`);
 	}
 	const order = owned.value;
-	if (order.status !== HELD) {
-		return refused(`order ${order.id} is ${order.status}, not held`);
+	const status = orderStatus(order);
+	if (status !== HELD) {
+		return refused(`order ${order.id} is ${status}, not held`);
 	}
 	return { ok: true, value: { store: owned.storeId, order } };
 }
@@ -116,6 +128,9 @@ function readRelease(body: Body, fake: Fake): Read<Release> {
 	const by = releasedBy.value ?? RELEASED_BY[0];
 	if (!(RELEASED_BY as readonly string[]).includes(by)) {
 		return refused(`\`releasedBy\` is not one of ${RELEASED_BY.join(', ')}`);
+	}
+	if (status.value !== undefined && !ITEM_STATUSES.includes(status.value)) {
+		return refused(`\`status\` is not an item status: ${status.value}`);
 	}
 	if (
 		body.order !== undefined &&
@@ -147,43 +162,36 @@ export function heldEvent(order: Order): EmitEvent {
 		type: 'order.held',
 		payload: {
 			orderId: order.id,
-			printId: order.printIds[0],
-			printIds: order.printIds,
 			externalRef: order.externalRef,
 			...order.hold,
 		},
 	};
 }
 
-/** Moves a held order on and records it, as Pixonaut releases one. */
+/** Moves a held order's held items on and records it, as Pixonaut releases
+ *  one; an item moved to a printshop's status is handed to its printshop. */
 export function release(
 	order: Order,
 	now: number,
 	releasedBy: string,
 	status: string,
 ): EmitEvent {
-	order.status = status;
 	order.hold = null;
-	order.updatedAt = now;
-	order.history.push({
-		seq: order.history.length + 1,
-		at: now,
-		type: 'order.released',
-		status,
-		reason: null,
-		via: null,
-		automation: null,
-		releasedBy,
-	});
+	const held = order.items.filter((item) => item.status === HELD);
+	for (const item of held) {
+		setItemStatus(item, status);
+	}
+	if (FORWARD_STATUSES.includes(status)) {
+		submitItems(order, held, now);
+	}
+	recordForEach(order, now, { type: 'order.released', via: null, releasedBy });
 	return {
 		type: 'order.released',
 		payload: {
 			orderId: order.id,
-			printId: order.printIds[0],
-			printIds: order.printIds,
 			externalRef: order.externalRef,
 			releasedBy,
-			status,
+			status: orderStatus(order),
 		},
 	};
 }

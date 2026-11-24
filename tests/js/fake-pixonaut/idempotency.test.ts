@@ -36,7 +36,10 @@ let gate: Promise<void> | null = null;
 
 const createOrder: Handler = async (context) => {
 	await gate;
-	const { designs } = context.body as { designs: { designId: string }[] };
+	const { items } = context.body as {
+		items: { designs: { designId: string }[] }[];
+	};
+	const designs = items.flatMap((item) => item.designs);
 	if (designs.some((d) => d.designId === UNKNOWN_DESIGN)) {
 		return { status: 404, body: { error: 'design_not_found' } };
 	}
@@ -71,7 +74,7 @@ function order(
 	return send(fake, '/v1/orders', {
 		method: 'POST',
 		headers: { ...bearer(integrationKey), 'idempotency-key': key },
-		json: { designs: [{ designId }], reorder: false },
+		json: { items: [{ designs: [{ designId }], reorder: false }] },
 	});
 }
 
@@ -100,7 +103,7 @@ describe('Idempotency-Key', () => {
 		const reordered = await send(fake, '/v1/orders', {
 			method: 'POST',
 			headers: { ...bearer(MAIN.integrationKey), 'idempotency-key': 'k1' },
-			json: { reorder: false, designs: [{ designId: 'd1' }] },
+			json: { items: [{ reorder: false, designs: [{ designId: 'd1' }] }] },
 		});
 
 		expect(first.status).toBe(201);

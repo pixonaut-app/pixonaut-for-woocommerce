@@ -21,9 +21,9 @@ use WC_Order_Item_Product;
 final class ShipmentsTest extends OrderEventsTestCase {
 
 	/**
-	 * The second Pixonaut order of an order with two Pixonaut lines.
+	 * The second item of ORDER_ID, of an order with two Pixonaut lines.
 	 */
-	private const OTHER_ORDER_ID = 'f2a3b4c5-d6e7-4f8a-9b0c-1d2e3f4a5b6c';
+	private const OTHER_ITEM_ID = 'oi_second';
 
 	private const OTHER_EXTERNAL_REF = 'wc_site_1042_8';
 
@@ -149,7 +149,8 @@ final class ShipmentsTest extends OrderEventsTestCase {
 	public function test_a_shipped_event_delivered_again_emails_once(): void {
 		$item = $this->pixonaut_line();
 		$this->add_plain_line( $this->order_of( $item ) );
-		$event = $this->status_event( 'printed', 'shipped', self::TRACKING );
+		$this->parcel_shipped( $item, self::TRACKING );
+		$event = $this->status_event( 'printed', 'shipped' );
 
 		$this->deliver( $event );
 		$this->run_jobs();
@@ -297,27 +298,41 @@ final class ShipmentsTest extends OrderEventsTestCase {
 	}
 
 	/**
-	 * Ships ORDER_ID, as the printshop reports it.
+	 * Ships ITEM_ID, as the printshop reports it.
 	 *
-	 * @param array<string, string> $tracking The tracking.
+	 * @param array{carrier?: string, number: string, url?: string} $tracking The tracking.
 	 */
 	private function ship( array $tracking ): void {
-		$this->deliver( $this->status_event( 'printed', 'shipped', $tracking ) );
-		$this->run_jobs();
+		$this->ship_item( self::ITEM_ID, self::EXTERNAL_REF, $tracking );
 	}
 
 	/**
-	 * Ships OTHER_ORDER_ID.
+	 * Ships OTHER_ITEM_ID.
 	 */
 	private function ship_second(): void {
+		$this->ship_item( self::OTHER_ITEM_ID, self::OTHER_EXTERNAL_REF, self::OTHER_TRACKING );
+	}
+
+	/**
+	 * Ships an item of ORDER_ID in a parcel with its tracking.
+	 *
+	 * @param string                                                $item_id      The item.
+	 * @param string                                                $external_ref Its line's ref.
+	 * @param array{carrier?: string, number: string, url?: string} $tracking     The parcel's tracking.
+	 */
+	private function ship_item( string $item_id, string $external_ref, array $tracking ): void {
+		foreach ( LineState::for_order_id( self::ORDER_ID ) as $line ) {
+			if ( $line->ref( LineState::REF_ORDER_ITEM_ID ) === $item_id ) {
+				$this->parcel_shipped( $line->item(), $tracking );
+			}
+		}
 		$this->deliver(
 			$this->status_event(
 				'printed',
 				'shipped',
-				self::OTHER_TRACKING,
 				array(
-					'orderId'     => self::OTHER_ORDER_ID,
-					'externalRef' => self::OTHER_EXTERNAL_REF,
+					'itemId'          => $item_id,
+					'itemExternalRef' => $external_ref,
 				)
 			)
 		);
@@ -325,7 +340,7 @@ final class ShipmentsTest extends OrderEventsTestCase {
 	}
 
 	/**
-	 * Adds a Pixonaut line ordered at OTHER_ORDER_ID.
+	 * Adds a Pixonaut line held in ORDER_ID as OTHER_ITEM_ID.
 	 *
 	 * @param WC_Order $order The order.
 	 */
@@ -333,7 +348,7 @@ final class ShipmentsTest extends OrderEventsTestCase {
 		return $this->pixonaut_line(
 			array(
 				'order'        => $order,
-				'order_id'     => self::OTHER_ORDER_ID,
+				'item_id'      => self::OTHER_ITEM_ID,
 				'external_ref' => self::OTHER_EXTERNAL_REF,
 			)
 		);

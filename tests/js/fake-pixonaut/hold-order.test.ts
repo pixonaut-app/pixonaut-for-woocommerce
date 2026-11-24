@@ -66,9 +66,14 @@ async function placeOrder(key: string): Promise<Record<string, unknown>> {
 		method: 'POST',
 		headers: { ...asStore, 'idempotency-key': key },
 		json: {
-			prints: [{ printId: seedPrint(fake, `dsn_${key}`) }],
-			variant: FIXTURE.variant.teeWhiteS,
 			externalRef: `wc_${key}`,
+			items: [
+				{
+					externalRef: `wc_${key}_1`,
+					prints: [{ printId: seedPrint(fake, `dsn_${key}`) }],
+					variant: FIXTURE.variant.teeWhiteS,
+				},
+			],
 		},
 	});
 	expect(response.status).toBe(201);
@@ -103,10 +108,19 @@ describe('held orders', () => {
 				limit: DEFAULT_HOLD_LIMIT,
 				periodEnd: DEFAULT_PERIOD_END,
 			},
+			items: [{ status: 'held', submissions: [{ printshopOrderId: null }] }],
+			printshopOrders: [],
 		});
-		expect(next).toMatchObject({ status: 'submitted', hold: null });
+		expect(next).toMatchObject({
+			status: 'open',
+			hold: null,
+			items: [{ status: 'submitted' }],
+		});
 		const history = (await (await read(held.id as string)).json()).history;
-		expect(history).toMatchObject([{ type: 'order.held', status: 'held' }]);
+		expect(history).toMatchObject([
+			{ type: 'order.created', status: 'held' },
+			{ type: 'order.held', status: 'held' },
+		]);
 	});
 
 	it('holds with the reason, limit and month end given', async () => {
@@ -137,7 +151,6 @@ describe('held orders', () => {
 				type: 'order.held',
 				payload: {
 					orderId: held.id,
-					printIds: held.printIds,
 					externalRef: 'wc_o1',
 					reason: MONTHLY_ORDER_LIMIT,
 					limit: DEFAULT_HOLD_LIMIT,
@@ -145,10 +158,11 @@ describe('held orders', () => {
 				},
 			},
 		]);
+		expect(received[0]?.payload).not.toHaveProperty('printId');
 	});
 
 	it.each(['upgrade', 'month_reset'])(
-		'releases a held order by %s to awaiting_prints, sending order.released alone',
+		'releases a held order by %s, its items to awaiting_prints, sending order.released alone',
 		async (releasedBy) => {
 			const status = 'awaiting_prints';
 			await control('hold', {});
@@ -163,11 +177,15 @@ describe('held orders', () => {
 			expect(received).toMatchObject([
 				{
 					type: 'order.released',
-					payload: { orderId: held.id, releasedBy, status },
+					payload: { orderId: held.id, releasedBy, status: 'open' },
 				},
 			]);
 			const order = await (await read(held.id as string)).json();
-			expect(order).toMatchObject({ status, hold: null });
+			expect(order).toMatchObject({
+				status: 'open',
+				hold: null,
+				items: [{ status }],
+			});
 			expect(order.history.at(-1)).toMatchObject({
 				type: 'order.released',
 				status,
@@ -193,6 +211,20 @@ describe('held orders', () => {
 			400, 400, 400,
 		]);
 		expect(received).toEqual([]);
+	});
+
+	it('hands items released as submitted to their printshop', async () => {
+		await control('hold', {});
+		const held = await placeOrder('o1');
+
+		await control('release', { orderId: held.id, status: 'submitted' });
+
+		const order = await (await read(held.id as string)).json();
+		expect(order).toMatchObject({
+			status: 'open',
+			items: [{ status: 'submitted' }],
+			printshopOrders: [{ itemIds: [order.items[0].id] }],
+		});
 	});
 
 	it('lists held orders under their status', async () => {

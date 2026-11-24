@@ -119,21 +119,23 @@ final class OrderLineAbilitiesTest extends WP_UnitTestCase {
 		$this->sign_in( 'shop_manager' );
 		$this->recorder
 			->json( 200, $this->read( OrderStatus::FAILED, array( 'canRetry' => true ) ) )
-			->json( 201, FulfilmentAnswers::order( self::NEWER_ORDER_ID, array( 'p_front' ), $this->external_ref(), array( 'replacesOrderId' => self::ORDER_ID ) ) );
+			->json( 201, FulfilmentAnswers::order( self::ORDER_ID, array( 'p_front' ), $this->external_ref(), array( 'status' => OrderStatus::SUBMITTED ) ) );
 
 		$answer = $this->ability( self::ACT )->execute( $this->act( LineActions::RETRY ) );
 
 		$this->assertIsArray( $answer );
 		$this->assertSame( LineActions::DONE, $answer['result'] );
 		$this->assertSame( LineState::ORDERED, $answer['line']['state'] );
-		$this->assertSame( self::NEWER_ORDER_ID, $answer['line']['pixonaut_order_id'] );
+		$this->assertSame( self::ORDER_ID, $answer['line']['pixonaut_order_id'], 'a retry keeps the order' );
 		$this->assertSame( array(), $answer['line']['actions'], 'A line at the printshop offers nothing on a live store.' );
 		$line = $this->line();
 		$this->assertSame( LineState::ORDERED, $line->state() );
-		$this->assertSame( array( self::ORDER_ID ), $line->replaced_order_ids() );
+		$this->assertSame( FulfilmentAnswers::item_id( self::ORDER_ID ), $line->ref( LineState::REF_ORDER_ITEM_ID ) );
+		$this->assertSame( OrderStatus::SUBMITTED, $line->ref( LineState::REF_ORDER_STATUS ) );
+		$this->assertSame( array(), $line->replaced_order_ids() );
 		$this->assertSame( 'POST', $this->recorder->requests[1]['method'] );
-		$this->assertStringEndsWith( '/v1/orders/' . self::ORDER_ID . '/retry', $this->recorder->requests[1]['url'] );
-		$this->assertStringContainsString( self::NEWER_ORDER_ID, $this->notes() );
+		$this->assertStringEndsWith( '/v1/orders/' . self::ORDER_ID . '/items/' . FulfilmentAnswers::item_id( self::ORDER_ID ) . '/retry', $this->recorder->requests[1]['url'] );
+		$this->assertStringContainsString( 'sent to the printshop again', $this->notes() );
 	}
 
 	public function test_listing_one_order_gives_the_actions_each_line_offers_now(): void {

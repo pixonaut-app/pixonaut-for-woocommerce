@@ -651,15 +651,15 @@ asked for the line's printshop order when the actions depend on it. Without
 
 `act-on-order-line` takes `order_id`, `item_id` and one of those `actions`,
 and runs it through the order screen's own code (`LineActions`), with the
-same order notes and line bookkeeping: `retry` places the printshop order
-again (Pixonaut's retry of a failed order, or the store's own next attempt
-at a line that never had one), `reorder` orders it although its design has
+same order notes and line bookkeeping: `retry` sends the line again
+(Pixonaut's retry of its failed item, in the same order, or the store's own
+next attempt at a line that never had one), `reorder` orders it although its design has
 a live order the line did not place, `settle_submitted` and `settle_failed`
-say whether the printshop has an order whose outcome is unknown (`reason`,
-what the printshop said, is required; `printshop_ref` is the printshop's
-reference), `cancel` asks the printshop to stop it, and `rehearse_queued`,
-`rehearse_printed`, `rehearse_shipped` and `rehearse_failed` move a sandbox
-order on. What the line offers is read again first, so an action Pixonaut
+say whether the printshop has the printshop order of an item whose outcome
+is unknown (`reason`, what the printshop said, is required; `printshop_ref`
+is the printshop's reference), `cancel` asks the printshop to stop the item,
+and `rehearse_queued`, `rehearse_printed`, `rehearse_shipped` and
+`rehearse_failed` move a sandbox printshop order on. What the line offers is read again first, so an action Pixonaut
 no longer allows is not sent. It answers `result` (`done`, or
 `retry_still_pending` when the new order is not on its way yet) and the line
 as it stands now; anything else is an error whose code is

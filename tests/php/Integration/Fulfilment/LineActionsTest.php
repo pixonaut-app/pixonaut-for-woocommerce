@@ -55,8 +55,6 @@ final class LineActionsTest extends FulfilmentTestCase {
 
 	private const NEWER_ORDER_ID = 'o_2';
 
-	private const NEWEST_ORDER_ID = 'o_3';
-
 	private const PERIOD_END = '2026-11-01T00:00:00.000Z';
 
 	/**
@@ -108,20 +106,22 @@ final class LineActionsTest extends FulfilmentTestCase {
 		$line = $this->flagged( 'failed', NeedsAttention::ORDER_FAILED );
 		$this->recorder
 			->json( 200, $this->read( 'failed', array( 'canRetry' => true ) ) )
-			->json( 201, $this->placed( self::NEWER_ORDER_ID, array( 'replacesOrderId' => self::ORDER_ID ) ) );
+			->json( 201, $this->placed( self::ORDER_ID ) );
 
 		$result = $this->actions->run( $line, LineActions::RETRY );
 
 		$this->assertSame( LineActions::DONE, $result->code );
-		$this->assertSame( 1, $this->count_sent( 'POST', '/v1/orders/' . self::ORDER_ID . '/retry' ) );
+		$this->assertSame( 1, $this->count_sent( 'POST', self::retry_path() ) );
 		$retry = array_slice( $this->recorder->requests, -1 )[0] ?? null;
-		$this->assertSame( '{}', $retry['body'] ?? null, 'A retry goes back to the printshop the order went to: it names none.' );
+		$this->assertEmpty( $retry['body'] ?? null, 'A retry goes back to the printshop the item went to: it names none.' );
 		$line = $this->line();
 		$this->assertSame( LineState::ORDERED, $line->state() );
-		$this->assertSame( self::NEWER_ORDER_ID, $line->ref( LineState::REF_ORDER_ID ) );
+		// The item is sent again in the order it is in.
+		$this->assertSame( self::ORDER_ID, $line->ref( LineState::REF_ORDER_ID ) );
+		$this->assertSame( FulfilmentAnswers::item_id( self::ORDER_ID ), $line->ref( LineState::REF_ORDER_ITEM_ID ) );
 		$this->assertSame( 'submitted', $line->ref( LineState::REF_ORDER_STATUS ) );
-		$this->assertSame( array( $line->item()->get_id() ), array_map( static fn ( LineState $found ): int => $found->item()->get_id(), LineState::for_order_id( self::NEWER_ORDER_ID ) ) );
-		$this->assertStringContainsString( self::NEWER_ORDER_ID, $this->notes() );
+		$this->assertSame( array( $line->item()->get_id() ), array_map( static fn ( LineState $found ): int => $found->item()->get_id(), LineState::for_order_id( self::ORDER_ID ) ) );
+		$this->assertStringContainsString( self::ORDER_ID, $this->notes() );
 		$this->assertFalse( $this->has_notice() );
 	}
 
@@ -149,20 +149,14 @@ final class LineActionsTest extends FulfilmentTestCase {
 			)
 			->json(
 				201,
-				$this->placed(
-					self::NEWER_ORDER_ID,
-					array(
-						'status'          => OrderStatus::AWAITING_PRINTS,
-						'replacesOrderId' => self::ORDER_ID,
-					)
-				)
+				$this->placed( self::ORDER_ID, array( 'status' => OrderStatus::AWAITING_PRINTS ) )
 			);
 
 		$this->assertSame( LineActions::DONE, $this->actions->run( $line, LineActions::RETRY )->code );
 
 		$line = $this->line();
 		$this->assertSame( LineState::ORDERED, $line->state() );
-		$this->assertSame( self::NEWER_ORDER_ID, $line->ref( LineState::REF_ORDER_ID ) );
+		$this->assertSame( self::ORDER_ID, $line->ref( LineState::REF_ORDER_ID ) );
 		$this->assertSame( OrderStatus::AWAITING_PRINTS, $line->ref( LineState::REF_ORDER_STATUS ) );
 		$this->assertStringContainsString( 'Waiting for prints', $this->render_box() );
 	}
@@ -317,14 +311,14 @@ final class LineActionsTest extends FulfilmentTestCase {
 		$this->assertSame( self::ORDER_ID, $line->ref( LineState::REF_ORDER_ID ) );
 	}
 
-	public function test_a_retry_that_fails_again_keeps_the_line_waiting_with_the_new_order(): void {
+	public function test_a_retry_that_fails_again_keeps_the_line_waiting(): void {
 		$line = $this->flagged( 'failed', NeedsAttention::ORDER_FAILED );
 		$this->recorder
 			->json( 200, $this->read( 'failed', array( 'canRetry' => true ) ) )
 			->json(
 				201,
 				$this->placed(
-					self::NEWER_ORDER_ID,
+					self::ORDER_ID,
 					array(
 						'status'    => 'failed',
 						'lastError' => 'Refused again.',
@@ -338,7 +332,7 @@ final class LineActionsTest extends FulfilmentTestCase {
 		$this->assertSame( 'failed', $result->detail );
 		$line = $this->line();
 		$this->assertSame( LineState::NEEDS_ATTENTION, $line->state() );
-		$this->assertSame( self::NEWER_ORDER_ID, $line->ref( LineState::REF_ORDER_ID ) );
+		$this->assertSame( self::ORDER_ID, $line->ref( LineState::REF_ORDER_ID ) );
 	}
 
 	public function test_a_retry_pixonaut_holds_shows_the_line_as_held_with_one_note(): void {
@@ -348,7 +342,7 @@ final class LineActionsTest extends FulfilmentTestCase {
 			->json(
 				201,
 				$this->placed(
-					self::NEWER_ORDER_ID,
+					self::ORDER_ID,
 					array(
 						'status' => OrderStatus::HELD,
 						'hold'   => self::HOLD,
@@ -360,7 +354,7 @@ final class LineActionsTest extends FulfilmentTestCase {
 
 		$line = $this->line();
 		$this->assertSame( LineState::ORDERED, $line->state() );
-		$this->assertSame( self::NEWER_ORDER_ID, $line->ref( LineState::REF_ORDER_ID ) );
+		$this->assertSame( self::ORDER_ID, $line->ref( LineState::REF_ORDER_ID ) );
 		$this->assertSame( OrderStatus::HELD, $line->ref( LineState::REF_ORDER_STATUS ) );
 		$this->assertSame( strtotime( self::PERIOD_END ), OrderHold::of( $line->ref( LineState::REF_HOLD ) )['periodEnd'] );
 		$this->assertSame( 1, substr_count( $this->notes(), 'is held' ) );
@@ -441,7 +435,7 @@ final class LineActionsTest extends FulfilmentTestCase {
 				'reason'           => 'Printful has it.',
 				'externalOrderRef' => 'PF-889123',
 			),
-			$this->sent_body( 'PATCH', '/v1/orders/' . self::ORDER_ID )
+			$this->sent_body( 'PATCH', self::printshop_order_path() )
 		);
 		$line = $this->line();
 		$this->assertSame( LineState::ORDERED, $line->state() );
@@ -454,7 +448,7 @@ final class LineActionsTest extends FulfilmentTestCase {
 		$this->recorder
 			->json( 200, $this->read( 'outcome_unknown', array( 'statusMoves' => array( 'submitted', 'failed' ) ) ) )
 			->json( 200, $this->placed( self::ORDER_ID, array( 'status' => 'failed' ) ) )
-			->json( 201, $this->placed( self::NEWER_ORDER_ID ) );
+			->json( 201, $this->placed( self::ORDER_ID ) );
 
 		$result = $this->actions->run( $line, LineActions::SETTLE_FAILED, 'No order under that number.' );
 
@@ -464,12 +458,12 @@ final class LineActionsTest extends FulfilmentTestCase {
 				'status' => 'failed',
 				'reason' => 'No order under that number.',
 			),
-			$this->sent_body( 'PATCH', '/v1/orders/' . self::ORDER_ID )
+			$this->sent_body( 'PATCH', self::printshop_order_path() )
 		);
-		$this->assertSame( 1, $this->count_sent( 'POST', '/v1/orders/' . self::ORDER_ID . '/retry' ) );
+		$this->assertSame( 1, $this->count_sent( 'POST', self::retry_path() ) );
 		$line = $this->line();
 		$this->assertSame( LineState::ORDERED, $line->state() );
-		$this->assertSame( self::NEWER_ORDER_ID, $line->ref( LineState::REF_ORDER_ID ) );
+		$this->assertSame( self::ORDER_ID, $line->ref( LineState::REF_ORDER_ID ) );
 	}
 
 	public function test_a_move_pixonaut_no_longer_allows_changes_nothing(): void {
@@ -506,11 +500,11 @@ final class LineActionsTest extends FulfilmentTestCase {
 		$line = $this->flagged( 'outcome_unknown', NeedsAttention::OUTCOME_UNKNOWN );
 		$this->recorder
 			->json( 200, $this->read( 'outcome_unknown' ) )
-			->json( 200, $this->placed( self::ORDER_ID, array( 'status' => 'cancelled' ) ) );
+			->json( 200, $this->placed( self::ORDER_ID, array( 'status' => 'cancelled' ) ) + array( 'cancelledItemIds' => array( FulfilmentAnswers::item_id( self::ORDER_ID ) ) ) );
 
 		$this->assertSame( LineActions::DONE, $this->actions->run( $line, LineActions::CANCEL )->code );
 
-		$this->assertSame( 1, $this->count_sent( 'POST', '/v1/orders/' . self::ORDER_ID . '/cancel' ) );
+		$this->assertSame( 1, $this->count_sent( 'POST', self::cancel_path() ) );
 		$this->assertSame( LineState::CANCELLED, $this->line()->state() );
 	}
 
@@ -520,7 +514,7 @@ final class LineActionsTest extends FulfilmentTestCase {
 
 		$this->assertSame( LineActions::NOT_AVAILABLE, $this->actions->run( $line, LineActions::RETRY )->code );
 
-		$this->assertSame( 0, $this->count_sent( 'POST', '/v1/orders/' . self::ORDER_ID . '/retry' ) );
+		$this->assertSame( 0, $this->count_sent( 'POST', self::retry_path() ) );
 	}
 
 	public function test_a_sandbox_order_can_be_rehearsed_and_the_line_follows(): void {
@@ -538,7 +532,7 @@ final class LineActionsTest extends FulfilmentTestCase {
 
 		$this->assertSame( LineActions::DONE, $this->actions->run( $line, LineActions::REHEARSE . 'shipped' )->code );
 
-		$this->assertSame( array( 'status' => 'shipped' ), $this->sent_body( 'PATCH', '/v1/orders/' . self::ORDER_ID ) );
+		$this->assertSame( array( 'status' => 'shipped' ), $this->sent_body( 'PATCH', self::printshop_order_path() ) );
 		$this->assertSame( LineState::SHIPPED, $this->line()->state() );
 	}
 
@@ -632,34 +626,19 @@ final class LineActionsTest extends FulfilmentTestCase {
 		$this->assertFalse( FulfilmentJobs::schedule( $this->item->get_id() ) );
 	}
 
-	public function test_a_retry_whose_answer_was_lost_is_found_and_the_line_takes_its_order(): void {
+	public function test_a_retry_whose_answer_was_lost_is_caught_up_on_the_next_read(): void {
 		$this->sign_in( 'shop_manager' );
 		$this->flagged( 'failed', NeedsAttention::ORDER_FAILED );
-		$this->recorder
-			->json( 200, $this->read( 'failed', array( 'replacedByOrderId' => self::NEWER_ORDER_ID ) ) )
-			->json(
-				200,
-				FulfilmentAnswers::read_order(
-					self::NEWER_ORDER_ID,
-					$this->external_ref(),
-					array(
-						'status'            => 'failed',
-						'replacesOrderId'   => self::ORDER_ID,
-						'replacedByOrderId' => self::NEWEST_ORDER_ID,
-					)
-				)
-			)
-			->json( 200, FulfilmentAnswers::read_order( self::NEWEST_ORDER_ID, $this->external_ref(), array( 'replacesOrderId' => self::NEWER_ORDER_ID ) ) )
-			->json( 200, FulfilmentAnswers::read_order( self::NEWEST_ORDER_ID, $this->external_ref(), array( 'status' => 'submitted' ) ) );
+		// The item was sent again in its order; the answer saying so never arrived.
+		$this->recorder->json( 200, $this->read( 'submitted' ) );
 
 		$html = $this->render_box();
 
 		$line = $this->line();
 		$this->assertSame( LineState::ORDERED, $line->state() );
-		$this->assertSame( self::NEWEST_ORDER_ID, $line->ref( LineState::REF_ORDER_ID ) );
+		$this->assertSame( self::ORDER_ID, $line->ref( LineState::REF_ORDER_ID ) );
 		$this->assertSame( 'submitted', $line->ref( LineState::REF_ORDER_STATUS ) );
-		$this->assertStringContainsString( ConnectionAnswers::studio_path() . 'orders/' . self::NEWEST_ORDER_ID, $html );
-		$this->assertStringContainsString( self::NEWEST_ORDER_ID, $this->notes() );
+		$this->assertStringContainsString( ConnectionAnswers::studio_path() . 'orders/' . self::ORDER_ID, $html );
 		$this->assertFalse( $this->has_notice() );
 	}
 
@@ -704,7 +683,7 @@ final class LineActionsTest extends FulfilmentTestCase {
 		$this->assertSame( 'cancelled', $line->ref( LineState::REF_ORDER_STATUS ) );
 	}
 
-	public function test_a_replacement_that_shipped_already_ships_the_line_and_completes_the_order(): void {
+	public function test_a_retried_item_that_shipped_already_ships_the_line_and_completes_the_order(): void {
 		$this->order->set_status( 'processing' );
 		$this->order->save();
 		$line = $this->flagged( 'failed', NeedsAttention::ORDER_FAILED );
@@ -713,11 +692,10 @@ final class LineActionsTest extends FulfilmentTestCase {
 			->json(
 				201,
 				$this->placed(
-					self::NEWER_ORDER_ID,
+					self::ORDER_ID,
 					array(
-						'status'          => 'shipped',
-						'replacesOrderId' => self::ORDER_ID,
-						'tracking'        => array(
+						'status'   => 'shipped',
+						'tracking' => array(
 							'carrier' => 'PostNord',
 							'number'  => 'PN123',
 						),
@@ -872,7 +850,7 @@ final class LineActionsTest extends FulfilmentTestCase {
 				'reason'           => 'They have it.',
 				'externalOrderRef' => 'PF-1',
 			),
-			$this->sent_body( 'PATCH', '/v1/orders/' . self::ORDER_ID )
+			$this->sent_body( 'PATCH', self::printshop_order_path() )
 		);
 		$this->assertStringContainsString( 'Another order in Pixonaut has that printshop reference', $this->render_box() );
 		$this->assertStringNotContainsString( 'Another order in Pixonaut has that printshop reference', $this->render_box() );
@@ -918,10 +896,10 @@ final class LineActionsTest extends FulfilmentTestCase {
 	 */
 	private function newer_order( string $via, int $quantity ): array {
 		$order              = FulfilmentAnswers::read_order( self::NEWER_ORDER_ID, $this->external_ref(), array( 'quantity' => $quantity ) );
-		$order['prints'][0] = array(
+		$order['items'][0]['prints'][0] = array(
 			'designId'       => self::DESIGN,
 			'designRevision' => self::REVISION,
-		) + $order['prints'][0];
+		) + $order['items'][0]['prints'][0];
 		return FulfilmentAnswers::placed_by(
 			$order,
 			$via,
@@ -1053,6 +1031,21 @@ final class LineActionsTest extends FulfilmentTestCase {
 
 	private static function plugin_file(): string {
 		return dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php';
+	}
+
+	private static function retry_path(): string {
+		return '/v1/orders/' . self::ORDER_ID . '/items/' . FulfilmentAnswers::item_id( self::ORDER_ID ) . '/retry';
+	}
+
+	private static function cancel_path(): string {
+		return '/v1/orders/' . self::ORDER_ID . '/items/' . FulfilmentAnswers::item_id( self::ORDER_ID ) . '/cancel';
+	}
+
+	/**
+	 * The path of the printshop order the line's item went in, as the fixtures name it.
+	 */
+	private static function printshop_order_path(): string {
+		return '/v1/orders/' . self::ORDER_ID . '/printshop-orders/po_' . FulfilmentAnswers::item_id( self::ORDER_ID );
 	}
 
 	private function external_ref(): string {

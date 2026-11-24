@@ -1,6 +1,6 @@
 <?php
 /**
- * Applies `order.cancelled` to the lines of the order.
+ * Applies `order.cancelled` to the lines of the order, and `item.cancelled` to the line of the item.
  *
  * @package Pixonaut\WooCommerce
  */
@@ -14,7 +14,7 @@ use RuntimeException;
 use WC_Order;
 
 /**
- * The printshop stopped the order: each of its lines is `cancelled`, with an
+ * The printshop stopped the order, or one item of it: each line it holds is `cancelled`, with an
  * order note, and records the order's status. The event comes for a cancel
  * the store asked for too; a line the store cancelled already when Pixonaut
  * answered is left as it is, so applying it twice changes nothing. Refunding
@@ -23,6 +23,11 @@ use WC_Order;
 final class OrderCancelled {
 
 	public const TYPE = 'order.cancelled';
+
+	/**
+	 * The event of one item cancelled.
+	 */
+	public const ITEM_TYPE = 'item.cancelled';
 
 	/**
 	 * Tries to apply the event when another request wrote the line meanwhile.

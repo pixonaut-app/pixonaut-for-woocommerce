@@ -17,7 +17,8 @@ use Pixonaut\WooCommerce\Webhooks\Payload;
 /**
  * Finds a Pixonaut order's lines by the order id they stored, keeping only
  * those of the connected workspace whose `externalRef` agrees with the
- * event's when it carries one.
+ * event's when it carries one. An `item.*` event is about one item, so only
+ * the line holding it is kept.
  */
 final class OrderEventLines {
 
@@ -32,7 +33,7 @@ final class OrderEventLines {
 	}
 
 	/**
-	 * @param Event $event An `order.*` event.
+	 * @param Event $event An `order.*` or `item.*` event.
 	 *
 	 * @return list<LineState> None when the event carries no `orderId` or the store is not connected.
 	 */
@@ -54,19 +55,6 @@ final class OrderEventLines {
 	}
 
 	/**
-	 * The lines the order id index still lists under a replaced order, see
-	 * LineState::indexed_under_replaced(), that an event about it may change.
-	 *
-	 * @param string $order_id A Pixonaut order id a retry replaced.
-	 * @param Event  $event    An `order.*` event.
-	 *
-	 * @return list<LineState> None when the store is not connected.
-	 */
-	public function indexed_under_replaced( string $order_id, Event $event ): array {
-		return $this->kept( LineState::indexed_under_replaced( $order_id ), $event );
-	}
-
-	/**
 	 * @param LineState[] $lines Lines holding an order the event names.
 	 * @param Event       $event An `order.*` event.
 	 * @phpstan-param list<LineState> $lines
@@ -74,7 +62,25 @@ final class OrderEventLines {
 	 * @return list<LineState> Those the event may change.
 	 */
 	private function kept( array $lines, Event $event ): array {
-		return array_values( array_filter( $lines, fn ( LineState $line ): bool => $this->holds( $line, Payload::string( $event, 'externalRef' ), $event->type ) ) );
+		$item_id = Payload::string( $event, 'itemId' );
+		return array_values(
+			array_filter(
+				$lines,
+				fn ( LineState $line ): bool => self::holds_item( $line, $item_id ) && $this->holds( $line, Payload::string( $event, 'externalRef' ), $event->type )
+			)
+		);
+	}
+
+	/**
+	 * Whether the line holds the item an event is about.
+	 *
+	 * @param LineState   $line    A line holding the event's order.
+	 * @param string|null $item_id The event's `itemId`; null for an event about the whole order.
+	 */
+	private static function holds_item( LineState $line, ?string $item_id ): bool {
+		$held = $line->ref( LineState::REF_ORDER_ITEM_ID );
+		// A line keeping no item id holds an order placed for it alone, whose one item is the line's.
+		return null === $item_id || ! is_string( $held ) || $held === $item_id;
 	}
 
 	/**

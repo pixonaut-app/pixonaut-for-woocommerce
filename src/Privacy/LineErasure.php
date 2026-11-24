@@ -299,8 +299,9 @@ final class LineErasure {
 
 	/**
 	 * The line's printshop order, the orders it replaced, and every other
-	 * order placed under its ref: a failed order a retry replaced keeps the
-	 * delivery it was sent to.
+	 * order placed under its ref: an order placed for the line alone before
+	 * orders held items, or replaced by a retry then, keeps the delivery it
+	 * was sent to.
 	 *
 	 * @param LineState $line     The line.
 	 * @param string    $order_id Its printshop order.

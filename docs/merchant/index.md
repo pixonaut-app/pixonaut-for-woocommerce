@@ -127,7 +127,7 @@ dismissed. [Troubleshooting](./troubleshooting/) lists them and what to do.
 
 As the printshop works on a personalised item, Pixonaut tells the store, and
 the plugin notes each step on the order: when the item is printed and when it
-ships, with the carrier and tracking number when the printshop gives one. An
+ships, and keeps the carrier and tracking number when the printshop gives one. An
 order whose items are all personalised is marked **Completed** once every
 item has shipped; an order with other items is never completed by the
 plugin. See [Printing and shipping](./how-orders-flow/#printing-and-shipping).

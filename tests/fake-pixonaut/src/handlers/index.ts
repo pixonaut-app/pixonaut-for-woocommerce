@@ -61,13 +61,12 @@ import { readFontFile } from './fonts';
 import { readImage } from './images';
 import { changeOrderDelivery } from './order-delivery';
 import {
+	cancelItem,
 	cancelOrder,
-	createOrder,
-	listOrders,
-	readOrder,
-	retryOrder,
-	updateOrder,
-} from './orders';
+	retryItem,
+	updatePrintshopOrder,
+} from './order-moves';
+import { createOrder, listOrders, readOrder } from './orders';
 import { reportPictureStorage } from './picture-storage';
 import {
 	importCatalogueBlank,
@@ -112,10 +111,12 @@ export const HANDLERS: Partial<Record<OperationKey, Handler>> = {
 	'GET /v1/templates': listTemplates,
 	'GET /v1/orders': listOrders,
 	'GET /v1/orders/{id}': readOrder,
-	'PATCH /v1/orders/{id}': updateOrder,
 	'POST /v1/orders': createOrder,
 	'POST /v1/orders/{id}/cancel': cancelOrder,
-	'POST /v1/orders/{id}/retry': retryOrder,
+	'POST /v1/orders/{id}/items/{itemId}/cancel': cancelItem,
+	'POST /v1/orders/{id}/items/{itemId}/retry': retryItem,
+	'PATCH /v1/orders/{id}/printshop-orders/{printshopOrderId}':
+		updatePrintshopOrder,
 	'POST /v1/orders/{id}/erase-personal-data': eraseOrder,
 	'PATCH /v1/orders/{id}/delivery': changeOrderDelivery,
 	'GET /v1/templates/{id}': readTemplate,
@@ -185,15 +186,14 @@ export const SERVED_WEBHOOKS: readonly string[] = [
 	'design.edited',
 	'design.personal_data_erased',
 	'design.rejected',
+	'item.cancelled',
+	'item.failed',
+	'item.status_changed',
+	'item.submitted',
 	'order.cancelled',
 	'order.delivery_changed',
-	'order.failed',
 	'order.held',
 	'order.released',
-	'order.status_changed',
-	'order.submitted',
-	'order.tracking_added',
-	'order.tracking_changed',
 	'share_link.regenerated',
 	'share_link.revoked',
 	'store_access.off',

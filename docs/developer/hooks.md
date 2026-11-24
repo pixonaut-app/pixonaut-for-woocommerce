@@ -514,13 +514,13 @@ add_filter( 'pixonaut_wc_fulfilment_order_address', function ( $mapped, $order )
 
 ### `pixonaut_wc_fulfilment_order_status_map`
 
-Filters the line state each Pixonaut order status puts a line in when `order.status_changed` reports it. A status left out changes nothing; a line never moves back, whatever the map says.
+Filters the line state each status of a Pixonaut order item puts its line in when `item.status_changed` reports it. A status left out changes nothing; a line never moves back, whatever the map says.
 
-Since 2.0.0 `$event` is the SDK's `Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event`.
+Since 2.0.0 `$event` is the SDK's `Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event`. Since 1.31.0 the statuses are an order item's, and `$event` is an `item.status_changed` event.
 
 | Parameter | Type | Description |
 |---|---|---|
-| `$map` | `array<string, string>` | Pixonaut order status => line state. |
+| `$map` | `array<string, string>` | Pixonaut order item status => line state. |
 | `$event` | `Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event\|null` | The event being applied; null when a read of the order applies the status. |
 
 Since 0.1.0. Fired in `src/Fulfilment/OrderStatusChanged.php`.

@@ -436,14 +436,15 @@ final class CancellationTest extends FulfilmentTestCase {
 	}
 
 	/**
-	 * Pixonaut's answer to the cancel: the order as it is now.
+	 * Pixonaut's answer to the cancel: the order as it is now, its item cancelled.
 	 *
-	 * @param string $status The order's status.
+	 * @param string $status The item's status.
 	 *
 	 * @return array<string, mixed>
 	 */
 	private function answer( string $status ): array {
-		return FulfilmentAnswers::order( self::ORDER_ID, array( 'p_front' ), Refs::order_item_ref( self::SITE, $this->order->get_id(), $this->item->get_id() ), array( 'status' => $status ) );
+		return FulfilmentAnswers::order( self::ORDER_ID, array( 'p_front' ), Refs::order_item_ref( self::SITE, $this->order->get_id(), $this->item->get_id() ), array( 'status' => $status ) )
+			+ array( 'cancelledItemIds' => array( FulfilmentAnswers::item_id( self::ORDER_ID ) ) );
 	}
 
 	/**

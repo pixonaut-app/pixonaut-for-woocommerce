@@ -12,6 +12,8 @@ namespace Pixonaut\WooCommerce\Fulfilment;
 // phpcs:disable WordPress.Security.EscapeOutput.ExceptionNotEscaped -- exception messages here are reasons and log text, never printed as they are: whoever shows one escapes it.
 
 use LogicException;
+use Pixonaut\WooCommerce\Api\Answers\Order;
+use Pixonaut\WooCommerce\Api\Answers\OrderItem;
 use Pixonaut\WooCommerce\Cart\FieldValue;
 use Pixonaut\WooCommerce\Cart\StandingSide;
 use Pixonaut\WooCommerce\Refs;
@@ -105,7 +107,7 @@ final class LineState {
 	/**
 	 * States reachable from any state that is not final.
 	 */
-	private const REACHABLE_ANYTIME = array( self::NEEDS_ATTENTION, self::FAILED, self::CANCELLED );
+	public const REACHABLE_ANYTIME = array( self::NEEDS_ATTENTION, self::FAILED, self::CANCELLED );
 
 	// Refs held for the whole line.
 	public const REF_TENANT_ID     = 'tenantId';
@@ -119,6 +121,8 @@ final class LineState {
 	// True once the designs hold the order line ref; absent while they may still hold the cart ref.
 	public const REF_EXTERNAL_REF_MOVED = 'externalRefMoved';
 	public const REF_ORDER_ID           = 'orderId';
+	// The id of the line's item in the order `orderId`; absent for an order placed for the line alone before orders held items, whose single item is the line's.
+	public const REF_ORDER_ITEM_ID = 'orderItemId';
 	public const REF_ORDER_KEY          = 'orderKey';
 	public const REF_ORDER_REQUEST      = 'orderRequest';
 	// True once the merchant asked to order the line's designs although they have a live order (`reorder`).
@@ -145,7 +149,7 @@ final class LineState {
 	// The name of the automation that placed the printshop order, when the line took on an order one of
 	// the workspace's automations placed; '' when its history did not name it. Absent for the store's own.
 	public const REF_ORDER_AUTOMATION = 'orderAutomation';
-	// The `externalRef` of an order the line took on that was placed under another ref than the line's.
+	// The `externalRef` of the line's order when it is not the line's own: the WooCommerce order's ref, or that of an order the line took on.
 	public const REF_ORDER_EXTERNAL_REF = 'orderExternalRef';
 	// `{at, reminders, failures}`: with proof by email, when the customer's deadline passes and the reminders go out (Unix times), and the deadline job's transient failures in a row.
 	public const REF_DEADLINE = 'deadline';
@@ -171,6 +175,7 @@ final class LineState {
 		self::REF_PRINTSHOP,
 		self::REF_EXTERNAL_REF_MOVED,
 		self::REF_ORDER_ID,
+		self::REF_ORDER_ITEM_ID,
 		self::REF_ORDER_KEY,
 		self::REF_ORDER_REQUEST,
 		self::REF_REORDER,
@@ -304,27 +309,16 @@ final class LineState {
 	}
 
 	/**
-	 * The lines whose Pixonaut order is $order_id. One line places one order,
-	 * so this is one line at most unless refs were copied by hand. A line the
-	 * index finds is returned only when its own `orderId` ref is $order_id.
+	 * The lines whose Pixonaut order is $order_id: the lines of one
+	 * WooCommerce order placed together, or the one line an order placed
+	 * before orders held items was placed for. A line the index finds is
+	 * returned only when its own `orderId` ref is $order_id.
 	 *
 	 * @param string $order_id A Pixonaut order id.
 	 * @return list<self>
 	 */
 	public static function for_order_id( string $order_id ): array {
 		return array_values( array_filter( self::indexed_under( $order_id ), static fn ( self $line ): bool => $line->ref( self::REF_ORDER_ID ) === $order_id ) );
-	}
-
-	/**
-	 * The lines the order id index still lists under $order_id although a
-	 * retry replaced it: a save wrote the document but not the index. The
-	 * next save of such a line brings the index in step.
-	 *
-	 * @param string $order_id A Pixonaut order id a retry replaced.
-	 * @return list<self>
-	 */
-	public static function indexed_under_replaced( string $order_id ): array {
-		return array_values( array_filter( self::indexed_under( $order_id ), static fn ( self $line ): bool => in_array( $order_id, $line->replaced_order_ids(), true ) ) );
 	}
 
 	/**
@@ -682,11 +676,15 @@ final class LineState {
 	 * old order's hold or release, so the new order can be held and released
 	 * in its turn. Saved with save().
 	 *
-	 * @param string $order_id The new order's id.
+	 * @param string      $order_id The new order's id.
+	 * @param string|null $item_id  The line's item in it; null when it holds the line's item alone.
 	 */
-	public function replace_order( string $order_id ): void {
+	public function replace_order( string $order_id, ?string $item_id = null ): void {
 		$current = $this->order_id();
 		if ( $current === $order_id ) {
+			if ( null !== $item_id ) {
+				$this->set_ref( self::REF_ORDER_ITEM_ID, $item_id );
+			}
 			return;
 		}
 		if ( null !== $current ) {
@@ -695,6 +693,7 @@ final class LineState {
 			$this->set_ref( self::REF_REPLACED_ORDER_IDS, $replaced );
 		}
 		$this->set_ref( self::REF_ORDER_ID, $order_id );
+		$this->set_ref( self::REF_ORDER_ITEM_ID, $item_id );
 		$this->set_ref( self::REF_ORDER_STATUS, null );
 		$this->set_ref( self::REF_ORDER_AUTOMATION, null );
 		$this->set_ref( self::REF_HOLD, null );
@@ -707,6 +706,19 @@ final class LineState {
 	public function replaced_order_ids(): array {
 		$ids = $this->ref( self::REF_REPLACED_ORDER_IDS );
 		return is_array( $ids ) ? array_values( array_filter( $ids, 'is_string' ) ) : array();
+	}
+
+	/**
+	 * The line's item in its Pixonaut order.
+	 *
+	 * @param Order $order The line's order, as Pixonaut answered it.
+	 *
+	 * @return OrderItem|null Null when the order holds no item of the line.
+	 */
+	public function item_of( Order $order ): ?OrderItem {
+		$item_id = $this->ref( self::REF_ORDER_ITEM_ID );
+		$ref     = $this->ref( self::REF_EXTERNAL_REF );
+		return $order->item( is_string( $item_id ) && '' !== $item_id ? $item_id : null, is_string( $ref ) ? $ref : null );
 	}
 
 	/**

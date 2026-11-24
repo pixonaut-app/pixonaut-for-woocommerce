@@ -42,6 +42,16 @@ final class Refs {
 	private const CART_REF_SEGMENTS = 4;
 
 	/**
+	 * Separates the order lines named in one key.
+	 */
+	private const ITEM_SEPARATOR = '.';
+
+	/**
+	 * The longest `Idempotency-Key` Pixonaut takes.
+	 */
+	private const MAX_KEY_LENGTH = 255;
+
+	/**
 	 * `Idempotency-Key` of a design commit: the same proof token always gets
 	 * the same key, so a repeated add to cart replays the first commit. What
 	 * the commit says of the preview is in the key too: a repeat that says
@@ -100,9 +110,8 @@ final class Refs {
 	}
 
 	/**
-	 * Reference of the order a line was sold in, which every Pixonaut line of
-	 * it sends as its store order: Pixonaut sends the lines bound for one
-	 * printshop to it together.
+	 * Reference of the order a line was sold in: the `externalRef` of the one
+	 * Pixonaut order its lines are placed in, an item per line.
 	 *
 	 * @param string $site     The connection's `<site>`.
 	 * @param int    $order_id Order id.
@@ -141,6 +150,19 @@ final class Refs {
 	 */
 	public static function reorder_key( string $site, int $item_id ): string {
 		return self::join( $site, 'item', (string) $item_id, 'reorder' );
+	}
+
+	/**
+	 * `Idempotency-Key` of the printshop order of several lines of one order,
+	 * placed together. Another set of lines is another request, under a key
+	 * of its own.
+	 *
+	 * @param string    $site     The connection's `<site>`.
+	 * @param list<int> $item_ids The order lines, in the order they are sent.
+	 */
+	public static function order_lines_key( string $site, array $item_ids ): string {
+		$key = self::join( $site, 'items', implode( self::ITEM_SEPARATOR, array_map( 'strval', $item_ids ) ) );
+		return strlen( $key ) <= self::MAX_KEY_LENGTH ? $key : self::join( $site, 'items', hash( self::HASH, $key ) );
 	}
 
 	/**

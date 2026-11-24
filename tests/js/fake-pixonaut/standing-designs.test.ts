@@ -22,8 +22,12 @@ function order(designIds: string[], key: string) {
 	return send(fake, '/v1/orders', {
 		method: 'POST',
 		json: {
-			designs: designIds.map((designId) => ({ designId })),
-			variant: FIXTURE.variant.teeWhiteS,
+			items: [
+				{
+					designs: designIds.map((designId) => ({ designId })),
+					variant: FIXTURE.variant.teeWhiteS,
+				},
+			],
 		},
 		headers: { ...asStore, 'idempotency-key': key },
 	});
@@ -172,7 +176,7 @@ describe('POST /v1/designs/standing', () => {
 		const [one, two] = [await first.json(), await second.json()];
 		expect(one.id).not.toBe(two.id);
 		// Each order reuses the print of the design's revision.
-		expect(two.prints[0].id).toBe(one.prints[0].id);
+		expect(two.items[0].printIds).toEqual(one.items[0].printIds);
 	});
 
 	it('refuses to order a standing design not approved', async () => {
@@ -307,7 +311,7 @@ describe('POST /v1/designs/standing on a blank whose print areas vary', () => {
 		const orderAs = (variant: string, key: string) =>
 			send(fake, '/v1/orders', {
 				method: 'POST',
-				json: { designs: [{ designId }], variant },
+				json: { items: [{ designs: [{ designId }], variant }] },
 				headers: { ...asStore, 'idempotency-key': key },
 			});
 

@@ -292,10 +292,10 @@ final class OrderLinesTest extends PersonalisedCartTestCase {
 		$this->assertCount( 5, $sent );
 		$this->assertSame( array( 'PUT', Hosts::server_api() . '/v1/designs/' . DesignFixture::ID . '/external-ref' ), array( $sent[0]['method'], $sent[0]['url'] ) );
 		$this->assertSame( array( 'externalRef' => $ref ), json_decode( (string) $sent[0]['body'], true ) );
-		$this->assertSame( Hosts::server_api() . '/v1/orders?externalRef=' . rawurlencode( $ref ), $sent[2]['url'] );
+		$this->assertSame( Hosts::server_api() . '/v1/orders?externalRef=' . rawurlencode( Refs::store_order_ref( self::SITE, $item->get_order_id() ) ), $sent[2]['url'] );
 		$placed = json_decode( (string) $sent[4]['body'], true );
 		$this->assertIsArray( $placed );
-		$this->assertSame( $ref, $placed['externalRef'] );
+		$this->assertSame( $ref, $placed['items'][0]['externalRef'] );
 		$state = LineState::of( $item );
 		$this->assertSame( LineState::ORDERED, $state->state() );
 		$this->assertSame( $ref, $state->ref( LineState::REF_EXTERNAL_REF ) );

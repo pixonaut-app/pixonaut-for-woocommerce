@@ -44,20 +44,22 @@ async function printed(): Promise<string> {
 	return seedPrint(fake, DESIGN);
 }
 
-/** Orders `printId`; answers the order's id. */
-async function ordered(printId: string, key = 'o1'): Promise<string> {
+/** Orders `printId` as one item; answers the order. */
+async function ordered(
+	printId: string,
+	key = 'o1',
+): Promise<{ id: string; items: { id: string }[] }> {
 	const response = await post(
 		'/v1/orders',
 		{
-			prints: [{ printId }],
 			externalRef: 'wc-42',
-			variant: FIXTURE.variant.teeWhiteS,
 			...shipping,
+			items: [{ prints: [{ printId }], variant: FIXTURE.variant.teeWhiteS }],
 		},
 		key,
 	);
 	expect(response.status).toBe(201);
-	return (await response.json()).id;
+	return response.json();
 }
 
 async function events(): Promise<unknown[]> {
@@ -118,23 +120,34 @@ describe('POST /v1/designs/{id}/erase-personal-data', () => {
 		const reprint = await post(
 			'/v1/orders',
 			{
-				designs: [{ designId: DESIGN }],
-				variant: FIXTURE.variant.teeWhiteS,
 				...shipping,
+				items: [
+					{
+						designs: [{ designId: DESIGN }],
+						variant: FIXTURE.variant.teeWhiteS,
+					},
+				],
 			},
 			'o3',
 		);
 		const order = await post(
 			'/v1/orders',
-			{ prints: [{ printId }], ...shipping },
+			{ ...shipping, items: [{ prints: [{ printId }] }] },
 			'o2',
 		);
-		const retry = await post(`/v1/orders/${failed}/retry`, {});
+		const retry = await post(
+			`/v1/orders/${failed.id}/items/${failed.items[0]?.id}/retry`,
+		);
 
-		for (const response of [reprint, order, retry]) {
+		for (const response of [reprint, order]) {
 			expect(response.status).toBe(409);
-			expect(await response.json()).toEqual({ error: 'design_erased' });
+			expect(await response.json()).toEqual({
+				error: 'design_erased',
+				itemIndex: 0,
+			});
 		}
+		expect(retry.status).toBe(409);
+		expect(await retry.json()).toEqual({ error: 'design_erased' });
 		expect(fake.violations).toEqual([]);
 	});
 
@@ -161,7 +174,7 @@ describe('POST /v1/designs/{id}/erase-personal-data', () => {
 
 describe('POST /v1/orders/{id}/erase-personal-data', () => {
 	it('refuses an order on its way, then erases it once cancelled', async () => {
-		const id = await ordered(await printed());
+		const { id } = await ordered(await printed());
 
 		const early = await eraseOrder(id);
 		await post(`/v1/orders/${id}/cancel`);

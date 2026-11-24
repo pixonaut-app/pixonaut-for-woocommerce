@@ -97,10 +97,12 @@ final class Pixonaut {
 		'orders.create',
 		'orders.list',
 		'orders.get',
-		'orders.update',
-		// Takes no key: a lost answer is found again as `order_superseded`.
-		'orders.retry',
+		'orders.printshopOrders.update',
+		// Takes no key: a lost answer leaves the item no longer failed, refused `retry_refused`.
+		'orders.items.retry',
+		// Placed before orders held items: an order of one line, cancelled whole.
 		'orders.cancel',
+		'orders.items.cancel',
 		// A repeat answers the order unchanged, so it takes no key.
 		'orders.erasePersonalData',
 		'orders.delivery.update',

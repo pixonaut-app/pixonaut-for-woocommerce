@@ -18,8 +18,9 @@ final class OrderHistoryEntry {
 
 	/**
 	 * @param float                $at         `at`, epoch milliseconds.
-	 * @param string               $status     `status`, the order's after it.
-	 * @param string               $type       `type`, the event's, e.g. `order.status_changed`.
+	 * @param string               $status     `status`, the item's after it.
+	 * @param string               $type       `type`, the event's, e.g. `item.status_changed`.
+	 * @param string               $item_id    `itemId`, the item the step was of.
 	 * @param string|null          $via        `via`, who made it, e.g. `automation`.
 	 * @param OrderAutomation|null $automation `automation`, the one that made it.
 	 */
@@ -27,6 +28,7 @@ final class OrderHistoryEntry {
 		public readonly float $at,
 		public readonly string $status,
 		public readonly string $type,
+		public readonly string $item_id,
 		public readonly ?string $via,
 		public readonly ?OrderAutomation $automation,
 	) {
@@ -43,6 +45,7 @@ final class OrderHistoryEntry {
 			at: Read::float( $data, 'at', $path ),
 			status: Read::string( $data, 'status', $path ),
 			type: Read::string( $data, 'type', $path ),
+			item_id: Read::string( $data, 'itemId', $path ),
 			via: Read::nullable_string( $data, 'via', $path ),
 			automation: Read::nullable_object( $data, 'automation', $path, OrderAutomation::from_answer( ... ) ),
 		);

@@ -435,7 +435,8 @@ function readArmFault(body: Body, fake: Fake): Read<ArmFault> {
 /** The reason a failed order gives when the test names none. */
 export const DEFAULT_ORDER_FAILURE_REASON = 'The printshop refused the order.';
 
-/** How many orders an armed outcome is for: `times`, or one. */
+/** How many items, or held orders, an armed outcome is for: `times`, or
+ *  one. */
 export function readTimes(body: Body): Read<number> {
 	const { times } = body;
 	if (
@@ -456,24 +457,38 @@ function readOrderFailure(body: Body): Read<OrderFailure> {
 	if (!times.ok) {
 		return times;
 	}
+	const item = optionalString(body, 'itemExternalRef');
+	if (!item.ok) {
+		return item;
+	}
 	return {
 		ok: true,
 		value: {
 			outcome: 'failed',
 			reason: reason.value ?? DEFAULT_ORDER_FAILURE_REASON,
 			remaining: times.value,
+			...(item.value === undefined ? {} : { itemExternalRef: item.value }),
 		},
 	};
 }
 
 function readOutcomeUnknown(body: Body): Read<OrderOutcomeUnknown> {
 	const times = readTimes(body);
-	return times.ok
-		? {
-				ok: true,
-				value: { outcome: 'outcome_unknown', remaining: times.value },
-			}
-		: times;
+	if (!times.ok) {
+		return times;
+	}
+	const item = optionalString(body, 'itemExternalRef');
+	if (!item.ok) {
+		return item;
+	}
+	return {
+		ok: true,
+		value: {
+			outcome: 'outcome_unknown',
+			remaining: times.value,
+			...(item.value === undefined ? {} : { itemExternalRef: item.value }),
+		},
+	};
 }
 
 type DesignCommand = {
@@ -662,7 +677,8 @@ export function registerControl(app: Hono, fake: Fake): void {
 		return c.json(fake.state.consent);
 	});
 
-	// The next orders placed answer `201` with status `failed`.
+	// The next items placed, or retried, fail at their printshop: `times` of
+	// them (one by default), only those of `itemExternalRef` when it is named.
 	app.post(`${PREFIX}/orders/fail`, async (c) => {
 		const body = await jsonBody(c.req.raw);
 		const failure = body.ok ? readOrderFailure(body.value) : body;
@@ -673,8 +689,9 @@ export function registerControl(app: Hono, fake: Fake): void {
 		return c.json(failure.value);
 	});
 
-	// The next orders placed answer `201` with status `outcome_unknown`, as
-	// when the printshop's answer to the submission was lost.
+	// The next items placed, or retried, are `outcome_unknown`, as when the
+	// printshop's answer to the submission was lost; counted and picked as a
+	// failure is.
 	app.post(`${PREFIX}/orders/outcome-unknown`, async (c) => {
 		const body = await jsonBody(c.req.raw);
 		const unknown = body.ok ? readOutcomeUnknown(body.value) : body;

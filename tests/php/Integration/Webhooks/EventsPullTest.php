@@ -68,11 +68,6 @@ final class EventsPullTest extends WP_UnitTestCase {
 
 	private const PRINT_ID = 'c4d5e6f7-a8b9-4c0d-9e1f-2a3b4c5d6e7f';
 
-	/**
-	 * The order a retry of ORDER_ID placed.
-	 */
-	private const RETRY_ID = 'a7b8c9d0-e1f2-4a3b-8c4d-5e6f7a8b9c0d';
-
 	private const EXTERNAL_REF = 'wc:5c3a1f6e:order:1:item:1';
 
 	private const TRACKING = array(
@@ -124,7 +119,7 @@ final class EventsPullTest extends WP_UnitTestCase {
 	public function test_connecting_skips_the_history_then_reads_every_open_line_once(): void {
 		$open    = $this->line( LineState::ORDERED );
 		$shipped = $this->line( LineState::SHIPPED );
-		$old     = $this->status_event( 'printed', 'shipped', self::TRACKING );
+		$old     = $this->status_event( 'printed', 'shipped' );
 		$last    = $this->status_event( 'submitted', 'queued' );
 		$this->recorder
 			->json( 200, self::page( array( $old ), 'evt_looked_through' ) )
@@ -271,7 +266,7 @@ final class EventsPullTest extends WP_UnitTestCase {
 	public function test_a_lost_delivery_is_handled_from_the_pull(): void {
 		$item = $this->line( LineState::ORDERED );
 		update_option( EventsPull::CURSOR_OPTION, self::cursor( null ) );
-		$shipped = $this->status_event( 'printed', 'shipped', self::TRACKING );
+		$shipped = $this->status_event( 'printed', 'shipped' );
 		$this->recorder
 			->json( 200, self::page( array( $shipped ), null ) )
 			->json( 200, array( self::endpoint( 0 ) ) );
@@ -289,12 +284,12 @@ final class EventsPullTest extends WP_UnitTestCase {
 		update_option( EventsPull::CURSOR_OPTION, self::cursor( null ) );
 		$fired = 0;
 		add_action(
-			'pixonaut_wc_webhook_order_status_changed',
+			'pixonaut_wc_webhook_item_status_changed',
 			static function () use ( &$fired ): void {
 				++$fired;
 			}
 		);
-		$event = $this->status_event( 'printed', 'shipped', self::TRACKING );
+		$event = $this->status_event( 'printed', 'shipped' );
 		$this->recorder
 			->json( 200, self::page( array( $event ), null ) )
 			->json( 200, array( self::endpoint( 0 ) ) );
@@ -309,18 +304,18 @@ final class EventsPullTest extends WP_UnitTestCase {
 		$this->assertSame( 1, $fired );
 	}
 
-	public function test_a_retried_order_pulled_hands_the_line_to_its_replacement_and_its_read_follows(): void {
+	public function test_a_retry_pulled_brings_the_line_out_of_needs_attention_and_its_read_follows(): void {
 		$item = $this->line( LineState::ORDERED );
 		$line = LineState::of( $item );
 		$line->set_ref( LineState::REF_ORDER_STATUS, 'failed' );
 		$line->transition( LineState::NEEDS_ATTENTION, 'order_failed' );
 		update_option( EventsPull::CURSOR_OPTION, self::cursor( null ) );
 		$this->recorder
-			->json( 200, self::page( array( $this->retried_event( self::RETRY_ID ), $this->status_event( 'submitted', 'queued', null, self::RETRY_ID ) ), null ) )
+			->json( 200, self::page( array( $this->submitted_event(), $this->status_event( 'submitted', 'queued' ) ), null ) )
 			->json( 200, array( self::endpoint( 0 ) ) );
-		// The handler reads the new order through the plugin's own client.
+		// The handler reads the order through the plugin's own client.
 		$plugin_api = ( new HttpRecorder( Hosts::server_api() ) )->start();
-		$plugin_api->json( 200, FulfilmentAnswers::order_read( self::RETRY_ID, self::PRINT_ID, self::EXTERNAL_REF, array( 'submitted' ) ) );
+		$plugin_api->json( 200, FulfilmentAnswers::order_read( self::ORDER_ID, self::PRINT_ID, self::EXTERNAL_REF, array( 'submitted', 'failed', 'submitted' ) ) );
 
 		do_action( EventsPull::PULL_HOOK );
 		ActionSchedulerRunner::run_pending( Processor::PROCESS_HOOK );
@@ -328,16 +323,15 @@ final class EventsPullTest extends WP_UnitTestCase {
 
 		$line = LineState::of( $item );
 		$this->assertSame( LineState::ORDERED, $line->state() );
-		$this->assertSame( self::RETRY_ID, $line->ref( LineState::REF_ORDER_ID ) );
-		$this->assertSame( array( self::ORDER_ID ), $line->replaced_order_ids() );
+		$this->assertSame( self::ORDER_ID, $line->ref( LineState::REF_ORDER_ID ), 'a retry keeps the order' );
 		$this->assertSame( 'queued', $line->ref( LineState::REF_ORDER_STATUS ) );
 
 		$this->recorder
-			->json( 200, FulfilmentAnswers::order_read( self::RETRY_ID, self::PRINT_ID, self::EXTERNAL_REF, array( 'submitted', 'queued', 'printed', 'shipped' ), self::TRACKING ) )
+			->json( 200, FulfilmentAnswers::order_read( self::ORDER_ID, self::PRINT_ID, self::EXTERNAL_REF, array( 'submitted', 'failed', 'submitted', 'queued', 'printed', 'shipped' ), self::TRACKING ) )
 			->json( 200, DesignFixture::design() );
 		do_action( LineReader::ACTION, $item->get_id() );
 
-		$this->assertStringContainsString( '/v1/orders/' . self::RETRY_ID, $this->recorder->requests[2]['url'] );
+		$this->assertStringContainsString( '/v1/orders/' . self::ORDER_ID, $this->recorder->requests[2]['url'] );
 		$this->assertSame( LineState::SHIPPED, LineState::of( $item )->state() );
 	}
 
@@ -356,7 +350,7 @@ final class EventsPullTest extends WP_UnitTestCase {
 		$item = $this->line( LineState::ORDERED );
 		update_option( EventsPull::CURSOR_OPTION, self::cursor( 'evt_kept' ) );
 		$printed   = $this->status_event( 'ordered', 'printed' );
-		$shipped   = $this->status_event( 'printed', 'shipped', self::TRACKING );
+		$shipped   = $this->status_event( 'printed', 'shipped' );
 		$malformed = $shipped;
 		unset( $malformed['createdAt'] );
 		$this->recorder->off_spec( 200, self::page( array( $printed, $malformed ), null ) );
@@ -399,7 +393,7 @@ final class EventsPullTest extends WP_UnitTestCase {
 	public function test_an_unreachable_store_reads_its_events_and_asks_for_no_delivery_again(): void {
 		$item = $this->line( LineState::ORDERED );
 		update_option( EventsPull::CURSOR_OPTION, self::cursor( null ) );
-		$shipped = $this->status_event( 'printed', 'shipped', self::TRACKING );
+		$shipped = $this->status_event( 'printed', 'shipped' );
 		$this->recorder
 			->json( 200, self::page( array( $shipped ), null ) )
 			->json( 200, array( self::endpoint( self::FAILED_DELIVERIES ) ) )
@@ -496,7 +490,7 @@ final class EventsPullTest extends WP_UnitTestCase {
 		$this->line( LineState::ORDERED );
 		update_option( EventsPull::CURSOR_OPTION, self::cursor( null ) );
 		$this->recorder
-			->json( 200, self::page( array( $this->status_event( 'printed', 'shipped', self::TRACKING ) ), null ) )
+			->json( 200, self::page( array( $this->status_event( 'printed', 'shipped' ) ), null ) )
 			->json( 200, self::page( array(), null ) );
 		$baselines = 0;
 		add_action(
@@ -595,7 +589,7 @@ final class EventsPullTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * A processing order with one Pixonaut line at $state, ordered at ORDER_ID.
+	 * A processing order with one Pixonaut line at $state, ordered at ORDER_ID as its one item.
 	 *
 	 * @param string $state   The line's state.
 	 * @param bool   $ordered Whether the line holds its printshop order.
@@ -613,6 +607,7 @@ final class EventsPullTest extends WP_UnitTestCase {
 		$line->set_ref( LineState::REF_EXTERNAL_REF, self::EXTERNAL_REF );
 		if ( $ordered ) {
 			$line->set_ref( LineState::REF_ORDER_ID, self::ORDER_ID );
+			$line->set_ref( LineState::REF_ORDER_ITEM_ID, FulfilmentAnswers::item_id( self::ORDER_ID ) );
 			$line->set_ref( LineState::REF_ORDER_STATUS, 'submitted' );
 		}
 		$line->set_side_ref( 'front', LineState::SIDE_DESIGN_ID, DesignFixture::ID );
@@ -625,58 +620,60 @@ final class EventsPullTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * An `order.status_changed` envelope.
+	 * An `item.status_changed` envelope for the item of ORDER_ID.
 	 *
-	 * @param string                     $previous Previous status.
-	 * @param string                     $status   New status.
-	 * @param array<string, string>|null $tracking Tracking, for `shipped`.
-	 * @param string                     $order_id The order.
+	 * @param string $previous Previous status.
+	 * @param string $status   New status.
 	 * @return array{id: string, type: string, payload: array<string, mixed>, createdAt: int}
 	 */
-	private function status_event( string $previous, string $status, ?array $tracking = null, string $order_id = self::ORDER_ID ): array {
-		++$this->sequence;
-		$created = time() * 1000 + $this->sequence;
-		$payload = array(
-			'orderId'        => $order_id,
-			'printId'        => self::PRINT_ID,
-			'externalRef'    => self::EXTERNAL_REF,
-			'previousStatus' => $previous,
-			'status'         => $status,
-			'via'            => 'integration',
-		);
-		if ( null !== $tracking ) {
-			$payload['tracking'] = $tracking;
-		}
-		return array(
-			'id'        => "{$created}-9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c" . str_pad( (string) $this->sequence, 2, '0', STR_PAD_LEFT ),
-			'type'      => 'order.status_changed',
-			'payload'   => $payload,
-			'createdAt' => $created,
+	private function status_event( string $previous, string $status ): array {
+		return $this->item_event(
+			'item.status_changed',
+			array(
+				'previousStatus' => $previous,
+				'status'         => $status,
+				'via'            => 'integration',
+			)
 		);
 	}
 
 	/**
-	 * An `order.submitted` envelope for $order_id, a retry of ORDER_ID.
+	 * An `item.submitted` envelope for the item of ORDER_ID, handed to its
+	 * printshop again after a retry.
 	 *
-	 * @param string $order_id The order that replaced ORDER_ID.
 	 * @return array{id: string, type: string, payload: array<string, mixed>, createdAt: int}
 	 */
-	private function retried_event( string $order_id ): array {
+	private function submitted_event(): array {
+		return $this->item_event(
+			'item.submitted',
+			array(
+				'printshopOrderId' => null,
+				'externalOrderRef' => null,
+			)
+		);
+	}
+
+	/**
+	 * An `item.*` envelope for the item of ORDER_ID, placed for the line alone.
+	 *
+	 * @param string               $type   Event type.
+	 * @param array<string, mixed> $fields Payload fields beside the item's.
+	 * @return array{id: string, type: string, payload: array<string, mixed>, createdAt: int}
+	 */
+	private function item_event( string $type, array $fields ): array {
 		++$this->sequence;
 		$created = time() * 1000 + $this->sequence;
 		return array(
 			'id'        => "{$created}-9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c" . str_pad( (string) $this->sequence, 2, '0', STR_PAD_LEFT ),
-			'type'      => 'order.submitted',
+			'type'      => $type,
 			'payload'   => array(
-				'orderId'          => $order_id,
-				'printId'          => self::PRINT_ID,
-				'printIds'         => array( self::PRINT_ID ),
-				'adapter'          => 'custom',
-				'quantity'         => 1,
-				'externalRef'      => self::EXTERNAL_REF,
-				'externalOrderRef' => null,
-				'replacesOrderId'  => self::ORDER_ID,
-			),
+				'orderId'         => self::ORDER_ID,
+				'externalRef'     => self::EXTERNAL_REF,
+				'itemId'          => FulfilmentAnswers::item_id( self::ORDER_ID ),
+				'itemExternalRef' => self::EXTERNAL_REF,
+				'submissionId'    => 'sub_' . FulfilmentAnswers::item_id( self::ORDER_ID ),
+				'printIds'        => array( self::PRINT_ID ),
+			) + $fields,
 			'createdAt' => $created,
 		);
 	}

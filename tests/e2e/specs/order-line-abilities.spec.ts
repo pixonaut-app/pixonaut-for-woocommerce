@@ -100,7 +100,10 @@ test('a failed printshop order is retried over the abilities an MCP client runs'
 	const order = await readOrder(request, orderId);
 	const [line] = order.lines as [Line];
 	expect(line.state).toBe('ordered');
-	expect(line.refs.orderId).not.toBe(stopped.refs.orderId);
+	// The item is sent again in the order it is in.
+	expect(line.refs.orderId).toBe(stopped.refs.orderId);
 	expect(order.notes.join('\n')).toContain('sent to the printshop again');
-	expect(await statuses(fake, 'POST /v1/orders/{id}/retry')).toEqual([201]);
+	expect(
+		await statuses(fake, 'POST /v1/orders/{id}/items/{itemId}/retry'),
+	).toEqual([201]);
 });
