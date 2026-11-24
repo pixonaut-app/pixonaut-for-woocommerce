@@ -393,6 +393,13 @@ final class PricingPanel {
 		} elseif ( null !== $cost && null !== $cost->product && '' !== $row->rate_date ) {
 			$parts = self::money( $cost->product, $cost->currency );
 		}
+		if ( null !== $cost && null !== $cost->pages ) {
+			$parts = '' === $parts
+				/* translators: %d: a book's page count. Under a cost in the Prices table of the product edit page: the count of inner pages the cost is at. */
+				? sprintf( _n( 'At %d page', 'At %d pages', $cost->pages, 'pixonaut-for-woocommerce' ), $cost->pages )
+				/* translators: 1: a cost's parts, such as "€16.71 + €3.00 shipping"; 2: a book's page count. Under a cost in the Prices table of the product edit page. */
+				: sprintf( _n( '%1$s, at %2$d page', '%1$s, at %2$d pages', $cost->pages, 'pixonaut-for-woocommerce' ), $parts, $cost->pages );
+		}
 		if ( '' !== $row->rate_date ) {
 			$parts = sprintf(
 				/* translators: 1: a cost as the printshop charges it, in its own currency, such as "€16.71 + €3.00 shipping"; 2: the day of the exchange rate, such as 2026-11-14; 3: the currency buffer in percent, such as 3. Under a converted cost in the Prices table of the product edit page. */

@@ -2,6 +2,7 @@ import type { Labeler } from '../shared/labels';
 import type {
 	Approved,
 	DesignerState,
+	PagesState,
 	PixonautDesigner,
 	ProductPlacement,
 	SplitMountOptions,
@@ -51,6 +52,14 @@ import {
 } from './frame-shape';
 import { type KeptView, listsView, shownViewOf } from './kept-view';
 import { withStandIns } from './lent-parts';
+import {
+	nextPageCount,
+	pageCount,
+	pageCountsSold,
+	printedPages,
+	showPageCount,
+	withPages,
+} from './pages';
 import { type DrawnSide, variationDrawnFor } from './partial-choice';
 import {
 	PREVIEW_OPENED_NAME,
@@ -99,6 +108,7 @@ import {
 	type Variations,
 	variationId,
 	variationsSoldAs,
+	variationsSoldAt,
 } from './variations';
 import { whenNeeded } from './when-needed';
 
@@ -339,6 +349,16 @@ export class ProductDesigner {
 	/** The variant last picked in the designer whose variation was put in
 	 *  the form, until the designer follows the form's next choice. */
 	private picked: string | undefined;
+
+	/** The page count last picked in the designer whose variation was put in
+	 *  the form, until the designer follows the form's next choice. */
+	private pickedPages: number | undefined;
+
+	/** The page count each designer shows, or was told the item has. */
+	private readonly pageCounts = new WeakMap<PixonautDesigner, number>();
+
+	/** The blanks the server's reads say have a placement printed as pages. */
+	private readonly books = new Set<string>();
 
 	/** The variant the script is switching the designer to, whose
 	 *  `variant` events are its own rather than the customer's. */
@@ -620,16 +640,33 @@ export class ProductDesigner {
 			withStandIns(options, this.form),
 			hidden,
 		);
+		// The reads are of the blank they were made for.
+		const paged =
+			from.readFor?.blankId === options.blankId
+				? printedPages(from.reads)
+				: null;
+		if (options.blankId !== undefined && Object.keys(paged ?? {}).length > 0) {
+			this.books.add(options.blankId);
+		}
+		const sold =
+			this.edit === null
+				? withPages(
+						preloaded,
+						paged,
+						pageCountsSold(this.container, this.variations),
+						this.pageCount(),
+					)
+				: preloaded;
 		this.deps.debug?.('mounting', {
 			productId: this.productId,
 			side,
-			options: preloaded,
+			options: sold,
 		});
 		let designer: PixonautDesigner;
 		try {
 			designer = await mountSide(
 				sdk,
-				this.forgetOnChange(side, preloaded),
+				this.forgetOnChange(side, sold),
 				from.reads,
 				from.readFor,
 			);
@@ -657,12 +694,24 @@ export class ProductDesigner {
 			);
 		}
 		designer.on('variant', ({ ref }) => this.variantPicked(side, ref));
+		const pages = designer.getPages();
+		if (pages !== null) {
+			this.pageCounts.set(designer, pages.count);
+		}
+		designer.on('pages', (shown) => this.pagesShown(side, designer, shown));
 		const frame =
 			this.existingPreview(side)?.closest<HTMLElement>(FRAME_SELECTOR);
 		if (frame) {
 			followDrawnShape(frame, designer);
 		}
 		this.designers.set(side, designer);
+		try {
+			// Mounted without the server's reads, it starts at the fewest pages;
+			// a cover mounted before the pages hears of them now.
+			this.showPages();
+		} catch (error) {
+			console.error('Pixonaut: the page count could not be shown.', error);
+		}
 		this.keptValues.delete(side);
 		this.keptViews.delete(side);
 		this.followHosts();
@@ -944,6 +993,109 @@ export class ProductDesigner {
 		this.setUnmatched(!chosen);
 	}
 
+	/** The pages the item is sold at; undefined for none, and before a
+	 *  variation names any. */
+	private pageCount(): number | undefined {
+		return pageCount(this.container, this.variations, this.variation);
+	}
+
+	/**
+	 * Puts the mounted sides the chosen variation has at the pages it is sold
+	 * at, dropping the approval of each that shows another count. Throws when
+	 * Pixonaut does not offer the count. A page editing a design leaves it at
+	 * the count it was made at.
+	 */
+	private showPages(): void {
+		const count = this.edit === null ? this.pageCount() : undefined;
+		if (count === undefined) {
+			return;
+		}
+		const sides = new Map(
+			this.activeSides()
+				.filter((side) => this.onBlank(side))
+				.flatMap((side) => {
+					const designer = this.designers.get(side);
+					return designer === undefined ? [] : [[designer, side] as const];
+				}),
+		);
+		showPageCount(
+			[...sides].map(([designer, side]) => ({
+				designer,
+				ofBook: this.books.has(
+					(this.mounts[side] as SideOptions & Placed).blankId ?? '',
+				),
+			})),
+			count,
+			(designer) => this.pageCounts.get(designer),
+			(designer) => {
+				// Before the SDK reports it, so it is not taken for a pick.
+				this.pageCounts.set(designer, count);
+				const side = sides.get(designer);
+				if (side !== undefined) {
+					this.dropApproval(side);
+				}
+			},
+		);
+	}
+
+	/**
+	 * After the side printed as pages reported its pages: another count,
+	 * picked by the customer in the designer, selects the variation sold at
+	 * it in the form, which the designer then follows. A count nothing is
+	 * sold at moves on to the next one sold the way the customer stepped,
+	 * else back to the one the item is sold at. A page turned changes nothing.
+	 */
+	private pagesShown(
+		side: string,
+		designer: PixonautDesigner,
+		{ count }: PagesState,
+	): void {
+		const before = this.pageCounts.get(designer) ?? count;
+		if (count === before || this.designers.get(side) !== designer) {
+			return;
+		}
+		this.pageCounts.set(designer, count);
+		this.dropApproval(side);
+		const { variations, form } = this;
+		const own = this.pageCount();
+		if (this.edit !== null || count === (this.pickedPages ?? own)) {
+			return;
+		}
+		const chosen =
+			variations !== null &&
+			form !== null &&
+			variationsSoldAt(
+				variations,
+				count,
+				form,
+				(variation) => !this.brokenVariations.has(variation),
+			).some((id) => selectAttributes(form, variations[id]?.attributes ?? {}));
+		if (chosen) {
+			this.pickedPages = count;
+			return;
+		}
+		const next =
+			nextPageCount(
+				pageCountsSold(this.container, variations),
+				before,
+				count,
+			) ?? own;
+		if (next === undefined) {
+			return;
+		}
+		// Once the SDK has told every listener of this count.
+		queueMicrotask(() => {
+			if (this.designers.get(side) !== designer) {
+				return;
+			}
+			try {
+				designer.setPageCount(next);
+			} catch (error) {
+				console.error('Pixonaut: the page count could not be shown.', error);
+			}
+		});
+	}
+
 	private setUnmatched(unmatched: boolean): void {
 		if (this.unmatched !== unmatched) {
 			this.unmatched = unmatched;
@@ -1096,6 +1248,7 @@ export class ProductDesigner {
 		}
 		this.unmatched = false;
 		this.picked = undefined;
+		this.pickedPages = undefined;
 		this.showPrice();
 		void this.queueSwitch(id).then(() => this.passOver(id));
 	}
@@ -1192,6 +1345,7 @@ export class ProductDesigner {
 		) {
 			return;
 		}
+		this.showPages();
 		this.applied = id;
 		// A designer that could not mount for the last variation may for this
 		// one, and a side it adds mounts now.
@@ -1618,6 +1772,10 @@ export class ProductDesigner {
 		return this.sdk !== null && error instanceof this.sdk.TemplateChangedError;
 	}
 
+	private pagesChanged(error: unknown): boolean {
+		return this.sdk !== null && error instanceof this.sdk.PagesChangedError;
+	}
+
 	private readonly onSubmit = (event: SubmitEvent): void => {
 		if (this.passing) {
 			return;
@@ -1764,14 +1922,20 @@ export class ProductDesigner {
 		}
 		this.approved.delete(side);
 		for (let attempt = 0; attempt < APPROVE_ATTEMPTS; attempt++) {
+			// The proof is of the item sold, however many pages the designer shows.
+			this.showPages();
 			const changes = this.changeCount(side);
 			let result: Approved;
 			try {
 				result = await designer.approve();
 			} catch (error) {
-				// A view on another placement, or another template, was shown
-				// while the proof was made.
-				if (this.placementChanged(error) || this.templateChanged(error)) {
+				// A view on another placement, another template, or another page
+				// count was shown while the proof was made.
+				if (
+					this.placementChanged(error) ||
+					this.templateChanged(error) ||
+					this.pagesChanged(error)
+				) {
 					continue;
 				}
 				throw error;

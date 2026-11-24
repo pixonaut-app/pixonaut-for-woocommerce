@@ -2,7 +2,7 @@
 // the printshop's price list: a product price and the cheapest shipping to a
 // region per variant, as decimal strings with their currency, and how long
 // the printshop says that shipping takes.
-import type { Blank, VariantCost } from '../state';
+import type { Blank, DeliveryDays, VariantCost } from '../state';
 import { tenantBlank } from './catalogue';
 import { type Handler, type HandlerResult, refusal } from './types';
 
@@ -47,9 +47,23 @@ export function costOf(blank: Blank, ref: string): VariantCost {
 	};
 }
 
+/** A cost's `times`: a time is told of what is shipped, by that shipping. */
+function timesOf(
+	product: string | null,
+	shipping: string | null,
+	delivery: DeliveryDays | null,
+) {
+	return {
+		production: null,
+		shipping: null,
+		delivery: product === null || shipping === null ? null : delivery,
+	};
+}
+
 /** `GET /v1/blanks/{id}/variants/costs`: every variant's cost with shipping
  *  to `region`, every variant read (`complete`), a variant without a
- *  published price with `product` null;
+ *  published price with `product` null, a book with its cost at each page
+ *  count (`pages`);
  *  refused `unknown_region` for a region no printshop ships to. */
 export const listVariantCosts: Handler = (context): HandlerResult => {
 	const blank = tenantBlank(context, context.params.id ?? '');
@@ -72,24 +86,22 @@ export const listVariantCosts: Handler = (context): HandlerResult => {
 				const cost = costOf(blank, variant.ref);
 				const money = (amount: string | null) =>
 					amount === null ? null : { amount, currency: cost.currency };
+				const delivery =
+					cost.delivery === undefined ? DELIVERY_DAYS : cost.delivery;
 				return {
 					variant: variant.ref,
 					product: money(cost.product),
 					// Shipping is priced only for something the printshop sells.
 					shipping: cost.product === null ? null : money(cost.shipping),
 					// A time is told of what is shipped, by that shipping.
-					times: {
-						production: null,
-						shipping: null,
-						delivery:
-							cost.product === null || cost.shipping === null
-								? null
-								: cost.delivery === undefined
-									? DELIVERY_DAYS
-									: cost.delivery,
-					},
-					// No fixture placement is printed as pages.
-					pages: [],
+					times: timesOf(cost.product, cost.shipping, delivery),
+					// A book's cost at each page count; empty for anything else.
+					pages: (cost.pages ?? []).map((at) => ({
+						pages: at.pages,
+						product: money(at.product),
+						shipping: at.product === null ? null : money(at.shipping),
+						times: timesOf(at.product, at.shipping, delivery),
+					})),
 					region,
 					readAt,
 					changedAt:

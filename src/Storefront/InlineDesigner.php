@@ -34,6 +34,7 @@ final class InlineDesigner {
 	 * @param array<string, string>               $side_labels   Each mounted side's name, by side key; empty to take them from the configuration.
 	 * @param string|null                         $variant       The ref of the blank variant the product sells, which the designer shows it in; null for none, and on a variable product, whose variations each name theirs.
 	 * @param string|null                         $opening_variant On a variable product, the ref of the blank variant of the variation the page opens on, which its preview is printed in; null for none.
+	 * @param int|null                            $page_count      The pages a book without variations is sold at; null for none, and on a variable product, whose variations each name theirs.
 	 */
 	public function __construct(
 		public readonly WC_Product $product,
@@ -47,6 +48,7 @@ final class InlineDesigner {
 		private readonly array $side_labels = array(),
 		public readonly ?string $variant = null,
 		public readonly ?string $opening_variant = null,
+		public readonly ?int $page_count = null,
 	) {
 	}
 

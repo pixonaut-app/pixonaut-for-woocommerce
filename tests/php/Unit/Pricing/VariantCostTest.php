@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Tests\Unit\Pricing;
 
 use Pixonaut\WooCommerce\Pricing\VariantCost;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\BlanksVariantsCostsResponseCostsItem;
 use Pixonaut\WooCommerce\Tests\Unit\TestCase;
 
 final class VariantCostTest extends TestCase {
@@ -51,6 +52,83 @@ final class VariantCostTest extends TestCase {
 
 		$this->assertSame( array( 'v_odd' ), array_keys( $costs ) );
 		$this->assertNull( $costs['v_odd']->product );
+	}
+
+	public function test_a_book_is_read_with_its_cost_at_each_page_count(): void {
+		$row  = self::row( 'v_a5', '9.53', '7.45' ) + array(
+			'pages' => array(
+				array(
+					'pages'    => 60,
+					'product'  => array(
+						'amount'   => '15.10',
+						'currency' => 'SEK',
+					),
+					'shipping' => array(
+						'amount'   => '8.10',
+						'currency' => 'SEK',
+					),
+				),
+				array(
+					'pages'    => 20,
+					'product'  => null,
+					'shipping' => null,
+				),
+				array( 'pages' => 'many' ),
+			),
+		);
+		$cost = VariantCost::list_from( array( $row ) )['v_a5'];
+
+		$this->assertSame( array( 20, 60 ), array_keys( $cost->by_pages ), 'fewest first, a count that is not a number left out' );
+		$this->assertNull( $cost->pages );
+		$at = $cost->at_pages( 60 );
+		$this->assertSame( array( 60, 15100, 8100, 'SE' ), array( $at->pages, $at->product, $at->shipping, $at->region ) );
+		$this->assertNull( $cost->at_pages( 20 )->product, 'no price at a count the printshop prices none at' );
+		$this->assertSame( array( 44, null ), array( $cost->at_pages( 44 )->pages, $cost->at_pages( 44 )->product ), 'no price at a count the placement does not offer' );
+		$this->assertSame( $cost, $cost->at_pages( null ) );
+
+		$stored = VariantCost::from_array( $at->to_array() );
+		$this->assertNotNull( $stored );
+		$this->assertSame( array( 60, 15100 ), array( $stored->pages, $stored->product ) );
+	}
+
+	public function test_a_book_is_read_as_the_sdk_models_its_cost(): void {
+		$money = static fn ( string $amount ): array => array(
+			'amount'   => $amount,
+			'currency' => 'SEK',
+		);
+		$times = array(
+			'production' => null,
+			'shipping'   => null,
+			'delivery'   => array(
+				'minDays' => 8,
+				'maxDays' => 10,
+			),
+		);
+		$at    = array(
+			'product'  => $money( '12.52' ),
+			'shipping' => $money( '7.45' ),
+			'times'    => $times,
+		);
+		$model = BlanksVariantsCostsResponseCostsItem::fromArray(
+			$at + array(
+				'variant'   => 'v_a5',
+				'region'    => 'SE',
+				'readAt'    => '2026-11-23T12:00:00.000Z',
+				'changedAt' => null,
+				'pages'     => array( $at + array( 'pages' => 44 ) ),
+			)
+		);
+
+		$cost = VariantCost::list_from( array( $model->raw() ) )['v_a5']->at_pages( 44 );
+		$this->assertSame( array( 44, 12520, 7450, 'SE' ), array( $cost->pages, $cost->product, $cost->shipping, $cost->region ) );
+	}
+
+	public function test_a_variant_printed_as_no_pages_is_its_own_cost_at_any_count(): void {
+		$cost = VariantCost::list_from( array( self::row( 'v_a3', '167.10', '65.50' ) + array( 'pages' => array() ) ) )['v_a3'];
+
+		$at = $cost->at_pages( 44 );
+		$this->assertSame( array( 44, 167100, 65500 ), array( $at->pages, $at->product, $at->shipping ), 'its own cost, said to be at the count' );
+		$this->assertArrayNotHasKey( 'pages', $cost->to_array() );
 	}
 
 	public function test_a_cost_is_stored_and_read_back(): void {

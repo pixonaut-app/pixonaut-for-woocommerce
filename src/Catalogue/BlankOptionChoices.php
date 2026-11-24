@@ -14,7 +14,8 @@ use Closure;
 /**
  * The options, each with its values, of the blanks that products with
  * values of an attribute use, themselves or through their variations, as
- * Pixonaut writes them: what `BlankOptionLinks` can link the attribute to.
+ * Pixonaut writes them: what `BlankOptionLinks` can link the attribute to,
+ * beside a book's page count (`BlankOptionLinks::PAGE_COUNT`).
  */
 final class BlankOptionChoices {
 
@@ -49,6 +50,8 @@ final class BlankOptionChoices {
 				}
 			}
 		}
+		// Any attribute can stand for a book's page count, whose values are counts rather than an option's values.
+		$choices[ BlankOptionLinks::PAGE_COUNT ] = array();
 		return $choices;
 	}
 }

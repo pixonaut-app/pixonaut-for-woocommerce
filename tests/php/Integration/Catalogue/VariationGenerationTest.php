@@ -195,6 +195,23 @@ final class VariationGenerationTest extends PricingTestCase {
 		$this->assertNull( VariationPlan::stored_on( $this->reread( $product ) ), 'nor is the plan saved' );
 	}
 
+	public function test_an_attribute_standing_for_a_page_count_makes_a_variation_per_count(): void {
+		$product = $this->poster();
+		BlankOptionLinks::set( $this->attribute_ids['colour'], BlankOptionLinks::PAGE_COUNT, array() );
+
+		$answer = $this->generate->execute(
+			array(
+				'product_id' => $product->get_id(),
+				'entries'    => array( self::PLAN[0] ),
+			)
+		);
+
+		$this->assertIsArray( $answer );
+		$counts = array_unique( array_map( static fn ( array $row ): string => (string) ( (array) $row['attributes'] )['pa_colour'], $answer['add'] ) );
+		sort( $counts );
+		$this->assertSame( array( 'black', 'white' ), $counts, 'each value its own variation, none for any value' );
+	}
+
 	public function test_generating_makes_links_and_prices_each_variation_on_its_blank(): void {
 		$product = $this->poster();
 		$framed  = $this->framed_variation( $product );

@@ -248,6 +248,8 @@ final class VariationCombinations {
 		$columns  = array();
 		foreach ( $offered as $name => $values ) {
 			$option = BlankOptionLinks::option_of( $name );
+			// A page count is no option of the blank: each of its values is a variation of its own.
+			$option = BlankOptionLinks::PAGE_COUNT === $option ? null : $option;
 			$axis   = null === $option ? null : self::axis_named( $axes, $option );
 			if ( null !== $axis ) {
 				$linked[ $name ] = $axis;

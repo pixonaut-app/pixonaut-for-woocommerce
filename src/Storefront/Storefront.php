@@ -300,6 +300,7 @@ final class Storefront {
 				'edit'            => self::edit_settings( $designer ),
 				'variations'      => $variations,
 				'variant'         => $designer->variant ?? '',
+				'page_count'      => $designer->page_count,
 				'forms'           => array() === $mounts ? array() : $this->forms( $designer ),
 				'reads'           => array() === $mounts ? '' : self::reads_json( $this->reads( $designer ) ),
 				'read_at'         => time(),

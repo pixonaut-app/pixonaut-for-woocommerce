@@ -353,7 +353,13 @@ export type Placement = {
 	views: View[];
 	/** Its print area per row; left out when it has one area, its own. */
 	areas?: PrintArea[];
+	/** The page counts it is printed at, each page its print area; left out
+	 *  for one page (`POST /__fake/blanks/:id/pages`). */
+	pages?: PrintedPages;
 };
+
+/** From `min` pages to `max`, `step` at a time. */
+export type PrintedPages = { min: number; max: number; step: number };
 
 /** Why a variant is no longer sold: the merchant `retired` it, or its
  *  printshop stopped making it (`no_longer_sold`). */
@@ -379,6 +385,17 @@ export type VariantCost = {
 	/** The days from the order to the door the printshop tells, null for
 	 *  none; absent for the fixture's span. */
 	delivery?: DeliveryDays | null;
+	/** A book's cost at each page count of its paged placement, fewest
+	 *  first; absent for a variant printed as no pages. */
+	pages?: PageCost[];
+};
+
+/** A book's cost at one page count: `product` null where the printshop
+ *  gives no price at it. */
+export type PageCost = {
+	pages: number;
+	product: string | null;
+	shipping: string | null;
 };
 
 /** A span of days as Pixonaut writes one. */

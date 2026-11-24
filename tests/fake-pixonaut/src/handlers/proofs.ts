@@ -3,7 +3,7 @@
 // `GET /p/{token}`, the image its `proofUrl` opens.
 import { reaches } from '../auth';
 import { mintProof, PROOFS, type Proof } from '../proofs';
-import { allOwned, type TemplateVersion } from '../state';
+import { allOwned, type PrintedPages, type TemplateVersion } from '../state';
 import { WHITE_JPEG } from './images';
 import { type Box, resolvePlacement } from './placements';
 import { sessionOf } from './session';
@@ -25,12 +25,44 @@ type ProofBody = {
 	/** Kept with the proof, and with the design committed from it. */
 	pickedColours?: Record<string, string>;
 	viewId?: string;
+	/** On a placement printed as pages, the page proofed and the pages the
+	 *  item has; on another placement of its blank, `pageCount` alone. */
+	page?: number;
+	pageCount?: number;
 };
 
 /** Whether exactly one of two values is given: Pixonaut takes both or
  *  neither, and refuses half a pair as `bad_request`. */
 function half(a: unknown, b: unknown): boolean {
 	return (a === undefined) !== (b === undefined);
+}
+
+/** Why Pixonaut refuses the page a proof names: a placement printed as
+ *  pages takes one page of a count it is printed at, and any other none. */
+function pageRefusal(
+	placementId: string,
+	pages: PrintedPages | undefined,
+	{ page, pageCount }: ProofBody,
+): Record<string, unknown> | undefined {
+	if (pages === undefined) {
+		return page === undefined
+			? undefined
+			: { error: 'page_on_unpaged_placement', placementId };
+	}
+	if (page === undefined || pageCount === undefined || page > pageCount) {
+		return { error: 'page_required', placementId };
+	}
+	const { min, max, step } = pages;
+	return pageCount < min || pageCount > max || (pageCount - min) % step !== 0
+		? {
+				error: 'page_count_out_of_range',
+				placementId,
+				count: pageCount,
+				min,
+				max,
+				step,
+			}
+		: undefined;
 }
 
 type FormField = { layerId: string; prop: string; default?: unknown };
@@ -126,6 +158,13 @@ export const createProof: Handler = (context) => {
 	) {
 		return refusal(422, 'unknown_placement');
 	}
+	const pages = state.blanks
+		.get(blankId ?? '')
+		?.placements.find((placement) => placement.id === placementId)?.pages;
+	const refused = pageRefusal(placementId ?? '', pages, request);
+	if (refused !== undefined) {
+		return { status: 422, body: refused };
+	}
 	const named: Box | undefined =
 		request.widthMm !== undefined && request.heightMm !== undefined
 			? { widthMm: request.widthMm, heightMm: request.heightMm }
@@ -143,6 +182,9 @@ export const createProof: Handler = (context) => {
 		values: request.values,
 		sessionId: sessionOf(context.headers),
 		language: context.query.get('lang'),
+		...(request.page === undefined || request.pageCount === undefined
+			? {}
+			: { page: { page: request.page, pageCount: request.pageCount } }),
 	});
 	if (typeof proof === 'string') {
 		throw new Error(`The checked proof request was refused: ${proof}`);

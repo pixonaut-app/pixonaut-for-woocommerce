@@ -333,6 +333,15 @@ export const REACH = {
 		'src/Catalogue/VariantWatch.php',
 		'src/Catalogue/Purchasability.php',
 	],
+	'book-pages.spec.ts': [
+		'assets/src/storefront/pages.ts',
+		'assets/src/storefront/variations.ts',
+		'src/Catalogue/BlankOptionLinks.php',
+		'src/Storefront/InlineDesigner.php',
+		'src/Storefront/InlineProducts.php',
+		'src/Storefront/VariationSwitches.php',
+		'templates/storefront/form.php',
+	],
 	'button-book.spec.ts': [
 		'src/Cart/ProofTokens.php',
 		'src/Api/Answers/ProofSet.php',

@@ -20,7 +20,8 @@
  * On a variable product, `data-pixonaut-variations` says what each variation
  * switches the designer to; the script hides the form of a variation bought
  * without a design. `data-pixonaut-variant` names the blank variant the
- * designer shows a product without variations in.
+ * designer shows a product without variations in, and
+ * `data-pixonaut-page-count` the pages a book without variations has.
  *
  * A product with more than one side gets a tab per side. The script shows
  * the selected side's form, preview and proof button and hides the others';
@@ -66,7 +67,7 @@
  * one, each variation's values and price, and how the shop writes a price.
  *
  * @package Pixonaut\WooCommerce
- * @version 1.26.0
+ * @version 1.31.0
  *
  * @var int                                 $product_id      The product.
  * @var array<string, array<string, mixed>> $mounts          Mount options by side key; empty when personalisation is unavailable.
@@ -83,6 +84,7 @@
  * @var array<string, string>               $edit            The edited line's `key` (a cart item key, or an order line's signed state), `updateUrl`, `linkUrl` and `nonce`; empty when the page adds a new line.
  * @var array<int, array<string, mixed>>    $variations      On a variable product: what each variation switches the designer to, by variation id; empty otherwise.
  * @var string                              $variant         The ref of the blank variant the designer shows the product in; empty for none.
+ * @var int|null                            $page_count      The pages a book without variations has; left out or null for none.
  * @var array<string, string>               $forms           Each mounted side's form as its designer draws it (`storefront/form-placeholder.php`), by side key.
  * @var string                              $reads           The server's Pixonaut reads, by side key, as a JSON object safe inside a script element; empty for none.
  * @var int                                 $read_at         When the page was made, in Unix seconds.
@@ -96,7 +98,7 @@
 
 defined( 'ABSPATH' ) || exit;
 ?>
-<div class="pixonaut-form" data-pixonaut-product="<?php echo esc_attr( (string) $product_id ); ?>" data-pixonaut-field="<?php echo esc_attr( $field ); ?>"<?php echo array() === $mounts ? '' : ' data-pixonaut-mounts="' . esc_attr( (string) wp_json_encode( $mounts ) ) . '"'; ?><?php echo array() === $edit ? '' : ' data-pixonaut-edit="' . esc_attr( (string) wp_json_encode( $edit ) ) . '"'; ?><?php echo array() === $variations ? '' : ' data-pixonaut-variations="' . esc_attr( (string) wp_json_encode( (object) $variations ) ) . '"'; ?><?php echo '' === $variant ? '' : ' data-pixonaut-variant="' . esc_attr( $variant ) . '"'; ?><?php echo '' === ( $product_price ?? '' ) ? '' : ' data-pixonaut-product-price="' . esc_attr( $product_price ) . '"'; ?><?php echo array() === ( $opening_choice ?? array() ) ? '' : ' data-pixonaut-opening-choice="' . esc_attr( (string) wp_json_encode( $opening_choice ) ) . '"'; ?><?php echo array() === ( $look ?? array() ) ? '' : ' data-pixonaut-look="' . esc_attr( implode( ' ', $look ) ) . '"'; ?><?php echo false === ( $group_numbers ?? true ) ? ' data-pixonaut-group-numbers="off"' : ''; ?><?php echo array() === ( $swatches ?? array() ) ? '' : ' data-pixonaut-swatches="' . esc_attr( (string) wp_json_encode( $swatches ) ) . '"'; ?><?php echo array() === ( $choice_prices ?? array() ) ? '' : ' data-pixonaut-choice-prices="' . esc_attr( (string) wp_json_encode( $choice_prices ) ) . '"'; ?>>
+<div class="pixonaut-form" data-pixonaut-product="<?php echo esc_attr( (string) $product_id ); ?>" data-pixonaut-field="<?php echo esc_attr( $field ); ?>"<?php echo array() === $mounts ? '' : ' data-pixonaut-mounts="' . esc_attr( (string) wp_json_encode( $mounts ) ) . '"'; ?><?php echo array() === $edit ? '' : ' data-pixonaut-edit="' . esc_attr( (string) wp_json_encode( $edit ) ) . '"'; ?><?php echo array() === $variations ? '' : ' data-pixonaut-variations="' . esc_attr( (string) wp_json_encode( (object) $variations ) ) . '"'; ?><?php echo '' === $variant ? '' : ' data-pixonaut-variant="' . esc_attr( $variant ) . '"'; ?><?php echo null === ( $page_count ?? null ) ? '' : ' data-pixonaut-page-count="' . esc_attr( (string) $page_count ) . '"'; ?><?php echo '' === ( $product_price ?? '' ) ? '' : ' data-pixonaut-product-price="' . esc_attr( $product_price ) . '"'; ?><?php echo array() === ( $opening_choice ?? array() ) ? '' : ' data-pixonaut-opening-choice="' . esc_attr( (string) wp_json_encode( $opening_choice ) ) . '"'; ?><?php echo array() === ( $look ?? array() ) ? '' : ' data-pixonaut-look="' . esc_attr( implode( ' ', $look ) ) . '"'; ?><?php echo false === ( $group_numbers ?? true ) ? ' data-pixonaut-group-numbers="off"' : ''; ?><?php echo array() === ( $swatches ?? array() ) ? '' : ' data-pixonaut-swatches="' . esc_attr( (string) wp_json_encode( $swatches ) ) . '"'; ?><?php echo array() === ( $choice_prices ?? array() ) ? '' : ' data-pixonaut-choice-prices="' . esc_attr( (string) wp_json_encode( $choice_prices ) ) . '"'; ?>>
 	<p class="pixonaut-form__unavailable" role="alert"<?php echo array() === $mounts ? '' : ' hidden'; ?>><?php echo esc_html( $unavailable ); ?></p>
 	<p class="pixonaut-form__error" role="alert" hidden></p>
 	<?php $pixonaut_first = (string) array_key_first( $mounts ); ?>

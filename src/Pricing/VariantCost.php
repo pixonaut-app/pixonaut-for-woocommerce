@@ -16,17 +16,24 @@ namespace Pixonaut\WooCommerce\Pricing;
  * long the printshop says it takes by that shipping, and when Pixonaut read
  * them. A printshop that publishes no price gives none,
  * and a cost is then never guessed.
+ *
+ * A book is priced only at a page count, and not in even steps, so a
+ * variant of a blank printed as pages is read with its cost at each page
+ * count its paged placement offers (`by_pages`). The variant's own cost is
+ * the one at its fewest priced pages; `at_pages()` gives the one at a count.
  */
 final class VariantCost {
 
 	/**
-	 * @param int|null      $product           The product's price in thousandths; null when the printshop publishes none.
-	 * @param string        $currency          Its currency, `SEK`; empty without a price.
-	 * @param int|null      $shipping          The cheapest shipping in thousandths; null when none is known.
-	 * @param string        $shipping_currency Its currency; empty without shipping.
-	 * @param string        $region            The region the cost is for, a country code.
-	 * @param string|null   $read_at           When Pixonaut read it from the printshop, ISO 8601.
-	 * @param DeliveryTimes $times             How long the printshop says the variant takes by that shipping; none for a cost read before Pixonaut answered times.
+	 * @param int|null         $product           The product's price in thousandths; null when the printshop publishes none.
+	 * @param string           $currency          Its currency, `SEK`; empty without a price.
+	 * @param int|null         $shipping          The cheapest shipping in thousandths; null when none is known.
+	 * @param string           $shipping_currency Its currency; empty without shipping.
+	 * @param string           $region            The region the cost is for, a country code.
+	 * @param string|null      $read_at           When Pixonaut read it from the printshop, ISO 8601.
+	 * @param DeliveryTimes    $times             How long the printshop says the variant takes by that shipping; none for a cost read before Pixonaut answered times.
+	 * @param int|null         $pages             The page count the cost is at, inner pages only; null for the variant's own cost.
+	 * @param array<int, self> $by_pages       The cost at each page count the variant's paged placement offers, fewest first, as read; empty for a variant printed as no pages, and on a cost read back from storage.
 	 */
 	public function __construct(
 		public readonly ?int $product,
@@ -36,7 +43,28 @@ final class VariantCost {
 		public readonly string $region = '',
 		public readonly ?string $read_at = null,
 		public readonly DeliveryTimes $times = new DeliveryTimes(),
+		public readonly ?int $pages = null,
+		public readonly array $by_pages = array(),
 	) {
+	}
+
+	/**
+	 * The cost at a page count: the variant's own for no count; for a
+	 * variant printed as no pages, its own at every count; at a count its
+	 * placement does not offer, one without a price, which nothing is sold
+	 * at. A cost at a count says so (`pages`), so a cost stored without one
+	 * is never taken for a count's.
+	 *
+	 * @param int|null $pages The page count, inner pages only; null for none.
+	 */
+	public function at_pages( ?int $pages ): self {
+		if ( null === $pages ) {
+			return $this;
+		}
+		if ( array() === $this->by_pages ) {
+			return new self( $this->product, $this->currency, $this->shipping, $this->shipping_currency, $this->region, $this->read_at, $this->times, $pages );
+		}
+		return $this->by_pages[ $pages ] ?? new self( null, region: $this->region, read_at: $this->read_at, pages: $pages );
 	}
 
 	/**
@@ -53,26 +81,40 @@ final class VariantCost {
 			if ( ! is_array( $row ) || ! is_string( $row['variant'] ?? null ) || '' === $row['variant'] ) {
 				continue;
 			}
-			list( $product, $currency )           = self::money( $row['product'] ?? null );
-			list( $shipping, $shipping_currency ) = self::money( $row['shipping'] ?? null );
-			$costs[ $row['variant'] ]             = new self(
-				$product,
-				$currency,
-				$shipping,
-				$shipping_currency,
-				is_string( $row['region'] ?? null ) ? $row['region'] : '',
-				is_string( $row['readAt'] ?? null ) ? $row['readAt'] : null,
-				DeliveryTimes::from_array( $row['times'] ?? null )
-			);
+			$region   = is_string( $row['region'] ?? null ) ? $row['region'] : '';
+			$read_at  = is_string( $row['readAt'] ?? null ) ? $row['readAt'] : null;
+			$by_pages = array();
+			foreach ( is_array( $row['pages'] ?? null ) ? $row['pages'] : array() as $at ) {
+				if ( is_array( $at ) && is_int( $at['pages'] ?? null ) && $at['pages'] > 0 ) {
+					$by_pages[ $at['pages'] ] = self::read( $at, $region, $read_at, $at['pages'] );
+				}
+			}
+			ksort( $by_pages );
+			$costs[ $row['variant'] ] = self::read( $row, $region, $read_at, null, $by_pages );
 		}
 		return $costs;
 	}
 
 	/**
-	 * @return array<string, mixed> `product`, `currency`, `shipping`, `shippingCurrency`, `region`, `readAt` and `times`.
+	 * A cost as the answer writes one, the variant's own or at a page count.
+	 *
+	 * @param array<mixed>     $row      Its `product`, `shipping` and `times`.
+	 * @param string           $region   The region it is for.
+	 * @param string|null      $read_at  When Pixonaut read it.
+	 * @param int|null         $pages    The page count it is at; null for the variant's own.
+	 * @param array<int, self> $by_pages The variant's costs by page count.
+	 */
+	private static function read( array $row, string $region, ?string $read_at, ?int $pages, array $by_pages = array() ): self {
+		list( $product, $currency )           = self::money( $row['product'] ?? null );
+		list( $shipping, $shipping_currency ) = self::money( $row['shipping'] ?? null );
+		return new self( $product, $currency, $shipping, $shipping_currency, $region, $read_at, DeliveryTimes::from_array( $row['times'] ?? null ), $pages, $by_pages );
+	}
+
+	/**
+	 * @return array<string, mixed> `product`, `currency`, `shipping`, `shippingCurrency`, `region`, `readAt`, `times`, and `pages` for a cost at a page count.
 	 */
 	public function to_array(): array {
-		return array(
+		$data = array(
 			'product'          => null === $this->product ? null : Amount::decimal( $this->product ),
 			'currency'         => $this->currency,
 			'shipping'         => null === $this->shipping ? null : Amount::decimal( $this->shipping ),
@@ -81,6 +123,7 @@ final class VariantCost {
 			'readAt'           => $this->read_at,
 			'times'            => $this->times->to_array(),
 		);
+		return null === $this->pages ? $data : $data + array( 'pages' => $this->pages );
 	}
 
 	/**
@@ -100,7 +143,8 @@ final class VariantCost {
 			$text( 'shippingCurrency' ),
 			$text( 'region' ),
 			is_string( $data['readAt'] ?? null ) ? $data['readAt'] : null,
-			DeliveryTimes::from_array( $data['times'] ?? null )
+			DeliveryTimes::from_array( $data['times'] ?? null ),
+			is_int( $data['pages'] ?? null ) ? $data['pages'] : null
 		);
 	}
 

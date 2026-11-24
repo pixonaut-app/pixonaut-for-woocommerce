@@ -135,16 +135,20 @@ final class PriceState {
 	/**
 	 * The cost last read, while it is the cost of what the product sells
 	 * now: of the same variant of the same blank, shipped to the same
-	 * country. A product paired with another variant since, or a shop that
-	 * moved, has no cost until its own is read.
+	 * country, at the same page count. A product paired with another variant
+	 * since, a book sold at another count, or a shop that moved, has no
+	 * cost until its own is read; so has a book whose cost was read before
+	 * it was sold at a count.
 	 *
 	 * @param string|null $blank_id The blank it is sold on now.
 	 * @param string|null $ref      The blank variant it sells now.
 	 * @param string      $region   The country shipping is priced to now.
+	 * @param int|null    $pages    The page count it sells a book at now; null for none.
 	 */
-	public function cost_of( ?string $blank_id, ?string $ref, string $region ): ?VariantCost {
-		return null !== $this->cost && null !== $ref && $this->blank_id === $blank_id && $this->ref === $ref && $this->cost->region === $region ? $this->cost : null;
+	public function cost_of( ?string $blank_id, ?string $ref, string $region, ?int $pages = null ): ?VariantCost {
+		return null !== $this->cost && null !== $ref && $this->blank_id === $blank_id && $this->ref === $ref && $this->cost->region === $region && $this->cost->pages === $pages ? $this->cost : null;
 	}
+
 
 	/**
 	 * The state once its cost was asked for.

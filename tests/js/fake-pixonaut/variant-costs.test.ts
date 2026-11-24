@@ -15,6 +15,11 @@ type Cost = {
 	variant: string;
 	product: { amount: string; currency: string } | null;
 	shipping: { amount: string; currency: string } | null;
+	pages: {
+		pages: number;
+		product: { amount: string; currency: string } | null;
+		shipping: { amount: string; currency: string } | null;
+	}[];
 	region: string;
 	readAt: string;
 	changedAt: string | null;
@@ -91,6 +96,40 @@ describe('GET /v1/blanks/{id}/variants/costs', () => {
 		});
 	});
 
+	it('lists no page counts for a variant printed as no pages', async () => {
+		const { body } = await costs();
+
+		expect(body.costs?.every((cost) => cost.pages.length === 0)).toBe(true);
+	});
+
+	it("lists a book's cost at each page count a test gives, fewest first", async () => {
+		const set = await setCosts({
+			costs: {
+				[WHITE_S]: {
+					product: '9.53',
+					pages: [
+						{ pages: 44, product: '12.52', shipping: '7.80' },
+						{ pages: 20, product: null, shipping: null },
+					],
+				},
+			},
+		});
+		expect(set.status).toBe(200);
+
+		const { body } = await costs();
+
+		expect(
+			body.costs?.find((cost) => cost.variant === WHITE_S)?.pages,
+		).toMatchObject([
+			{ pages: 20, product: null, shipping: null },
+			{
+				pages: 44,
+				product: { amount: '12.52', currency: COST_CURRENCY },
+				shipping: { amount: '7.80', currency: COST_CURRENCY },
+			},
+		]);
+	});
+
 	it('charges in the currency a test names', async () => {
 		await setCosts({
 			costs: { [WHITE_S]: { product: '1200.00', currency: 'SEK' } },
@@ -131,5 +170,12 @@ describe('POST /__fake/blanks/:id/costs', () => {
 			(await setCosts({ costs: { [WHITE_S]: { product: 'free' } } })).status,
 		).toBe(400);
 		expect((await setCosts({ costs: [] })).status).toBe(400);
+		expect(
+			(
+				await setCosts({
+					costs: { [WHITE_S]: { pages: [{ pages: 0, product: '1.00' }] } },
+				})
+			).status,
+		).toBe(400);
 	});
 });

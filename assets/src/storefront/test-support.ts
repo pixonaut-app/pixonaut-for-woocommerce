@@ -19,6 +19,7 @@ export class WasmIntegrityError extends Error {}
 export class WasmVersionMismatchError extends Error {}
 export class PlacementChangedError extends Error {}
 export class TemplateChangedError extends Error {}
+export class PagesChangedError extends Error {}
 export class UnreadableDocumentError extends Error {}
 export class VariantUnavailableError extends Error {
 	constructor(
@@ -33,6 +34,9 @@ export class VariantUnavailableError extends Error {
 export function requestError(status: number, code: string): Error {
 	return Object.assign(new Error(`${status} ${code}`), { status, code });
 }
+
+/** The side printed as pages, as the SDK reports it. */
+export type FakePages = { count: number; min: number; max: number };
 
 export type FakeDesigner = {
 	approve: ReturnType<typeof vi.fn>;
@@ -59,12 +63,18 @@ export type FakeDesigner = {
 	getView: Mock<() => string | undefined>;
 	getViews: Mock<() => Array<{ viewId: string; hasPhoto: boolean }>>;
 	setView: ReturnType<typeof vi.fn>;
+	getPages: Mock<() => FakePages | null>;
+	setPageCount: Mock<(count: number) => void>;
+	setItemPageCount: ReturnType<typeof vi.fn>;
 	settled: ReturnType<typeof vi.fn>;
 	preload: ReturnType<typeof vi.fn>;
 	on: ReturnType<typeof vi.fn>;
 	/** Mounts with `options`: shows their `initialVariant`, as a mount does,
 	 *  or without one the variant it starts on. */
-	mounted: (options: { initialVariant?: string }) => void;
+	mounted: (options: {
+		initialVariant?: string;
+		placements?: Array<{ pageCount?: number }>;
+	}) => void;
 	/** Shows variant `ref` as the customer picking it in the designer does. */
 	pick: (ref: string) => void;
 };
@@ -92,14 +102,19 @@ export function fakeDesigner({
 	refusesInitialVariant = false,
 	pickedWhileMounting,
 	startsOn,
+	pages,
 }: {
 	refusesInitialVariant?: boolean;
 	pickedWhileMounting?: string;
 	startsOn?: string;
+	/** Draws a side printed as pages, at the count it mounts with. */
+	pages?: FakePages;
 } = {}): FakeDesigner {
 	let variant: string | undefined;
 	let previewOpened = false;
+	let paged = pages ?? null;
 	const shown: Array<(event: { ref: string }) => void> = [];
+	const counted: Array<(event: FakePages) => void> = [];
 	const show = (ref: string) => {
 		variant = ref;
 		for (const handler of shown) {
@@ -138,15 +153,35 @@ export function fakeDesigner({
 		getView: vi.fn(() => undefined),
 		getViews: vi.fn(() => []),
 		setView: vi.fn().mockResolvedValue(undefined),
+		getPages: vi.fn(() => paged),
+		setPageCount: vi.fn((count: number) => {
+			if (paged === null || count < paged.min || count > paged.max) {
+				throw new TypeError(`setPageCount: ${count} is not offered`);
+			}
+			paged = { ...paged, count };
+			for (const handler of counted) {
+				handler(paged);
+			}
+		}),
+		setItemPageCount: vi.fn(),
 		settled: vi.fn().mockResolvedValue(undefined),
 		preload: vi.fn().mockResolvedValue(undefined),
-		on: vi.fn((event: string, handler: (event: { ref: string }) => void) => {
+		on: vi.fn((event: string, handler: (event: never) => void) => {
 			if (event === 'variant') {
-				shown.push(handler);
+				shown.push(handler as (event: { ref: string }) => void);
+			} else if (event === 'pages') {
+				counted.push(handler as (event: FakePages) => void);
 			}
 			return () => undefined;
 		}),
-		mounted: ({ initialVariant }) => {
+		mounted: ({ initialVariant, placements }) => {
+			const started = placements?.find(
+				({ pageCount }) => pageCount !== undefined,
+			)?.pageCount;
+			if (paged !== null && started !== undefined) {
+				paged = { ...paged, count: started };
+			}
+			counted.length = 0;
 			variant =
 				pickedWhileMounting ??
 				(refusesInitialVariant || initialVariant === undefined
@@ -161,6 +196,7 @@ export function fakeDesigner({
 /** The mount options that hand the designer elements of the host's page. */
 type LendingOptions = {
 	initialVariant?: string;
+	placements?: Array<{ pageCount?: number }>;
 	formTarget?: HTMLElement;
 	optionsStep?: { content?: HTMLElement };
 	lastStepContent?: HTMLElement;
@@ -209,6 +245,7 @@ export function fakeSdk(designer: FakeDesigner = fakeDesigner()) {
 		WasmVersionMismatchError,
 		PlacementChangedError,
 		TemplateChangedError,
+		PagesChangedError,
 		UnreadableDocumentError,
 		VariantUnavailableError,
 	} as unknown as PixonautSdk;

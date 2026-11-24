@@ -55,7 +55,7 @@ section is part of the system report that **Get system report** copies.
 | Template | Version | Override in the theme | Description |
 |---|---|---|---|
 | `admin/attribute-query-name-field.php` | 1.12.0 | `woocommerce/pixonaut/admin/attribute-query-name-field.php` | The setting on a global attribute's add and edit screens naming the attribute in the shop's addresses, as in `?size=50x70-cm`. |
-| `admin/blank-option-field.php` | 1.23.0 | `woocommerce/pixonaut/admin/blank-option-field.php` | The blank option a global attribute stands for, and the option value each of its values stands for, on the attribute's edit screen. |
+| `admin/blank-option-field.php` | 1.31.0 | `woocommerce/pixonaut/admin/blank-option-field.php` | The blank option a global attribute stands for, and the option value each of its values stands for, on the attribute's edit screen. |
 | `admin/choice-price-field.php` | 1.29.0 | `woocommerce/pixonaut/admin/choice-price-field.php` | The setting on a global attribute's add and edit screens that chooses the price its options show on a product page. |
 | `admin/connection-card.php` | 0.1.0 | `woocommerce/pixonaut/admin/connection-card.php` | The Pixonaut connection card on the settings page's Connection tab. |
 | `admin/developer-tools.php` | 0.1.0 | `woocommerce/pixonaut/admin/developer-tools.php` | The hidden developer tools on the settings page's Connection tab. |
@@ -121,7 +121,7 @@ section is part of the system report that **Get system report** copies.
 | `storefront/button.php` | 0.1.0 | `woocommerce/pixonaut/storefront/button.php` | The Personalise button, in a personalised product's add-to-cart form, directly before WooCommerce's add-to-cart button and in its classes, in its place. |
 | `storefront/design-gallery.php` | 0.1.0 | `woocommerce/pixonaut/storefront/design-gallery.php` | The customer's design in the place of the product image, with one picture per side, in the classes of WooCommerce's gallery. |
 | `storefront/form-placeholder.php` | 1.2.1 | `woocommerce/pixonaut/storefront/form-placeholder.php` | One side's form as the designer draws it, printed before the SDK runs. |
-| `storefront/form.php` | 1.26.0 | `woocommerce/pixonaut/storefront/form.php` | The personalisation form, at the top of a personalised product's add-to-cart form. |
+| `storefront/form.php` | 1.31.0 | `woocommerce/pixonaut/storefront/form.php` | The personalisation form, at the top of a personalised product's add-to-cart form. |
 | `storefront/in-cart.php` | 0.1.0 | `woocommerce/pixonaut/storefront/in-cart.php` | An item that is in the cart, in place of the add-to-cart form on its product page: its options and quantity, a button changing its design, a button to the cart and a link to make another. |
 | `storefront/personalised-notice.php` | 0.1.0 | `woocommerce/pixonaut/storefront/personalised-notice.php` | The soft note above the add-to-cart row saying this is the customer's design, with a button changing it. |
 | `storefront/preview.php` | 1.17.0 | `woocommerce/pixonaut/storefront/preview.php` | The live preview of a personalised product, in place of its gallery. |

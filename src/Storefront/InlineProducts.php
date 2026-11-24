@@ -14,6 +14,7 @@ use Pixonaut\WooCommerce\Approval\OrderEdit;
 use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Cart\CartEdit;
 use Pixonaut\WooCommerce\Cart\CommittedSide;
+use Pixonaut\WooCommerce\Catalogue\BlankOptionLinks;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\RequestCache;
 use Pixonaut\WooCommerce\Catalogue\Side;
@@ -159,7 +160,7 @@ final class InlineProducts {
 		$mode = ApprovalMode::resolve( $page->approval_mode, $this->settings );
 		if ( array() === $variants ) {
 			$variant = null === $config->blank_id ? null : ProductVariant::sold_by( $product, $config );
-			return new InlineDesigner( $product, $config, $this->mounts( $product, $config, null === $variant ? array() : array( $variant ) ), $mode, variant: $variant );
+			return new InlineDesigner( $product, $config, $this->mounts( $product, $config, null === $variant ? array() : array( $variant ) ), $mode, variant: $variant, page_count: self::pages_sold( $product, $config ) );
 		}
 		return $this->variable_designer( $product, $config, $page, $variants, array_map( static fn ( array $variation ): WC_Product => $variation[0], $sold ), $mode );
 	}
@@ -252,7 +253,7 @@ final class InlineProducts {
 			$variant      = $entry['config'];
 			$variant_mode = ApprovalMode::resolve( $variant->approval_mode, $this->settings );
 			$switches->add_mounts( $entry['mounts'], $variant );
-			$switches->add_personalised( $variation_id, $entry['attributes'], $entry['mounts'], $variant_mode, $refs[ $variation_id ] );
+			$switches->add_personalised( $variation_id, $entry['attributes'], $entry['mounts'], $variant_mode, $refs[ $variation_id ], self::pages_sold( $entry['variation'], $variant ) );
 			if ( ApprovalMode::CHECKBOX === $variant_mode ) {
 				$mode = ApprovalMode::CHECKBOX;
 			}
@@ -431,6 +432,19 @@ final class InlineProducts {
 	 */
 	private static function variant_bought( WC_Product $bought, ProductConfig $config ): ?string {
 		return null === $config->blank_id ? null : ProductVariant::sold_by( $bought, $config );
+	}
+
+	/**
+	 * The pages an item of a product or variation has, which its designer
+	 * shows; null for one on no blank, one sold at no page count, and one
+	 * whose count cannot be read, which is not sold.
+	 *
+	 * @param WC_Product    $sold   The product or variation sold.
+	 * @param ProductConfig $config Its configuration.
+	 */
+	private static function pages_sold( WC_Product $sold, ProductConfig $config ): ?int {
+		$count = null === $config->blank_id ? null : BlankOptionLinks::page_count( $sold );
+		return BlankOptionLinks::UNRESOLVED_PAGES === $count ? null : $count;
 	}
 
 	/**

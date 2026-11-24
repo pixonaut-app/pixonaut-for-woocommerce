@@ -12,6 +12,7 @@ namespace Pixonaut\WooCommerce\Catalogue;
 use Pixonaut\WooCommerce\Schema;
 use WC_Product;
 use WC_Product_Attribute;
+use WC_Product_Variation;
 use WP_Term;
 
 /**
@@ -26,6 +27,12 @@ use WP_Term;
  * Both are kept as Pixonaut writes them, so a link holds whatever language
  * the designer reads the blank in.
  *
+ * An attribute can stand for a book's page count instead (`PAGE_COUNT`): a
+ * blank printed as pages has no option for it, and each value is a count of
+ * inner pages, the one it was linked to or else the first number in its
+ * name, "44 pages" for 44. A variation then sells its blank variant at that
+ * count, priced by the cost at it.
+ *
  * @phpstan-type Link array{option: string, values: array<int, string>}
  */
 final class BlankOptionLinks {
@@ -34,6 +41,18 @@ final class BlankOptionLinks {
 	 * Each linked global attribute's link, by attribute id.
 	 */
 	public const OPTION = Schema::BLANK_OPTION_LINKS_OPTION;
+
+	/**
+	 * What an attribute standing for a book's page count is linked to in
+	 * place of an option; no option Pixonaut writes starts with `@`.
+	 */
+	public const PAGE_COUNT = '@pages';
+
+	/**
+	 * The page count of a product with an attribute standing for one that
+	 * names no count: no printshop prices a book at it.
+	 */
+	public const UNRESOLVED_PAGES = 0;
 
 	/**
 	 * Longest option or value name kept; Pixonaut's are far shorter.
@@ -130,7 +149,9 @@ final class BlankOptionLinks {
 	 * Links a global attribute to an option, its values to the option's
 	 * values given, and re-checks the products using it, whose variants it
 	 * may name otherwise now. An empty option unlinks the attribute; an
-	 * empty value leaves a value to stand for the option's value of its name.
+	 * empty value leaves a value to stand for the option's value of its name,
+	 * or for an attribute standing for a page count, for the count in its
+	 * name; a value given for a page count keeps only its count.
 	 *
 	 * @param int                $attribute_id A global attribute's id.
 	 * @param string             $option       The option, as Pixonaut writes it; empty to unlink.
@@ -147,6 +168,8 @@ final class BlankOptionLinks {
 			);
 			foreach ( $values as $term_id => $value ) {
 				$value = self::clean( $value );
+				// A page count is kept as its number alone, and a value naming none as no value.
+				$value = self::PAGE_COUNT === $option ? (string) self::count_in( $value ) : $value;
 				if ( $term_id > 0 && '' !== $value ) {
 					$link['values'][ $term_id ] = $value;
 				}
@@ -181,6 +204,7 @@ final class BlankOptionLinks {
 		$labels = array();
 		foreach ( $product->get_attributes() as $name => $value ) {
 			$option = is_string( $name ) ? self::option_of( $name ) : null;
+			$option = self::PAGE_COUNT === $option ? null : $option;
 			$term   = null === $option ? null : self::term( (string) $name, $value );
 			if ( null !== $option && null !== $term ) {
 				$labels[ $option ] = self::stands_for( (string) $name, $term );
@@ -190,7 +214,47 @@ final class BlankOptionLinks {
 	}
 
 	/**
-	 * The linked attributes a product has, by taxonomy.
+	 * The page count a variation, or a product with one value of it, is
+	 * sold at by an attribute standing for it: the variation's value, else
+	 * its product's one value of an attribute it does not vary by. Null when
+	 * it has no such attribute; `UNRESOLVED_PAGES` when it has one but no
+	 * count can be read from it: a variation for any value, a product with
+	 * several, or a value with no number in it.
+	 *
+	 * @param WC_Product $product A product or variation.
+	 */
+	public static function page_count( WC_Product $product ): ?int {
+		if ( ! in_array( self::PAGE_COUNT, array_column( self::stored(), 'option' ), true ) ) {
+			return null;
+		}
+		$attributes = $product->get_attributes();
+		if ( $product instanceof WC_Product_Variation ) {
+			$parent = wc_get_product( $product->get_parent_id() );
+			// Its own values first: a variation names only the attributes it varies by.
+			$attributes += $parent instanceof WC_Product ? $parent->get_attributes() : array();
+		}
+		foreach ( $attributes as $name => $value ) {
+			if ( ! is_string( $name ) || self::PAGE_COUNT !== self::option_of( $name ) ) {
+				continue;
+			}
+			$term = self::term( $name, $value );
+			return null === $term ? self::UNRESOLVED_PAGES : ( self::count_in( self::stands_for( $name, $term ) ) ?? self::UNRESOLVED_PAGES );
+		}
+		return null;
+	}
+
+	/**
+	 * The page count a value stands for: the first whole number in it; null
+	 * for none.
+	 *
+	 * @param string $value A value of an attribute standing for a page count, or what it was linked to.
+	 */
+	public static function count_in( string $value ): ?int {
+		return 1 === preg_match( '/\d+/', $value, $found ) && (int) $found[0] > 0 ? (int) $found[0] : null;
+	}
+
+	/**
+	 * The attributes a product has linked to a blank option, by taxonomy.
 	 *
 	 * @param WC_Product $product A product.
 	 * @return list<string>
@@ -201,8 +265,9 @@ final class BlankOptionLinks {
 		}
 		$linked = array();
 		foreach ( array_keys( $product->get_attributes() ) as $name ) {
-			if ( is_string( $name ) && null !== self::option_of( $name ) ) {
-				$linked[] = $name;
+			$option = is_string( $name ) ? self::option_of( $name ) : null;
+			if ( null !== $option && self::PAGE_COUNT !== $option ) {
+				$linked[] = (string) $name;
 			}
 		}
 		return $linked;

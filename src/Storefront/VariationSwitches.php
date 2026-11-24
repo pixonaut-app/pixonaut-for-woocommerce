@@ -18,8 +18,8 @@ use Pixonaut\WooCommerce\Catalogue\ProductConfig;
  * configuration that has it, in the order the configurations are added; each variation names the
  * template, blank, placement, form layout, canvas and print sizes it switches a side to, by
  * index into those sizes, with the size and view the side starts on, so the storefront script switches the mounted
- * designer instead of mounting another, and the blank variant it shows the
- * product in.
+ * designer instead of mounting another, the blank variant it shows the
+ * product in, and the pages a book has.
  *
  * A side whose every personalised variation fixes one print size draws no
  * size menu of its own: the variation form picks it.
@@ -128,8 +128,9 @@ final class VariationSwitches {
 	 * @param array<string, array<string, mixed>> $mounts        Its mount options by side key, already added.
 	 * @param string                              $approval_mode Its approval mode.
 	 * @param string|null                         $variant       The ref of the blank variant it sells; null for none.
+	 * @param int|null                            $page_count    The pages an item of it has, on a book; null for none.
 	 */
-	public function add_personalised( int $variation_id, array $attributes, array $mounts, string $approval_mode, ?string $variant = null ): void {
+	public function add_personalised( int $variation_id, array $attributes, array $mounts, string $approval_mode, ?string $variant = null, ?int $page_count = null ): void {
 		$sides = array();
 		foreach ( $mounts as $key => $options ) {
 			$sizes = array_map( fn ( array $size ): int => $this->size_index( $key, $size ), self::print_sizes( $options ) );
@@ -165,7 +166,7 @@ final class VariationSwitches {
 			'attributes'   => (object) $attributes,
 			'approvalMode' => $approval_mode,
 			'sides'        => (object) $sides,
-		) + ( null === $variant ? array() : array( 'variant' => $variant ) );
+		) + ( null === $variant ? array() : array( 'variant' => $variant ) ) + ( null === $page_count ? array() : array( 'pageCount' => $page_count ) );
 	}
 
 	/**
