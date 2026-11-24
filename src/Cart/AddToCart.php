@@ -398,7 +398,7 @@ final class AddToCart {
 			$this->personalised?->forget( $key );
 			throw new AddRefused( Labels::DESIGN_OUTDATED );
 		}
-		$pages  = BlankOptionLinks::page_count( $product );
+		$pages  = DesignCheck::book_count( BlankOptionLinks::page_count( $product ), array_map( static fn ( Side $side ): int => $line->page_count( $side->key ), $sides ) );
 		$by_key = array_combine( array_map( static fn ( Side $side ): string => $side->key, $sides ), $sides );
 		foreach ( $line->sides as $held ) {
 			$design   = $this->read( $held->design_id );
@@ -671,6 +671,7 @@ final class AddToCart {
 			}
 		}
 
+		$book     = DesignCheck::book_count( $sold, array_map( static fn ( string|array $pages ): int => is_array( $pages ) ? count( $pages ) : 0, $ordered ) );
 		$site     = $connection->site;
 		$line_key = Refs::line_key( ProofTokens::by_slot( $ordered ), self::cart_owner() );
 		$ref      = Refs::cart_ref( $site, $line_key );
@@ -693,7 +694,7 @@ final class AddToCart {
 					}
 					$ours[]   = $design_id;
 					$mismatch = DesignCheck::mismatch( $design, $side, $config->blank_id )
-						?? ( DesignCheck::pages_match( $design, $page, $paged ? count( $ordered[ $side->key ] ) : 0, $sold ) ? null : DesignCheck::PAGES );
+						?? ( DesignCheck::pages_match( $design, $page, $paged ? count( $ordered[ $side->key ] ) : 0, $book ) ? null : DesignCheck::PAGES );
 					if ( null !== $mismatch ) {
 						$this->logger->warning(
 							sprintf( 'Refused a design for product %d: its %s does not match side "%s".', $product->get_id(), $mismatch, $side->key ),

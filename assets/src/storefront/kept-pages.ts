@@ -149,11 +149,16 @@ function givePage(
 					? layer !== undefined && Object.hasOwn(layer, prop)
 					: byKey.has(key);
 			if (has) {
-				designer.setValue(
-					layerId,
-					prop,
-					key === undefined ? layer?.[prop] : byKey.get(key),
-				);
+				try {
+					designer.setValue(
+						layerId,
+						prop,
+						key === undefined ? layer?.[prop] : byKey.get(key),
+					);
+				} catch (error) {
+					// The field keeps its own; the others still take theirs.
+					console.error('Pixonaut: a value could not be carried over.', error);
+				}
 			}
 		}
 	}

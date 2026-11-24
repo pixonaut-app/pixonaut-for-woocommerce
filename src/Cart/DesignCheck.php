@@ -86,7 +86,7 @@ final class DesignCheck {
 	 * @param Design   $design The design, as Pixonaut answered it.
 	 * @param int|null $page   The page the line holds it as; null on a side of one design.
 	 * @param int      $held   How many pages the line holds of its side; 0 on a side of one design.
-	 * @param int|null $sold   The pages the product or variation is sold at; null when it names none.
+	 * @param int|null $sold   The pages the design must be made for (`book_count()`); null for any.
 	 */
 	public static function pages_match( Design $design, ?int $page, int $held, ?int $sold ): bool {
 		if ( $design->page !== $page ) {
@@ -97,6 +97,19 @@ final class DesignCheck {
 		}
 		// A cover is made for a book of a count too.
 		return null === $design->page_count || self::count_sold( $design->page_count, $sold );
+	}
+
+	/**
+	 * The page count each design of a line must be made for: the one sold,
+	 * else the one the line's sides printed as pages hold; null for none, and
+	 * for sides of different counts.
+	 *
+	 * @param int|null   $sold The pages the product or variation is sold at; null when it names none.
+	 * @param array<int> $held How many pages each side of the line holds; 0 for a side of one design.
+	 */
+	public static function book_count( ?int $sold, array $held ): ?int {
+		$counts = array_values( array_unique( array_filter( $held ) ) );
+		return $sold ?? ( 1 === count( $counts ) ? $counts[0] : null );
 	}
 
 	/**

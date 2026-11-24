@@ -1531,7 +1531,7 @@ export class ProductDesigner {
 	}
 
 	/** Gives each page of a book the values it held in `kept`, on the template
-	 *  the designer shows now. A page that refuses one keeps what it has. */
+	 *  the designer shows now. */
 	private carryPages(designer: PixonautDesigner, kept: KeptPages): void {
 		try {
 			carryPageValues(designer, kept, (count) => {

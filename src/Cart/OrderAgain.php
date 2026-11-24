@@ -160,6 +160,7 @@ final class OrderAgain {
 			}
 		}
 
+		$book   = DesignCheck::book_count( $sold, $held );
 		$copies = array();
 		$sides  = array();
 		try {
@@ -168,7 +169,7 @@ final class OrderAgain {
 				$copies[ $slot ] = $copy;
 				$design          = Design::get( $this->pixonaut, $copy );
 				$mismatch        = DesignCheck::mismatch( $design, $side, $config->blank_id )
-					?? ( DesignCheck::pages_match( $design, $page, $held[ $side->key ], $sold ) ? null : DesignCheck::PAGES );
+					?? ( DesignCheck::pages_match( $design, $page, $held[ $side->key ], $book ) ? null : DesignCheck::PAGES );
 				if ( null !== $mismatch ) {
 					$this->logger->warning(
 						sprintf( 'Refused to order product %d again: the copy of its design for side "%s" does not match the product\'s %s.', $product->get_id(), $side->key, $mismatch ),

@@ -187,6 +187,13 @@ final class DesignCheckTest extends TestCase {
 		);
 	}
 
+	public function test_designs_are_made_for_the_count_sold_else_the_one_the_book_holds(): void {
+		$this->assertSame( 44, DesignCheck::book_count( 44, array( 0, 60 ) ) );
+		$this->assertSame( 60, DesignCheck::book_count( null, array( 0, 60, 60 ) ) );
+		$this->assertNull( DesignCheck::book_count( null, array( 44, 60 ) ) );
+		$this->assertNull( DesignCheck::book_count( null, array( 0 ) ) );
+	}
+
 	public function test_refuses_another_blank_or_placement(): void {
 		$this->assertSame( DesignCheck::BLANK, self::mismatch( array( 'blankId' => 'blank_hoodie' ) ) );
 		$this->assertSame( DesignCheck::BLANK, self::mismatch( array( 'blankId' => null ) ) );

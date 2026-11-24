@@ -26,6 +26,7 @@ function book({
 	templateId = 'other@1',
 	layers = [] as object[],
 	fields = [{ layerId: 'title', prop: 'content' }],
+	refuses = undefined as unknown,
 } = {}) {
 	let pages = { count, page: shown, shown: true, placementId: 'p', ...OFFERED };
 	const given: Array<[number, string, string, unknown]> = [];
@@ -44,6 +45,9 @@ function book({
 		getTemplate: () => ({ layers }),
 		getFormSchema: () => ({ steps: [{ fields }] }),
 		setValue: (layerId: string, prop: string, value: unknown) => {
+			if (value === refuses) {
+				throw new TypeError('setValue');
+			}
 			given.push([pages.page, layerId, prop, value]);
 		},
 	};
@@ -91,6 +95,20 @@ describe('carryPageValues()', () => {
 		carry({ ...KEPT, keys: new Map([['title:content', 'who']]) });
 
 		expect(given[0]).toEqual([1, 'name', 'content', 'One']);
+	});
+
+	it('still gives the other pages theirs when one refuses a value', () => {
+		const logged = vi
+			.spyOn(console, 'error')
+			.mockImplementation(() => undefined);
+		const { carry, given, pages } = book({ refuses: 'One' });
+
+		carry();
+
+		expect(given.map(([, , , value]) => value)).toEqual(['Four', 'Five']);
+		expect(pages()).toMatchObject({ page: 2, count: 4 });
+		expect(logged).toHaveBeenCalledOnce();
+		logged.mockRestore();
 	});
 
 	it('leaves the pages alone on the template they were designed on', () => {
