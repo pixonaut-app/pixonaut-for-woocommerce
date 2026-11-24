@@ -80,6 +80,16 @@ final class RefsTest extends TestCase {
 	public function test_order_keys(): void {
 		$this->assertSame( 'wc:' . self::SITE . ':item:42:reorder', Refs::reorder_key( self::SITE, 42 ) );
 		$this->assertSame( 'wc:' . self::SITE . ':item:7', Refs::order_key( self::SITE, 7 ) );
+		$this->assertSame( 'wc:' . self::SITE . ':items:7.9', Refs::order_lines_key( self::SITE, array( 7, 9 ) ) );
+		$this->assertNotSame( Refs::order_lines_key( self::SITE, array( 7, 9 ) ), Refs::order_lines_key( self::SITE, array( 7 ) ), 'Another set of lines is another request.' );
+	}
+
+	public function test_a_key_of_many_lines_fits_an_idempotency_key(): void {
+		$max   = 255;
+		$lines = range( PHP_INT_MAX - 100, PHP_INT_MAX );
+		$key   = Refs::order_lines_key( self::SITE, $lines );
+		$this->assertLessThanOrEqual( $max, strlen( $key ) );
+		$this->assertSame( $key, Refs::order_lines_key( self::SITE, $lines ), 'The same lines make the same key.' );
 	}
 
 	public function test_refs_fit_an_external_ref(): void {

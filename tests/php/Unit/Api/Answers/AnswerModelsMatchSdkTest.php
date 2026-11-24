@@ -16,6 +16,8 @@ use Pixonaut\WooCommerce\Api\Answers\LowResolutionImage;
 use Pixonaut\WooCommerce\Api\Answers\Order;
 use Pixonaut\WooCommerce\Api\Answers\OrderDetail;
 use Pixonaut\WooCommerce\Api\Answers\OrderList;
+use Pixonaut\WooCommerce\Api\Answers\OrderListRow;
+use Pixonaut\WooCommerce\Api\Answers\OrderParcel;
 use Pixonaut\WooCommerce\Api\Answers\PrintSizeVerdicts;
 use Pixonaut\WooCommerce\Api\Answers\ShareLinkPage;
 use Pixonaut\WooCommerce\Api\Answers\WebhookEndpoint;
@@ -32,9 +34,10 @@ use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\OrdersCancelRespons
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\OrdersCreateResponse;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\OrdersDeliveryUpdateResponse;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\OrdersGetResponse;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\OrdersItemsCancelResponse;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\OrdersItemsRetryResponse;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\OrdersListResponse;
-use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\OrdersRetryResponse;
-use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\OrdersUpdateResponse;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\OrdersPrintshopOrdersUpdateResponse;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\ShareLinksListResponse;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\TemplatesDesignerLinksCreateResponse;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\TemplatesPrintSizeValidateResponseOption3;
@@ -83,9 +86,10 @@ final class AnswerModelsMatchSdkTest extends TestCase {
 		// OrderDetail holds these fields of orders.get as its $order, so Order is matched with that answer too.
 		Order::class                  => array(
 			array( OrdersCreateResponse::class ),
-			array( OrdersRetryResponse::class ),
-			array( OrdersUpdateResponse::class ),
+			array( OrdersItemsRetryResponse::class ),
+			array( OrdersPrintshopOrdersUpdateResponse::class ),
 			array( OrdersCancelResponse::class ),
+			array( OrdersItemsCancelResponse::class ),
 			array( OrdersDeliveryUpdateResponse::class ),
 			array( OrdersGetResponse::class ),
 		),
@@ -100,11 +104,15 @@ final class AnswerModelsMatchSdkTest extends TestCase {
 	 */
 	private const NOT_FIELDS = array(
 		// Stored as Pixonaut sent them, to be read later as the SDK's webhook event; the SDK types the list as a union of every event.
-		EventsPage::class  => array( 'events' ),
+		EventsPage::class   => array( 'events' ),
 		// The order as Pixonaut sent it, which the public line actions filter hands on.
-		Order::class       => array( 'as_sent' ),
+		Order::class        => array( 'as_sent' ),
 		// The fields every answer about an order has, matched as Order.
-		OrderDetail::class => array( 'order' ),
+		OrderDetail::class  => array( 'order' ),
+		// Its items' `itemId`, read from `items`.
+		OrderParcel::class  => array( 'item_ids' ),
+		// Its items' `externalRef` by `id`, read from `items`.
+		OrderListRow::class => array( 'item_refs' ),
 	);
 
 	/**

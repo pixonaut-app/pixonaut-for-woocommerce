@@ -670,12 +670,19 @@ export const SCENARIOS: Scenario[] = [
 				params: { id },
 				json: { consent: consentNow(), expectedRevision: read.revision },
 			});
-			// Pixonaut renders the print and holds the order until it is done.
+			// One order per store order, an item per line. Pixonaut renders the
+			// print and holds the item until it is done.
 			const order = (
 				await session.call('POST /v1/orders', {
 					json: {
-						designs: [{ designId: id }],
-						variant: need(found.variantRef, 'a variant sold'),
+						items: [
+							{
+								externalRef,
+								designs: [{ designId: id }],
+								variant: need(found.variantRef, 'a variant sold'),
+								quantity: 1,
+							},
+						],
 						shipToAddressId: null,
 						externalRef: `wc:scenario:order:${runId}`,
 						recipient: { name: 'Ada Lovelace' },
@@ -693,12 +700,16 @@ export const SCENARIOS: Scenario[] = [
 				query: { externalRef: `wc:scenario:order:${runId}` },
 			});
 			await session.call('GET /v1/orders/{id}', { params: { id: order.id } });
-			// A design has one live order: another order of it is refused,
-			// naming that order.
+			// A design has one live item: another order of it is refused,
+			// naming that item and its order.
 			await session.call('POST /v1/orders', {
 				json: {
-					designs: [{ designId: id }],
-					variant: need(found.variantRef, 'a variant sold'),
+					items: [
+						{
+							designs: [{ designId: id }],
+							variant: need(found.variantRef, 'a variant sold'),
+						},
+					],
 					externalRef: `wc:scenario:order:${runId}:again`,
 				},
 				idempotencyKey: `order:${runId}:again`,
@@ -720,21 +731,30 @@ export const SCENARIOS: Scenario[] = [
 				idempotencyKey: `delivery:${runId}:1`,
 				expect: [OK, CONFLICT, UNAVAILABLE],
 			});
-			// The order screen's moves. A live order whose outcome is known
-			// allows none of them, so a refusal the reference declares is an
-			// answer too; cancel last, so the order goes no further.
-			await session.call('PATCH /v1/orders/{id}', {
-				params: { id: order.id },
-				json: { status: 'failed', reason: 'The printshop has no such order.' },
-				expect: [OK, CONFLICT],
-			});
-			await session.call('POST /v1/orders/{id}/retry', {
-				params: { id: order.id },
-				json: {},
+			// The order screen's moves, of the line's item. A live item whose
+			// outcome is known allows none of them, so a refusal the reference
+			// declares is an answer too; cancel last, so the order goes no further.
+			const itemId: string = order.items[0].id;
+			const printshopOrderId: string | undefined = order.printshopOrders[0]?.id;
+			if (printshopOrderId !== undefined) {
+				await session.call(
+					'PATCH /v1/orders/{id}/printshop-orders/{printshopOrderId}',
+					{
+						params: { id: order.id, printshopOrderId },
+						json: {
+							status: 'failed',
+							reason: 'The printshop has no such order.',
+						},
+						expect: [OK, CONFLICT],
+					},
+				);
+			}
+			await session.call('POST /v1/orders/{id}/items/{itemId}/retry', {
+				params: { id: order.id, itemId },
 				expect: [CREATED, CONFLICT],
 			});
-			await session.call('POST /v1/orders/{id}/cancel', {
-				params: { id: order.id },
+			await session.call('POST /v1/orders/{id}/items/{itemId}/cancel', {
+				params: { id: order.id, itemId },
 				expect: [OK, CONFLICT, UNAVAILABLE],
 			});
 			// A privacy request: an order still on its way is refused.
@@ -778,8 +798,12 @@ export const SCENARIOS: Scenario[] = [
 				const order = (
 					await session.call('POST /v1/orders', {
 						json: {
-							designs: [{ designId: standing.designId }],
-							variant: need(found.variantRef, 'a variant sold'),
+							items: [
+								{
+									designs: [{ designId: standing.designId }],
+									variant: need(found.variantRef, 'a variant sold'),
+								},
+							],
 							externalRef: `wc:scenario:order:${runId}:${n}`,
 							recipient: { name: 'Ada Lovelace' },
 							shippingAddress: {
@@ -825,8 +849,12 @@ export const SCENARIOS: Scenario[] = [
 				const order = (
 					await session.call('POST /v1/orders', {
 						json: {
-							designs: [{ designId: standing.designId }],
-							variant: need(found.variantRef, 'a variant sold'),
+							items: [
+								{
+									designs: [{ designId: standing.designId }],
+									variant: need(found.variantRef, 'a variant sold'),
+								},
+							],
 							externalRef: `wc:scenario:order:${runId}:${releasedBy}`,
 							recipient: { name: 'Ada Lovelace' },
 							shippingAddress: {

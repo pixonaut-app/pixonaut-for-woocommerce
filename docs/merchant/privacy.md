@@ -92,7 +92,9 @@ What is erased depends on the item:
   cancelled or its print order fails; you do not have to run the request again.
 
 Each item it erases gets an order note. When Pixonaut is busy, or the
-printshop order is still being settled, the plugin tries again on its own
+order is still being settled, for example while another item of it is still
+on its way (Pixonaut erases an order's name and address once each of its
+items is finished), the plugin tries again on its own
 over the next hours, and the request says it "could not be erased yet". When
 Pixonaut refuses for good, or the store is not connected to the Pixonaut
 workspace the item was ordered under, the order note says why; run the

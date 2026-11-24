@@ -56,7 +56,7 @@ final class RetryRefusalTest extends TestCase {
 	 */
 	private static function declared_codes(): array {
 		$spec                  = json_decode( (string) file_get_contents( dirname( __DIR__, 4 ) . '/contracts/pixonaut/openapi.json' ), true ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- local file.
-		$retry                 = Pixonaut::catalogue()->operation( 'orders.retry' );
+		$retry                 = Pixonaut::catalogue()->operation( 'orders.items.retry' );
 		list( $method, $path ) = array( $retry->method, $retry->path );
 		$codes                 = array();
 		foreach ( $spec['paths'][ $path ][ strtolower( $method ) ]['responses'] as $status => $response ) {

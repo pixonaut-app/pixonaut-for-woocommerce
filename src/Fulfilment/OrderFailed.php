@@ -1,6 +1,6 @@
 <?php
 /**
- * Applies `order.failed` to the lines of the order.
+ * Applies `item.failed` to the line of the item.
  *
  * @package Pixonaut\WooCommerce
  */
@@ -15,15 +15,15 @@ use RuntimeException;
 use WC_Order;
 
 /**
- * A printshop order that failed needs the merchant: each of its lines moves
- * to `needs_attention` with the reason Pixonaut gave in the order note, and
- * records the order's status as `failed`. A line that is final, or in
- * `needs_attention` already, or that a retry handed to another order since
- * it was found, is left as it is.
+ * An item of a printshop order that failed needs the merchant: its line
+ * moves to `needs_attention` with the reason Pixonaut gave in the order
+ * note, and records the item's status as `failed`. A line that is final, or
+ * in `needs_attention` already, or that a retry handed to another order
+ * since it was found, is left as it is.
  */
 final class OrderFailed {
 
-	public const TYPE = 'order.failed';
+	public const TYPE = 'item.failed';
 
 	/**
 	 * Tries to apply the event when another request wrote the line meanwhile.
@@ -37,7 +37,7 @@ final class OrderFailed {
 	}
 
 	/**
-	 * @param Event $event An `order.failed` event.
+	 * @param Event $event An `item.failed` event.
 	 * @throws RuntimeException When a line kept changing; handling the event again retries it.
 	 */
 	public function handle( Event $event ): void {

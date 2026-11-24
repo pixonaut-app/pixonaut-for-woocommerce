@@ -1,6 +1,6 @@
 <?php
 /**
- * Applies `order.status_changed` to the lines of the order.
+ * Applies `item.status_changed` to the line of the item.
  *
  * @package Pixonaut\WooCommerce
  */
@@ -12,6 +12,7 @@ namespace Pixonaut\WooCommerce\Fulfilment;
 use Pixonaut\WooCommerce\Api\Answers\Order;
 use Pixonaut\WooCommerce\Api\Answers\OrderDetail;
 use Pixonaut\WooCommerce\Api\Answers\OrderHistoryEntry;
+use Pixonaut\WooCommerce\Api\Answers\OrderItem;
 use Pixonaut\WooCommerce\Milliseconds;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
 use Pixonaut\WooCommerce\Webhooks\Payload;
@@ -20,8 +21,8 @@ use WC_Order;
 use WC_Order_Item_Product;
 
 /**
- * Finds the line by the Pixonaut order id it stored, with `externalRef` as a
- * cross-check, and moves it along: `submitted`, `queued` and `printed` mean
+ * Finds the line by the Pixonaut order and item ids it stored, with
+ * `externalRef` as a cross-check, and moves it along by its item's status: `submitted`, `queued` and `printed` mean
  * `ordered` (`printed` with an order note), `shipped` means `shipped`, with
  * the tracking in the line and an order note. A change older than one already
  * applied never moves a line back. When every line of the WooCommerce order is
@@ -32,7 +33,7 @@ use WC_Order_Item_Product;
  */
 final class OrderStatusChanged {
 
-	public const TYPE = 'order.status_changed';
+	public const TYPE = 'item.status_changed';
 
 	/**
 	 * `via` of a change the store made with its own key, which the plugin
@@ -61,7 +62,7 @@ final class OrderStatusChanged {
 	}
 
 	/**
-	 * @param Event $event An `order.status_changed` event.
+	 * @param Event $event An `item.status_changed` event.
 	 * @throws RuntimeException When a line kept changing while the change was applied; handling the event again retries it.
 	 */
 	public function handle( Event $event ): void {
@@ -80,7 +81,7 @@ final class OrderStatusChanged {
 	 * key, does not repeat.
 	 *
 	 * @param WC_Order_Item_Product $item  The line.
-	 * @param Event                 $event An `order.status_changed` event, or one built from Pixonaut's answer to the store's move.
+	 * @param Event                 $event An `item.status_changed` event, or one built from Pixonaut's answer to the store's move.
 	 * @throws RuntimeException When the line kept changing for MAX_ATTEMPTS tries.
 	 */
 	public function apply_to( WC_Order_Item_Product $item, Event $event ): void {
@@ -92,8 +93,8 @@ final class OrderStatusChanged {
 	}
 
 	/**
-	 * Applies the order's status as a read of it answered, by the same rules
-	 * as an `order.status_changed` event: a status already applied, or one
+	 * Applies the status of the line's item as a read of the order answered,
+	 * by the same rules as an `item.status_changed` event: a status already applied, or one
 	 * behind it, changes nothing. A change the store made with its own key is
 	 * applied too, in case the store stopped before applying it itself. A
 	 * held order's hold is kept, once, as `order.held` would keep it.
@@ -104,25 +105,37 @@ final class OrderStatusChanged {
 	 */
 	public function apply_read( LineState $line, OrderDetail $read ): void {
 		$order = $read->order;
-		if ( '' === $order->status || ! $this->lines->holds( $line, $order->external_ref, self::READ_OPERATION ) ) {
+		$item  = $line->item_of( $order );
+		if ( null === $item || '' === $item->status || ! $this->lines->holds( $line, $order->external_ref, self::READ_OPERATION ) ) {
+			return;
+		}
+		if ( OrderStatus::FAILED === $item->status ) {
+			// A failure is applied as `item.failed` would apply it, with the reason the read gives.
+			( new OrderFailed( $this->lines ) )->apply_to( $line, $item->last_error ?? '' );
+			return;
+		}
+		if ( OrderStatus::CANCELLED === $item->status ) {
+			( new OrderCancelled( $this->lines ) )->apply_to( $line );
 			return;
 		}
 		$order_id = $line->ref( LineState::REF_ORDER_ID );
-		$this->apply( $line->item(), is_string( $order_id ) ? $order_id : null, $order->status, self::previous_in( $read->history ), Tracking::from_answer( $order->tracking ), self::tracking_at_in( $read->history ), null );
-		if ( OrderStatus::HELD === $order->status && is_string( $order_id ) ) {
+		$parcel   = $order->shipped_parcel_of( $item->id );
+		$this->apply( $line->item(), is_string( $order_id ) ? $order_id : null, $item->status, self::previous_in( $read->history, $item->id ), Tracking::from_answer( $parcel?->tracking ), $parcel?->shipped_at_ms(), null );
+		if ( OrderStatus::HELD === $item->status && is_string( $order_id ) ) {
 			OrderHold::keep( $line->item(), $order_id, $order->hold );
 		}
 	}
 
 	/**
-	 * The `order.status_changed` event Pixonaut sends for a move the store
+	 * The `item.status_changed` event Pixonaut sends for a move the store
 	 * made with its own key, built from its answer to the move.
 	 *
-	 * @param string $order_id The order.
-	 * @param string $previous Its status before the move.
-	 * @param Order  $moved    Pixonaut's answer: the order as it is now.
+	 * @param string    $order_id The order.
+	 * @param string    $previous The item's status before the move.
+	 * @param Order     $moved    Pixonaut's answer: the order as it is now.
+	 * @param OrderItem $item     The line's item in it.
 	 */
-	public static function store_move( string $order_id, string $previous, Order $moved ): Event {
+	public static function store_move( string $order_id, string $previous, Order $moved, OrderItem $item ): Event {
 		return Payload::event(
 			'store_' . wp_generate_uuid4(),
 			self::TYPE,
@@ -130,44 +143,32 @@ final class OrderStatusChanged {
 			array(
 				'orderId'        => $order_id,
 				'externalRef'    => $moved->external_ref,
+				'itemId'         => $item->id,
 				'previousStatus' => $previous,
-				'status'         => $moved->status,
-				'tracking'       => Tracking::as_sent( $moved->tracking ),
+				'status'         => $item->status,
+				'tracking'       => Tracking::as_sent( $moved->shipped_parcel_of( $item->id )?->tracking ),
 				'via'            => self::VIA_STORE_KEY,
 			)
 		);
 	}
 
 	/**
-	 * The status before the order's current one, from its history.
+	 * The status before the item's current one, from the order's history.
 	 *
 	 * @param OrderHistoryEntry[] $history `GET /v1/orders/{id}`'s `history`.
+	 * @param string              $item_id The item.
 	 * @phpstan-param list<OrderHistoryEntry> $history
 	 */
-	private static function previous_in( array $history ): string {
-		// The last entry is the current status; the one before it led there.
-		$count = count( $history );
-		return $count > 1 ? $history[ $count - 2 ]->status : '';
-	}
-
-	/**
-	 * When the order's tracking was last set, by the `at` of the last entry of
-	 * its history that set it: the move to `shipped`, or a tracking added or
-	 * corrected since.
-	 *
-	 * @param OrderHistoryEntry[] $history `GET /v1/orders/{id}`'s `history`.
-	 * @phpstan-param list<OrderHistoryEntry> $history
-	 * @return int|null Epoch milliseconds; null when the history names no such entry.
-	 */
-	private static function tracking_at_in( array $history ): ?int {
-		$at = null;
+	private static function previous_in( array $history, string $item_id ): string {
+		$statuses = array();
 		foreach ( $history as $entry ) {
-			$shipment = self::TYPE === $entry->type && OrderStatus::SHIPPED === $entry->status;
-			if ( $shipment || OrderTrackingChanged::ADDED === $entry->type || OrderTrackingChanged::CHANGED === $entry->type ) {
-				$at = max( $at ?? 0, (int) $entry->at );
+			if ( $entry->item_id === $item_id ) {
+				$statuses[] = $entry->status;
 			}
 		}
-		return $at;
+		// The last status is the current one; the one before it led there.
+		$count = count( $statuses );
+		return $count > 1 ? $statuses[ $count - 2 ] : '';
 	}
 
 	/**
@@ -204,6 +205,7 @@ final class OrderStatusChanged {
 			if ( ! OrderStatus::moves_on( self::applied( $line ), $previous, $status ) ) {
 				// Applied already, perhaps by a run that stopped before the order was taken on.
 				if ( OrderStatus::SHIPPED === $status && LineState::SHIPPED === $line->state() ) {
+					$this->keep_parcel_tracking( $line, $tracking, $event );
 					$this->shipped_again( $line );
 				}
 				return;
@@ -223,9 +225,9 @@ final class OrderStatusChanged {
 	}
 
 	/**
-	 * Keeps the shipment's tracking on the line, unless `order.tracking_added`
-	 * or `order.tracking_changed` set newer tracking already, having arrived
-	 * first; the line's tracking is then the one the shipment is noted with.
+	 * Keeps the shipment's tracking on the line, unless a parcel's event set
+	 * newer tracking already, having arrived first; the line's tracking is
+	 * then the one the shipment is noted with.
 	 * Tracking whose time is not known replaces only tracking no event set.
 	 *
 	 * @param LineState                                                  $line        The line, about to ship.
@@ -306,6 +308,27 @@ final class OrderStatusChanged {
 		}
 		$this->note( $item, self::shipped_note( $item, $tracking ) );
 		$this->shipments->shipped( $line );
+		if ( null === $tracking ) {
+			// An item's event carries no tracking: its parcel does, which a read of the order finds.
+			LineReader::queue( $item->get_id() );
+		}
+	}
+
+	/**
+	 * Keeps the tracking of the parcel a shipped line left in, as a read of
+	 * its order found it, when the line shipped without any.
+	 *
+	 * @param LineState                                                  $line     A shipped line.
+	 * @param array{carrier?: string, number: string, url?: string}|null $tracking The parcel's tracking, when the read found one.
+	 * @param Event|null                                                 $event    The event; null for a read of the order.
+	 */
+	private function keep_parcel_tracking( LineState $line, ?array $tracking, ?Event $event ): void {
+		if ( null !== $event || null === $tracking || null !== $line->ref( LineState::REF_TRACKING ) ) {
+			return;
+		}
+		$line->set_ref( LineState::REF_TRACKING, $tracking );
+		// A line changed meanwhile is read again with its order.
+		$line->save();
 	}
 
 	/**
@@ -364,16 +387,18 @@ final class OrderStatusChanged {
 	 */
 	private static function line_states( ?Event $event ): array {
 		/**
-		 * Filters the line state each Pixonaut order status puts a line in
-		 * when `order.status_changed` reports it. A status left out changes
-		 * nothing; a line never moves back, whatever the map says.
+		 * Filters the line state each status of a Pixonaut order item puts
+		 * its line in when `item.status_changed` reports it. A status left out
+		 * changes nothing; a line never moves back, whatever the map says.
 		 *
 		 * Since 2.0.0 `$event` is the SDK's
-		 * `Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event`.
+		 * `Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event`. Since
+		 * 1.31.0 the statuses are an order item's, and `$event` is an
+		 * `item.status_changed` event.
 		 *
 		 * @since 0.1.0
 		 *
-		 * @param array<string, string> $map   Pixonaut order status => line state.
+		 * @param array<string, string> $map   Pixonaut order item status => line state.
 		 * @param Event|null            $event The event being applied; null when a read of the order applies the status.
 		 *
 		 * @example

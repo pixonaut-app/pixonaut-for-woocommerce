@@ -132,7 +132,7 @@ line: each side's proof with a link to the design in the Pixonaut studio,
 where the line stands, its printshop order with a link to it in the studio
 (and the automation that placed it, when the line took on an order one of
 your Pixonaut automations placed), and the actions the line offers now. Only the actions Pixonaut allows for
-the order at that moment are shown; Pixonaut is asked each time the screen
+the line's item at that moment are shown; Pixonaut is asked each time the screen
 opens. Shop managers and administrators can use them.
 
 The studio links open in the workspace the store is connected to, even when
@@ -145,12 +145,12 @@ came of it.
 
 | Action | Shown when | What it does |
 |---|---|---|
-| **Retry** | The line stopped before it had a printshop order; or it waits for a printshop order in a paid order with no job scheduled; or its printshop order failed and Pixonaut allows a retry. | Sends the line on from where it stopped; or has Pixonaut place the failed order again at the same printshop. The line goes on to *ordered*. If an earlier retry already placed one, the line takes that order instead of placing another. |
+| **Retry** | The line stopped before it had a printshop order; or it waits for a printshop order in a paid order with no job scheduled; or its item failed and Pixonaut allows a retry. | Sends the line on from where it stopped; or has Pixonaut send the failed item again, in the same order, to the same printshop. The line goes on to *ordered*. If the printshop has the item already, or it is no longer failed, Pixonaut refuses and an order note says so. |
 | **Order again anyway** | The line stopped because its design already has a printshop order in Pixonaut that the line did not place (`design_already_ordered`). | Places the line's printshop order as well, so the item is made a second time. Check the other order in Pixonaut first. |
-| **Printshop has it** | The order's outcome is unknown (`outcome_unknown`). | Tells Pixonaut the printshop received the order. Say what the printshop told you; add its order reference if it gave one, so Pixonaut follows the order from there. The line goes on to *ordered*. |
-| **Printshop does not have it: send again** | The order's outcome is unknown. | Tells Pixonaut the order failed, with what the printshop told you, and places it again at once. |
-| **Cancel the printshop order** | The order's outcome is unknown. | Asks the printshop to stop the order. The line is cancelled once it did. Refund the customer in WooCommerce yourself. |
-| **Rehearse: queued**, **printed**, **shipped**, **failed** | The store is connected to a sandbox. | Moves the sandbox order on as a printshop would, and the line with it, so you can see each step without a real printshop. |
+| **Printshop has it** | The item's outcome is unknown (`outcome_unknown`). | Tells Pixonaut the printshop received the printshop order the item was sent in. Say what the printshop told you; add its order reference if it gave one, so Pixonaut follows the order from there. The line goes on to *ordered*. Pixonaut moves every item sent in that printshop order; the box brings their lines up to date the next time it opens. |
+| **Printshop does not have it: send again** | The item's outcome is unknown. | Tells Pixonaut the printshop order failed, with what the printshop told you, and sends the item again at once. |
+| **Cancel the printshop order** | The item's outcome is unknown. | Asks the printshop to stop the item. The line is cancelled once it did. Refund the customer in WooCommerce yourself. |
+| **Rehearse: queued**, **printed**, **shipped**, **failed** | The store is connected to a sandbox. | Moves the sandbox printshop order on as a printshop would, and the line with it, so you can see each step without a real printshop. |
 
 An order whose outcome is unknown is never sent again on its own: the
 printshop may have it, and sending it again could print it twice. Ask the
@@ -163,18 +163,17 @@ reference.
 
 If Pixonaut cannot be reached while an action runs, the box says it is not
 known whether Pixonaut took it. Reload the page: each time the box opens, a
-line whose printshop order moved on in Pixonaut without the store hearing
-of it is brought up to date, with an order note, and a line whose failed
-order was placed again takes the new order. If Pixonaut cannot be reached
+line whose item moved on in Pixonaut without the store hearing of it is
+brought up to date, with an order note. If Pixonaut cannot be reached
 while the box opens, the box says so for every line and shows no actions,
 without waiting on Pixonaut once per line.
 
-When the printshop order failed because its print could not be made
+When the item failed because its print could not be made
 (`print_failed`), **Retry** has Pixonaut make the print again, from the
-design the customer approved, and place the order. The line shows *Waiting
-for prints* until the print is finished and the order goes to the
-printshop. The same goes for an order whose print was still being made
-when it failed: the new order waits for the print. If Pixonaut answers that
+design the customer approved, and send the item. The line shows *Waiting
+for prints* until the print is finished and the item goes to the
+printshop. The same goes for an item whose print was still being made
+when it failed: the retried item waits for the print. If Pixonaut answers that
 a print is still being made, the box says so; try again once it is
 finished.
 
@@ -208,9 +207,9 @@ stopped, the line keeps needing attention with the reason
 | `design_not_waiting` | Proof by email: when the order was paid, the design was no longer waiting for the customer's approval, for example because it was rejected in Pixonaut. | Check the design in Pixonaut with the customer. |
 | `proof_rejected` | Proof by email: the customer rejected the proof, and **On deny** marks such items for your attention (or the item could not be cancelled). | Refund or cancel the item. See [Rejected or denied proofs](../approval-modes/#rejected-or-denied-proofs). |
 | `proof_expired` | Proof by email: the customer did not answer by the deadline, the design was denied, and **On deny** marks such items for your attention (or the item could not be cancelled). | Refund or cancel the item. |
-| `order_failed` | The printshop order failed, when it was placed or later. The note gives the printshop's reason. | Check the order in Pixonaut, then **Retry** it, here or in Pixonaut. A retry made in Pixonaut places a new printshop order; the item follows it, and an order note names it. When that order was placed again too, the item follows on to the latest. |
-| `outcome_unknown` | The printshop order was sent, but its answer was lost, so Pixonaut cannot tell whether the printshop has it. | Ask the printshop, then click **Printshop has it** or **Printshop does not have it: send again**, or cancel it. |
-| `order_status` | Pixonaut placed the printshop order with a status the store cannot go on from. | Check the order with the printshop. |
+| `order_failed` | The item failed at the printshop, when it was placed or later. The note gives the printshop's reason. The order's other items go on. | Check the order in Pixonaut, then **Retry** the item, here or in Pixonaut. A retry keeps the order and the item, so the line follows it either way. |
+| `outcome_unknown` | The item was sent to the printshop, but the answer was lost, so Pixonaut cannot tell whether the printshop has it. | Ask the printshop, then click **Printshop has it** or **Printshop does not have it: send again**, or cancel it. |
+| `order_status` | Pixonaut placed the item with a status the store cannot go on from. | Check the order with the printshop. |
 | `postal_code_required`, `prints_disagree`, `print_without_placement` and other codes | Pixonaut refused the request. The note names the code. | Correct what the code names (for example the order's address), then retry. |
 | `not_found`, `design_not_found`, `print_not_found` | Pixonaut no longer knows the line's design, print or order. On a sandbox connection this happens after the sandbox's data was reset, and the note says so. | Place the item again. |
 | `unauthorized` | Pixonaut no longer accepts the store's key. | Reconnect the store. |

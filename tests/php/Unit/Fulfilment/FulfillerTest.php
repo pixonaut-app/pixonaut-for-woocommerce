@@ -67,6 +67,11 @@ final class FulfillerTest extends TestCase {
 
 	private const EXTERNAL_REF = 'wc:' . self::SITE . ':order:7:item:42';
 
+	/**
+	 * The order's ref, which its printshop order is placed under.
+	 */
+	private const STORE_REF = 'wc:' . self::SITE . ':order:7';
+
 	private const STATE_KEY = 'state-signing-key';
 
 	private const DEADLINE_DAYS = 14;
@@ -189,7 +194,7 @@ final class FulfillerTest extends TestCase {
 		$this->assertSame(
 			array(
 				'POST /v1/designs/' . self::DESIGN . '/approve',
-				'GET /v1/orders?externalRef=' . rawurlencode( self::EXTERNAL_REF ),
+				'GET /v1/orders?externalRef=' . rawurlencode( self::STORE_REF ),
 				// The design is read again: it may have been edited since it was approved.
 				'GET /v1/designs/' . self::DESIGN,
 				'POST /v1/orders',
@@ -205,11 +210,17 @@ final class FulfillerTest extends TestCase {
 		);
 		$this->assertEquals(
 			array(
-				// Pixonaut renders the print and holds the order until it is done.
-				'designs'         => array( array( 'designId' => self::DESIGN ) ),
-				'quantity'        => self::QUANTITY,
-				'externalRef'     => self::EXTERNAL_REF,
+				// One order of the order's lines: this one alone.
+				'externalRef'     => self::STORE_REF,
 				'shipToAddressId' => null,
+				'items'           => array(
+					array(
+						'externalRef' => self::EXTERNAL_REF,
+						// Pixonaut renders the print and holds the item until it is done.
+						'designs'     => array( array( 'designId' => self::DESIGN ) ),
+						'quantity'    => self::QUANTITY,
+					),
+				),
 				'recipient'       => array(
 					'name'  => 'Ada Lovelace',
 					'email' => 'ada@example.org',
@@ -221,11 +232,6 @@ final class FulfillerTest extends TestCase {
 					'postalCode' => '111 22',
 					'city'       => 'Stockholm',
 					'country'    => 'SE',
-				),
-				// The order's one Pixonaut line names the store order it was sold in.
-				'storeOrder'      => array(
-					'ref'   => 'wc:' . self::SITE . ':order:' . self::ORDER_ID,
-					'items' => 1,
 				),
 			),
 			$this->body( 3 )
@@ -260,7 +266,7 @@ final class FulfillerTest extends TestCase {
 
 		$this->assertSame( 'POST /v1/designs/' . self::BACK_DESIGN . '/approve', $this->sent()[1] );
 		$this->assertSame( 'GET /v1/designs/' . self::BACK_DESIGN, $this->sent()[4] );
-		$this->assertSame( array( array( 'designId' => self::DESIGN ), array( 'designId' => self::BACK_DESIGN ) ), $this->body( 5 )['designs'] );
+		$this->assertSame( array( array( 'designId' => self::DESIGN ), array( 'designId' => self::BACK_DESIGN ) ), $this->item_sent( 5 )['designs'] );
 		$this->assertSame( LineState::ORDERED, $this->line()->state() );
 	}
 
@@ -275,7 +281,7 @@ final class FulfillerTest extends TestCase {
 
 		$this->fulfiller()->fulfil( $this->item() );
 
-		$this->assertSame( 'v_tee_red_m', $this->body( 3 )['variant'] ?? null );
+		$this->assertSame( 'v_tee_red_m', $this->item_sent( 3 )['variant'] ?? null );
 		$this->assertSame( LineState::ORDERED, $this->line()->state() );
 	}
 
@@ -313,7 +319,7 @@ final class FulfillerTest extends TestCase {
 
 		$this->fulfiller()->fulfil( $this->item() );
 
-		$this->assertSame( array( 'GET /v1/orders?externalRef=' . rawurlencode( self::EXTERNAL_REF ), 'GET /v1/designs/' . self::DESIGN, 'POST /v1/orders' ), $this->sent() );
+		$this->assertSame( array( 'GET /v1/orders?externalRef=' . rawurlencode( self::STORE_REF ), 'GET /v1/designs/' . self::DESIGN, 'POST /v1/orders' ), $this->sent() );
 		$this->assertSame( LineState::ORDERED, $this->line()->state() );
 	}
 
@@ -323,7 +329,13 @@ final class FulfillerTest extends TestCase {
 			order_request: array(
 				'operation'       => 'orders.create',
 				'target'          => '/v1/orders',
-				'body'            => (string) json_encode( array( 'externalRef' => self::EXTERNAL_REF ) ), // phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode
+				// phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode -- no WordPress in a unit test.
+				'body'            => (string) json_encode(
+					array(
+						'externalRef' => self::STORE_REF,
+						'items'       => array( array( 'externalRef' => self::EXTERNAL_REF ) ),
+					)
+				),
 				'idempotency_key' => 'wc:' . self::SITE . ':item:42',
 			)
 		);
@@ -333,7 +345,7 @@ final class FulfillerTest extends TestCase {
 
 		$this->fulfiller()->fulfil( $this->item() );
 
-		$this->assertSame( array( 'GET /v1/orders?externalRef=' . rawurlencode( self::EXTERNAL_REF ), 'GET /v1/designs/' . self::DESIGN ), $this->sent() );
+		$this->assertSame( array( 'GET /v1/orders?externalRef=' . rawurlencode( self::STORE_REF ), 'GET /v1/designs/' . self::DESIGN ), $this->sent() );
 		$line = $this->line();
 		$this->assertSame( LineState::NEEDS_ATTENTION, $line->state() );
 		$this->assertSame( NeedsAttention::DESIGN_EDITED, $line->reason() );
@@ -350,8 +362,8 @@ final class FulfillerTest extends TestCase {
 
 		$this->fulfiller()->fulfil( $this->item() );
 
-		$this->assertSame( array( 'GET /v1/orders?externalRef=' . rawurlencode( self::EXTERNAL_REF ), 'POST /v1/orders' ), $this->sent() );
-		$this->assertSame( array( array( 'printId' => 'p_front' ) ), $this->body( 1 )['prints'] ?? null );
+		$this->assertSame( array( 'GET /v1/orders?externalRef=' . rawurlencode( self::STORE_REF ), 'POST /v1/orders' ), $this->sent() );
+		$this->assertSame( array( array( 'printId' => 'p_front' ) ), $this->item_sent( 1 )['prints'] ?? null );
 		$this->assertArrayNotHasKey( 'designs', $this->body( 1 ) );
 		$this->assertSame( LineState::ORDERED, $this->line()->state() );
 	}
@@ -397,18 +409,20 @@ final class FulfillerTest extends TestCase {
 
 		$this->fulfiller()->fulfil( $this->item() );
 
-		$this->assertTrue( $this->body( 2 )['reorder'] ?? null );
+		$this->assertTrue( $this->item_sent( 2 )['reorder'] ?? null );
 		$this->assertSame( 'wc:' . self::SITE . ':item:42:reorder', $this->transport->sent[2]['headers']['Idempotency-Key'] );
 		$this->assertSame( 'o_again', $this->line()->ref( LineState::REF_ORDER_ID ) );
 	}
 
 	public function test_an_order_placed_under_the_lines_ref_is_adopted_rather_than_placed_again(): void {
 		$this->store_line( LineState::PRINTED, print_ids: array( self::FRONT => 'p_front' ) );
-		$this->transport->json( 200, FulfilmentAnswers::orders( array( FulfilmentAnswers::order( 'o_placed', array( 'p_front' ), self::EXTERNAL_REF ) ) ) );
+		$this->transport
+			->json( 200, FulfilmentAnswers::orders( array( FulfilmentAnswers::order( 'o_placed', array( 'p_front' ), self::EXTERNAL_REF ) ) ) )
+			->json( 200, FulfilmentAnswers::order( 'o_placed', array( 'p_front' ), self::EXTERNAL_REF ) );
 
 		$this->fulfiller()->fulfil( $this->item() );
 
-		$this->assertCount( 1, $this->transport->sent );
+		$this->assertSame( array( 'GET /v1/orders?externalRef=' . rawurlencode( self::STORE_REF ), 'GET /v1/orders/o_placed' ), $this->sent() );
 		$this->assertSame( 'o_placed', $this->line()->ref( LineState::REF_ORDER_ID ) );
 		$this->assertSame( LineState::ORDERED, $this->line()->state() );
 	}
@@ -443,7 +457,7 @@ final class FulfillerTest extends TestCase {
 			$this->assertSame( ApiException::UNEXPECTED_RESPONSE, $e->errorCode );
 		}
 
-		$this->assertSame( array( 'GET /v1/orders?externalRef=' . rawurlencode( self::EXTERNAL_REF ) ), $this->sent() );
+		$this->assertSame( array( 'GET /v1/orders?externalRef=' . rawurlencode( self::STORE_REF ) ), $this->sent() );
 		$this->assertSame( LineState::PRINTED, $this->line()->state() );
 	}
 
@@ -479,8 +493,8 @@ final class FulfillerTest extends TestCase {
 		$this->assertSame( array( 'externalRef' => self::EXTERNAL_REF ), $this->body( 0 ) );
 		$this->assertSame( array( 'externalRef' => self::EXTERNAL_REF ), $this->body( 1 ) );
 		$this->assertSame( self::EXTERNAL_REF, $this->body( 2 )['consent']['ref'] );
-		$this->assertSame( 'GET /v1/orders?externalRef=' . rawurlencode( self::EXTERNAL_REF ), $this->sent()[4] );
-		$this->assertSame( self::EXTERNAL_REF, $this->body( 7 )['externalRef'] );
+		$this->assertSame( 'GET /v1/orders?externalRef=' . rawurlencode( self::STORE_REF ), $this->sent()[4] );
+		$this->assertSame( self::EXTERNAL_REF, $this->item_sent( 7 )['externalRef'] );
 		$line = $this->line();
 		$this->assertSame( LineState::ORDERED, $line->state() );
 		$this->assertSame( self::EXTERNAL_REF, $line->ref( LineState::REF_EXTERNAL_REF ) );
@@ -499,12 +513,12 @@ final class FulfillerTest extends TestCase {
 		$this->assertSame(
 			array(
 				'PUT /v1/designs/' . self::DESIGN . '/external-ref',
-				'GET /v1/orders?externalRef=' . rawurlencode( self::EXTERNAL_REF ),
+				'GET /v1/orders?externalRef=' . rawurlencode( self::STORE_REF ),
 				'POST /v1/orders',
 			),
 			$this->sent()
 		);
-		$this->assertSame( self::EXTERNAL_REF, $this->body( 2 )['externalRef'] );
+		$this->assertSame( self::EXTERNAL_REF, $this->item_sent( 2 )['externalRef'] );
 		$this->assertSame( LineState::ORDERED, $this->line()->state() );
 	}
 
@@ -534,7 +548,7 @@ final class FulfillerTest extends TestCase {
 			->json( 201, FulfilmentAnswers::order( 'o_1', array( 'p_front' ), self::EXTERNAL_REF ) );
 		$this->fulfiller()->fulfil( $this->item() );
 
-		$this->assertSame( self::EXTERNAL_REF, $this->body( 5 )['externalRef'] );
+		$this->assertSame( self::EXTERNAL_REF, $this->item_sent( 5 )['externalRef'] );
 		$this->assertSame( LineState::ORDERED, $this->line()->state() );
 	}
 
@@ -553,7 +567,7 @@ final class FulfillerTest extends TestCase {
 		$this->assertSame( 'PUT /v1/designs/' . self::DESIGN . '/external-ref', $this->sent()[0] );
 		$this->assertSame( array( 'externalRef' => self::EXTERNAL_REF ), $this->body( 0 ) );
 		$this->assertSame( self::EXTERNAL_REF, $this->body( 1 )['consent']['ref'] );
-		$this->assertSame( self::EXTERNAL_REF, $this->body( 4 )['externalRef'] );
+		$this->assertSame( self::EXTERNAL_REF, $this->item_sent( 4 )['externalRef'] );
 		$this->assertSame( self::EXTERNAL_REF, $this->line()->ref( LineState::REF_EXTERNAL_REF ) );
 		$this->assertSame( LineState::ORDERED, $this->line()->state() );
 	}
@@ -611,7 +625,7 @@ final class FulfillerTest extends TestCase {
 			->json( 201, FulfilmentAnswers::order( 'o_1', array( 'p_front' ), self::EXTERNAL_REF ) );
 		$this->fulfiller()->fulfil( $this->item() );
 
-		$this->assertSame( 'GET /v1/orders?externalRef=' . rawurlencode( self::EXTERNAL_REF ), $this->sent()[3] );
+		$this->assertSame( 'GET /v1/orders?externalRef=' . rawurlencode( self::STORE_REF ), $this->sent()[3] );
 		$this->assertSame( $first_order['body'], $this->transport->sent[5]['body'] );
 		$this->assertSame( $first_order['headers']['Idempotency-Key'], $this->transport->sent[5]['headers']['Idempotency-Key'] );
 		$this->assertSame( LineState::ORDERED, $this->line()->state() );
@@ -696,7 +710,7 @@ final class FulfillerTest extends TestCase {
 		$this->assertSame(
 			array(
 				'GET /v1/designs/' . self::DESIGN,
-				'GET /v1/orders?externalRef=' . rawurlencode( self::EXTERNAL_REF ),
+				'GET /v1/orders?externalRef=' . rawurlencode( self::STORE_REF ),
 				'GET /v1/designs/' . self::DESIGN,
 				'POST /v1/orders',
 			),
@@ -882,11 +896,14 @@ final class FulfillerTest extends TestCase {
 
 	public function test_an_adopted_order_that_failed_needs_attention(): void {
 		$this->store_line( LineState::PRINTED, print_ids: array( self::FRONT => 'p_front' ) );
-		$this->transport->json( 200, FulfilmentAnswers::orders( array( FulfilmentAnswers::order( 'o_placed', array( 'p_front' ), self::EXTERNAL_REF, array( 'status' => 'failed' ) ) ) ) );
+		$placed = FulfilmentAnswers::order( 'o_placed', array( 'p_front' ), self::EXTERNAL_REF, array( 'status' => 'failed' ) );
+		$this->transport
+			->json( 200, FulfilmentAnswers::orders( array( $placed ) ) )
+			->json( 200, $placed );
 
 		$this->fulfiller()->fulfil( $this->item() );
 
-		$this->assertCount( 1, $this->transport->sent );
+		$this->assertCount( 2, $this->transport->sent );
 		$this->assertSame( LineState::NEEDS_ATTENTION, $this->line()->state() );
 		$this->assertSame( 'o_placed', $this->line()->ref( LineState::REF_ORDER_ID ) );
 	}
@@ -894,8 +911,9 @@ final class FulfillerTest extends TestCase {
 	public function test_an_order_listed_without_a_field_the_store_does_not_read_is_adopted(): void {
 		$this->store_line( LineState::PRINTED, print_ids: array( self::FRONT => 'p_front' ) );
 		$placed = FulfilmentAnswers::order( 'o_placed', array( 'p_front' ), self::EXTERNAL_REF );
-		unset( $placed['adapter'], $placed['printshopAsPlaced'], $placed['submittedAt'] );
-		$this->transport->off_spec( self::answer( FulfilmentAnswers::orders( array( $placed ) ) ) );
+		$listed = FulfilmentAnswers::orders( array( $placed ) );
+		unset( $listed['orders'][0]['printshopNames'], $listed['orders'][0]['itemsPreview'], $listed['orders'][0]['items'][0]['blank'] );
+		$this->transport->off_spec( self::answer( $listed ) )->json( 200, $placed );
 
 		$this->fulfiller()->fulfil( $this->item() );
 
@@ -972,7 +990,7 @@ final class FulfillerTest extends TestCase {
 			'city'       => 'Stockholm',
 			'country'    => 'SE',
 		);
-		$print     = FulfilmentAnswers::order( 'o_auto', array( 'p_front' ), 'automation-ref' )['prints'][0];
+		$print     = FulfilmentAnswers::order( 'o_auto', array( 'p_front' ), 'automation-ref' )['items'][0]['prints'][0];
 		$read      = FulfilmentAnswers::read_order(
 			'o_auto',
 			'automation-ref',
@@ -1118,6 +1136,14 @@ final class FulfillerTest extends TestCase {
 			static fn ( array $sent ): string => $sent['method'] . ' ' . ScriptedClient::target( $sent['url'] ),
 			$this->transport->sent
 		);
+	}
+
+	/**
+	 * @param int $index A sent `POST /v1/orders`.
+	 * @return array<string, mixed> The line's item of its body: these orders hold the one line.
+	 */
+	private function item_sent( int $index ): array {
+		return $this->body( $index )['items'][0];
 	}
 
 	/**

@@ -295,15 +295,27 @@ final class LineCancellation {
 			);
 			return;
 		}
+		$ref   = (string) $line->ref( LineState::REF_EXTERNAL_REF );
+		$under = self::requested_under( $line ) ?? $ref;
 		try {
-			$placed = OrderList::under( $this->pixonaut, (string) $line->ref( LineState::REF_EXTERNAL_REF ) )->orders;
+			$placed = OrderList::under( $this->pixonaut, $under )->orders;
 		} catch ( ApiException $e ) {
 			$this->refused( $line, $e );
 			return;
 		}
-		$order_id = $placed[0]->id ?? '';
+		$order_id = '';
+		$item_id  = null;
+		foreach ( $placed as $row ) {
+			$item_id = $row->item_under( $ref, $under === $ref );
+			if ( null !== $item_id ) {
+				$order_id = $row->id;
+				break;
+			}
+		}
 		if ( '' !== $order_id ) {
 			$line->set_ref( LineState::REF_ORDER_ID, $order_id );
+			// An order listed under the line's own ref was placed for it alone: the whole order is its item.
+			$line->set_ref( LineState::REF_ORDER_ITEM_ID, $under === $ref ? null : $item_id );
 			// The request holds the customer's name and address; its outcome is known now.
 			$line->set_ref( LineState::REF_ORDER_REQUEST, null );
 			if ( ! $line->save() ) {
@@ -318,6 +330,20 @@ final class LineCancellation {
 		$line = LineState::of( $line->item() );
 		$line->set_ref( LineState::REF_ORDER_REQUEST, null );
 		$this->cancel_before_order( $line );
+	}
+
+	/**
+	 * The ref the order the line's stored request places is placed under:
+	 * the WooCommerce order's, or, for a request an earlier version made, the
+	 * line's own.
+	 *
+	 * @param LineState $line A line keeping the request of an order whose outcome is unknown.
+	 */
+	private static function requested_under( LineState $line ): ?string {
+		$stored = $line->ref( LineState::REF_ORDER_REQUEST );
+		$body   = is_array( $stored ) && is_string( $stored['body'] ?? null ) ? json_decode( $stored['body'], true ) : null;
+		$ref    = is_array( $body ) ? ( $body['externalRef'] ?? null ) : null;
+		return is_string( $ref ) && '' !== $ref ? $ref : null;
 	}
 
 	/**
@@ -362,8 +388,12 @@ final class LineCancellation {
 			);
 			return;
 		}
+		$item_id = $line->ref( LineState::REF_ORDER_ITEM_ID );
 		try {
-			$status = Order::cancel( $this->pixonaut, $order_id )->status;
+			// A line keeping no item id holds an order placed for it alone: the whole order is its item.
+			$status = is_string( $item_id ) && '' !== $item_id
+				? ( Order::cancel_item( $this->pixonaut, $order_id, $item_id )->item( $item_id, null )->status ?? OrderStatus::CANCELLED )
+				: Order::cancel( $this->pixonaut, $order_id )->status;
 		} catch ( ApiException $e ) {
 			$this->refused( $line, $e );
 			return;

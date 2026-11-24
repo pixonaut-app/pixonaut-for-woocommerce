@@ -38,7 +38,7 @@ final class StandingFulfilmentTest extends FulfilmentTestCase {
 		$this->assertSame( array( array( 'designId' => self::STANDING_ID ) ), $body['designs'] ?? null );
 		$this->assertSame( self::QUANTITY, $body['quantity'] ?? null );
 		$this->assertSame( $external_ref, $body['externalRef'] ?? null );
-		$this->assertSame( 'Storgatan 1', $body['shippingAddress']['line1'] ?? null );
+		$this->assertSame( 'Storgatan 1', $this->sent_order()['shippingAddress']['line1'] ?? null );
 		$this->assertArrayNotHasKey( 'reorder', $body );
 		$line = LineState::of( new WC_Order_Item_Product( $item->get_id() ) );
 		$this->assertSame( LineState::ORDERED, $line->state() );
@@ -124,11 +124,20 @@ final class StandingFulfilmentTest extends FulfilmentTestCase {
 	}
 
 	/**
-	 * The last `POST /v1/orders` body sent.
+	 * The line's item of the last `POST /v1/orders` body sent: these orders hold one line.
 	 *
 	 * @return array<string, mixed>
 	 */
 	private function order_body(): array {
+		return $this->sent_order()['items'][0];
+	}
+
+	/**
+	 * The last `POST /v1/orders` body sent.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function sent_order(): array {
 		$orders = array_values( array_filter( $this->recorder->requests, static fn ( array $request ): bool => 'POST' === $request['method'] && self::BASE_URL . '/v1/orders' === $request['url'] ) );
 		$this->assertNotSame( array(), $orders );
 		$body = json_decode( (string) $orders[ count( $orders ) - 1 ]['body'], true );

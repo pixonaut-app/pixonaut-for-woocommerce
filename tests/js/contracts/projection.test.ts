@@ -15,7 +15,7 @@ const ERR = 3;
 const OASDIFF_TIMEOUT_MS = 120_000;
 
 const consumed = readConsumed();
-const HOOK = 'order.status_changed';
+const HOOK = 'item.status_changed';
 const HOOK_PATH = `${WEBHOOK_PATH_PREFIX}${HOOK}`;
 
 type Finding = { id: string; level: number; path: string };
@@ -25,9 +25,9 @@ function pinned(): Spec {
 	return readJson(SPEC_FILE);
 }
 
-/** The order.status_changed payload schema in `spec`. */
+/** The item.status_changed payload schema in `spec`. */
 function payload(spec: Spec) {
-	return spec.components?.schemas.OrderStatusChangedEvent.properties.payload;
+	return spec.components?.schemas.ItemStatusChangedEvent.properties.payload;
 }
 
 /** `spec` with the payload's `status` as a closed enum, plus `extra`. */
@@ -114,7 +114,7 @@ describe('oasdiff on the projection', { timeout: OASDIFF_TIMEOUT_MS }, () => {
 	it('is an error when a webhook field becomes optional', () => {
 		const changed = pinned();
 		const hook = payload(changed);
-		hook.required = hook.required.filter((name: string) => name !== 'printId');
+		hook.required = hook.required.filter((name: string) => name !== 'itemId');
 
 		expect(onHook(breaking(pinned(), changed))).toEqual([
 			`response-property-became-optional ${ERR}`,

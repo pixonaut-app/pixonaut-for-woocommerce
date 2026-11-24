@@ -56,7 +56,9 @@ test('cancelling an order before production stops its printshop order', async ({
 		orderId: placed.refs.orderId,
 		orderStatus: 'cancelled',
 	});
-	expect(await statuses(fake, 'POST /v1/orders/{id}/cancel')).toEqual([200]);
+	expect(
+		await statuses(fake, 'POST /v1/orders/{id}/items/{itemId}/cancel'),
+	).toEqual([200]);
 	expect(cancelled.notes.join('\n')).toContain('was cancelled');
 	await admin.reload();
 	await expect(

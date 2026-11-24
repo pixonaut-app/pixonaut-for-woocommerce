@@ -62,6 +62,13 @@ function phpFileOf(path) {
 	return stem === undefined ? undefined : `${stem}.l10n.php`;
 }
 
+/**
+ * The SDK's generated models, under the staged plugin, whose docblocks repeat
+ * the API spec's descriptions. The wporg flavor ships them without their
+ * comments, which nothing reads at run time, for the same upload limit.
+ */
+export const COMMENTLESS_DIRS = ['vendor/pixonaut/pixonaut-php/src/Generated'];
+
 /** The largest zip wordpress.org's plugin submission form takes: 10 MB. */
 export const WPORG_UPLOAD_LIMIT_BYTES = 10 * 1024 * 1024;
 

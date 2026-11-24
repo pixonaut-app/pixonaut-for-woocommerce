@@ -27,7 +27,7 @@ function example(type: string): { type: string; payload: unknown } {
 }
 
 const APPROVED = example('design.approved');
-const SUBMITTED = example('order.submitted');
+const SUBMITTED = example('item.submitted');
 
 type Envelope = { id: string; type: string; payload: unknown };
 
@@ -116,8 +116,9 @@ describe('GET /v1/events', () => {
 		await control('orders/move', { orderId: 'ord_1', printId: 'prt_1' });
 
 		expect((await pull()).events.map((e) => e.type)).toEqual([
-			'order.status_changed',
-			'order.status_changed',
+			'item.status_changed',
+			'item.status_changed',
+			'item.status_changed',
 			'order.status_changed',
 		]);
 	});
@@ -165,7 +166,7 @@ describe('GET /v1/events', () => {
 		await emitMany(2);
 		const submitted = await emitMany(2, SUBMITTED, 'sub');
 
-		const page = await pull({ types: 'order.submitted,design.edited' });
+		const page = await pull({ types: 'item.submitted,design.edited' });
 
 		expect(page.events.map((e) => e.id)).toEqual(submitted);
 		expect(page.nextCursor).toBeNull();
@@ -175,9 +176,9 @@ describe('GET /v1/events', () => {
 		const approved = await emitMany(EVENTS_LOOKED_THROUGH);
 		const submitted = await emitMany(1, SUBMITTED, 'sub');
 
-		const first = await pull({ types: 'order.submitted' });
+		const first = await pull({ types: 'item.submitted' });
 		const second = await pull({
-			types: 'order.submitted',
+			types: 'item.submitted',
 			after: first.nextCursor ?? '',
 		});
 

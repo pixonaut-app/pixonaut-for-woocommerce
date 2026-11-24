@@ -215,7 +215,7 @@ final class ProofByEmailTest extends WP_UnitTestCase {
 		$this->pay();
 
 		$this->assertSame( LineState::ORDERED, $this->line()->state() );
-		$this->assertSame( array( 'GET /v1/designs/' . self::DESIGN, 'GET /v1/orders?externalRef=' . rawurlencode( $this->external_ref() ), 'GET /v1/designs/' . self::DESIGN, 'POST /v1/orders' ), $this->sent() );
+		$this->assertSame( array( 'GET /v1/designs/' . self::DESIGN, 'GET /v1/orders?externalRef=' . rawurlencode( Refs::store_order_ref( self::SITE, $this->order->get_id() ) ), 'GET /v1/designs/' . self::DESIGN, 'POST /v1/orders' ), $this->sent() );
 		$this->assertSame( array(), $this->mails( self::PROOF_INTRO ) );
 	}
 

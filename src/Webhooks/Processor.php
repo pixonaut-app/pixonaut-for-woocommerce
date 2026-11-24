@@ -197,7 +197,7 @@ final class Processor {
 		 *
 		 * @example
 		 * add_filter( 'pixonaut_wc_webhook_handle', function ( $handle, $event ) {
-		 *     return 'order.status_changed' === $event->type ? false : $handle;
+		 *     return 'item.status_changed' === $event->type ? false : $handle;
 		 * }, 10, 2 );
 		 */
 		$handle  = (bool) apply_filters( 'pixonaut_wc_webhook_handle', true, $event );

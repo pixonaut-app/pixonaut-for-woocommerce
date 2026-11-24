@@ -73,8 +73,11 @@ test('a failed printshop order is retried from the order screen', async ({
 	await expect(lineBox(admin)).toContainText('At the printshop');
 	const [line] = (await readOrder(request, orderId)).lines as [Line];
 	expect(line.state).toBe('ordered');
-	expect(line.refs.orderId).not.toBe(stopped.refs.orderId);
-	expect(await statuses(fake, 'POST /v1/orders/{id}/retry')).toEqual([201]);
+	// The item is sent again in the order it is in.
+	expect(line.refs.orderId).toBe(stopped.refs.orderId);
+	expect(
+		await statuses(fake, 'POST /v1/orders/{id}/items/{itemId}/retry'),
+	).toEqual([201]);
 });
 
 test('an unknown outcome the printshop has is settled from the order screen', async ({
@@ -127,7 +130,12 @@ test('an unknown outcome the printshop has is settled from the order screen', as
 		orderId: stopped.refs.orderId,
 		orderStatus: 'submitted',
 	});
-	expect(await statuses(fake, 'PATCH /v1/orders/{id}')).toEqual([200]);
+	expect(
+		await statuses(
+			fake,
+			'PATCH /v1/orders/{id}/printshop-orders/{printshopOrderId}',
+		),
+	).toEqual([200]);
 });
 
 test('an unknown outcome the printshop does not have is sent again from the order screen', async ({
@@ -166,9 +174,17 @@ test('an unknown outcome the printshop does not have is sent again from the orde
 	await expect(lineBox(admin)).toContainText('At the printshop');
 	const [line] = (await readOrder(request, orderId)).lines as [Line];
 	expect(line.state).toBe('ordered');
-	expect(line.refs.orderId).not.toBe(stopped.refs.orderId);
-	expect(await statuses(fake, 'PATCH /v1/orders/{id}')).toEqual([200]);
-	expect(await statuses(fake, 'POST /v1/orders/{id}/retry')).toEqual([201]);
+	// The item is sent again in the order it is in.
+	expect(line.refs.orderId).toBe(stopped.refs.orderId);
+	expect(
+		await statuses(
+			fake,
+			'PATCH /v1/orders/{id}/printshop-orders/{printshopOrderId}',
+		),
+	).toEqual([200]);
+	expect(
+		await statuses(fake, 'POST /v1/orders/{id}/items/{itemId}/retry'),
+	).toEqual([201]);
 });
 
 test('an address changed on the order screen is sent to the printshop order', async ({

@@ -473,19 +473,25 @@ export type Printshop = {
 	acceptsAddressUpdates: boolean;
 };
 
-/** Orders the printshop refuses as they are placed: each answers `201` with
- *  status `failed`, as Pixonaut does when its partner turns one down. */
+/** Items the printshop refuses as they are placed: each is placed `failed`,
+ *  as Pixonaut does when its partner turns one down. */
 export type OrderFailure = {
 	outcome: 'failed';
 	reason: string;
 	remaining: number;
+	/** Only items placed with this external reference; any item when
+	 *  absent. */
+	itemExternalRef?: string;
 };
 
-/** Orders whose submission's answer is lost: each answers `201` with status
+/** Items whose submission's answer is lost: each is placed
  *  `outcome_unknown` until the store settles it. */
 export type OrderOutcomeUnknown = {
 	outcome: 'outcome_unknown';
 	remaining: number;
+	/** Only items placed with this external reference; any item when
+	 *  absent. */
+	itemExternalRef?: string;
 };
 
 /** Why a free workspace holds an order, as an order's `hold` reports it. */

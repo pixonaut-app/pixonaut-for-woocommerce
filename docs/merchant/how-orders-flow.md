@@ -130,12 +130,13 @@ the same and the line keeps its designs.
 
 ## After payment
 
-Each personalised line of an order becomes its own printshop order in
-Pixonaut. A line with a front and a back is one printshop order holding both
-prints, so the printshop makes them as one item. Each line's order goes to
-its own printshop: a blank's, or the one a product without a blank chose,
-so a cart of products for different printshops becomes one printshop order
-per line, each at its printshop.
+The personalised lines of an order become one order in Pixonaut, with an
+item for each line. A line with a front and a back is one item holding both
+prints, so the printshop makes them as one. Each item goes to its own
+printshop: a blank's, or the one a product without a blank chose. Pixonaut
+sends the items bound for one printshop to it together, so a cart of
+products for different printshops reaches each printshop as its own
+printshop order.
 
 When an order is paid, the store starts one background job per personalised
 line. An order counts as paid when WooCommerce completes its payment, or
@@ -154,14 +155,17 @@ and takes the line through two steps:
    as *awaiting customer*, until they approve it there (see
    [Approval modes](../approval-modes/)). A design approved already, in the
    studio for one, goes straight on.
-2. **Order.** One printshop order is placed for the line as soon as its
-   designs are approved, with all its designs (the first side leads, and a
-   fixed design is among them), the blank variant the line was bought as,
-   the line's quantity, and the order's shipping address. The store never
-   picks the printshop: the blank the product is made on decides it, or
-   the workspace's default printshop for a product without a blank.
-   Pixonaut renders the print file of each design and hands the order to
-   the printshop once they are done.
+2. **Order.** Once every personalised line of the order is approved, one
+   Pixonaut order is placed for them all, sent to the order's shipping
+   address. Each line's item holds all its designs (the first side leads,
+   and a fixed design is among them), the blank variant the line was bought
+   as, and the line's quantity. A line that waits for its customer's proof
+   holds the others back until it is approved; a line that needs your
+   attention or is cancelled does not, and the others are placed without
+   it. The store never picks the printshop: the blank the product is made
+   on decides it, or the workspace's default printshop for a product
+   without a blank. Pixonaut renders the print file of each design and
+   hands each item to its printshop once they are done.
 
 Once a day the store also looks for lines that lost their job: a line of a
 paid order from the last 30 days that is still *committed* or *approved*,
@@ -180,19 +184,22 @@ The line's state moves along *committed → approved → ordered* as each step
 completes, with *awaiting customer* between *committed* and *approved* for
 proof by email. While Pixonaut renders the prints, the order screen's
 Pixonaut box shows the line as *Waiting for prints*, and the customer sees
-*In production*. Pixonaut fails the order if a print cannot be
+*In production*. Pixonaut fails the item if a print cannot be
 made, or if the prints are not ready within an hour, and the line then needs
-attention like any failed order.
+attention like any failed item; the order's other items go on.
 
 Pixonaut orders a design once. If the design already has a printshop order
 that the line did not place, for example one placed in the studio, the line
-needs attention (`design_already_ordered`); see
-[Troubleshooting](../troubleshooting/#reasons).
+needs attention (`design_already_ordered`) and the order's other lines are
+placed without it; see [Troubleshooting](../troubleshooting/#reasons). The
+same goes for any other reason Pixonaut gives for refusing one line's item:
+that line needs attention, and the rest of the order goes on. A refusal of
+the order as a whole makes every line of it need attention.
 
 An order one of your Pixonaut automations placed is the exception, when it
 makes the item as bought: every side at the version the customer approved,
-the line's quantity and its variant. The store takes that order on as the
-line's instead of placing another, follows it from then on, and adds an
+the line's quantity and its variant. The store takes that order's item on as
+the line's instead of placing another, follows it from then on, and adds an
 order note saying so; the Pixonaut box names the automation. If the
 automation's order ships somewhere other than the customer's address, the
 store sends it the customer's address, as for a changed address. An
@@ -222,8 +229,8 @@ the customer is asked to try again.
 
 ## A line with a quantity
 
-A line of 3 personalised T-shirts is one printshop order for 3, not three
-orders: all of them share one design.
+A line of 3 personalised T-shirts is one item for 3, not three items: all of
+them share one design.
 
 ## Shipping address
 
@@ -260,20 +267,19 @@ WooCommerce order keeps the address it had.
 
 ## Printing and shipping
 
-As the printshop works on a printshop order, Pixonaut tells the store, and
-the plugin notes each step on the WooCommerce order: when the item is printed
-and when it ships, with the carrier and tracking number when the printshop
-gives one. Each personalised line ships on its own, so the items of one order
+As the printshop works on an item, Pixonaut tells the store, and the plugin
+notes each step on the WooCommerce order: when the item is printed and when
+it ships. Each personalised line ships on its own, so the items of one order
 can reach the customer at different times.
 
 When a personalised item ships:
 
 - **Every item of the order is personalised and has shipped**: the order is
   marked **Completed**, and WooCommerce sends the customer its *Completed
-  order* email, which lists each item with its tracking.
+  order* email.
 - **Other personalised items are still on their way**: the order stays
   **Processing**, and the customer gets the *Part of your order has shipped*
-  email, with the item and its tracking. An order with a single line gets no
+  email, with the item. An order with a single line gets no
   such email: its shipment completes it.
 - **The order also has items the plugin does not fulfil** (a mixed order):
   the plugin never completes it. The customer gets the *Part of your order
@@ -286,16 +292,14 @@ it yourself, a later shipment is still noted on the order, but sends no *Part
 of your order has shipped* email and adds no "All personalised items shipped"
 note.
 
-When the printshop adds tracking to an item that shipped without any, or
-corrects its tracking, the order gets a note with the new tracking (and the
-old one, for a correction), and the customer gets the *Tracking updated*
-email with the item and its tracking as it now is. Tracking that reaches the
-store before the shipment itself is kept for it and sent with the shipment's
-email.
+Tracking belongs to the parcel an item left in, not to Pixonaut's notice
+that the item shipped. Once an item ships, the store reads its order from
+Pixonaut again and keeps the parcel's carrier and tracking number with the
+item, where the customer sees it; the shipment's own note and email, sent
+before that read, go out without it, and no further note or email follows.
 
-The *Part of your order has shipped* and *Tracking updated* emails are
-WooCommerce emails: turn them off or edit them under **WooCommerce > Settings
-> Emails**.
+The *Part of your order has shipped* email is a WooCommerce email: turn it
+off or edit it under **WooCommerce > Settings > Emails**.
 
 ### What the customer sees
 
@@ -311,7 +315,7 @@ text; see [Label keys](../../developer/label-keys/).
 Cancelling a WooCommerce order, or refunding it in full, cancels each of its
 personalised items in Pixonaut. Refunding an item's whole quantity cancels
 that item; refunding part of its quantity (1 of 3, say) changes nothing in
-Pixonaut and adds an order note, since a printshop order is cancelled whole.
+Pixonaut and adds an order note, since an item is cancelled whole.
 Cancelling never moves money: refund the customer in WooCommerce as usual.
 With proof by email, a proof the customer rejected or did not approve in
 time can cancel, or refund and cancel, the item on its own; see
@@ -322,23 +326,26 @@ What happens depends on how far the item got:
 - **Not yet sent to the printshop**: the item is not sent, a design still
   waiting for approval is rejected in Pixonaut, and the item is
   **Cancelled**.
-- **Sent to the printshop**: Pixonaut asks the printshop to stop the order.
-  Once it has, the item is **Cancelled** and an order note says so.
+- **Sent to the printshop**: Pixonaut asks the printshop to stop the item.
+  Once it has, the item is **Cancelled** and an order note says so. A
+  printshop that only stops whole orders stops the other items sent to it
+  with this one too, and each of them is cancelled in the store with its
+  own note.
   - If the printshop has made the order already, or has begun it and does
     not cancel it, the item stays as it is and an order note says why. Ask
     the printshop.
   - If the printshop cannot be asked right now, the store asks again later,
     as it does when sending an item. If it still cannot, an order note tells
     you to ask the printshop yourself.
-  - If the printshop order had failed, there is nothing to stop, and the item
-    is cancelled in the store.
+  - If the item had failed, there is nothing to stop, and the item is
+    cancelled in the store.
 - **Shipped**: nothing changes.
 
-An order cancelled in Pixonaut or by the printshop cancels its item in the
-store too.
+An order or item cancelled in Pixonaut or by the printshop cancels its
+items in the store too.
 
 If the store sent an item to the printshop but never heard back, it looks the
-printshop order up first and cancels it if it exists. If an order note says
+order up first and cancels the item if it exists. If an order note says
 an item "is not cancelled yet", the store could not schedule the
 cancellation: click **Update** on the order to try again. Until then the
 item is not sent to the printshop.
@@ -347,13 +354,14 @@ item is not sent to the printshop.
 
 Paying twice, a payment notice that arrives twice, or an order moved to
 Processing by hand after payment, starts no second job while one is waiting
-or running, and a line that already has its printshop order is left alone.
+or running, and a line that already has its item in a Pixonaut order is
+left alone.
 
 Every step is stored as it completes. A job that stops part way (the server
 restarted, Pixonaut could not be reached) carries on where it stopped the
 next time it runs: it sends exactly what it sent before, and if Pixonaut had
-already placed the printshop order, the store finds it under the line's
-reference and keeps it rather than placing another. This holds across a
+already placed the order, the store finds it under the order's reference
+and keeps it rather than placing another. This holds across a
 reconnect of the store, too.
 
 If Pixonaut cannot take a step, the line is retried later or needs your
@@ -370,10 +378,9 @@ does not send it again, and no email goes out.
 
 Pixonaut sends a held order on to the printshop as soon as the workspace
 upgrades, or when the month resets, oldest first, while the new month has
-room. An order note then says it was released and why, and the line goes on
-as any other order. Should Pixonaut release it as failed or cancelled
-instead, the line needs attention or is cancelled, as for any other order,
-with a note saying so.
+room. An order note then says it was released and why, and each line goes on
+as in any other order. Should Pixonaut release it cancelled instead, its
+lines are cancelled, with a note saying so.
 
 ## When the store cannot send a line
 

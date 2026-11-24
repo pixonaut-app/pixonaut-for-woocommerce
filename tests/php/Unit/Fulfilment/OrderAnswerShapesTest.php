@@ -94,11 +94,11 @@ final class OrderAnswerShapesTest extends TestCase {
 			'carrier' => 'PostNord',
 			'url'     => 'https://tracking.example/PN123456789SE',
 		);
-		$answered = self::order( array( 'tracking' => $tracking ) )->tracking;
+		$answered = self::order( array( 'tracking' => $tracking ) )->shipped_parcel_of( FulfilmentAnswers::item_id( 'o_1' ) )?->tracking;
 
 		$this->assertSame( $tracking, Tracking::as_sent( $answered ) );
 		$this->assertSame( Tracking::from_payload( $tracking ), Tracking::from_answer( $answered ) );
-		$this->assertSame( array( 'number' => 'PN1' ), Tracking::as_sent( self::order( array( 'tracking' => array( 'number' => 'PN1' ) ) )->tracking ) );
+		$this->assertSame( array( 'number' => 'PN1' ), Tracking::as_sent( self::order( array( 'tracking' => array( 'number' => 'PN1' ) ) )->shipped_parcel_of( FulfilmentAnswers::item_id( 'o_1' ) )?->tracking ) );
 		$this->assertNull( Tracking::from_answer( null ) );
 	}
 
@@ -114,7 +114,7 @@ final class OrderAnswerShapesTest extends TestCase {
 			)
 		);
 
-		$event = OrderStatusChanged::store_move( 'o_1', 'printed', $moved );
+		$event = OrderStatusChanged::store_move( 'o_1', 'printed', $moved, $moved->items[0] );
 
 		$this->assertSame( OrderStatusChanged::TYPE, $event->type );
 		$this->assertSame( 'store_00000000-0000-4000-8000-000000000000', $event->id );
@@ -122,6 +122,7 @@ final class OrderAnswerShapesTest extends TestCase {
 			array(
 				'orderId'        => 'o_1',
 				'externalRef'    => self::REF,
+				'itemId'         => FulfilmentAnswers::item_id( 'o_1' ),
 				'previousStatus' => 'printed',
 				'status'         => 'shipped',
 				'tracking'       => $tracking,
@@ -129,7 +130,8 @@ final class OrderAnswerShapesTest extends TestCase {
 			),
 			$event->payload
 		);
-		$this->assertNull( OrderStatusChanged::store_move( 'o_1', '', self::order() )->payload['tracking'] );
+		$unmoved = self::order();
+		$this->assertNull( OrderStatusChanged::store_move( 'o_1', '', $unmoved, $unmoved->items[0] )->payload['tracking'] );
 	}
 
 	public function test_an_adopted_orders_address_has_the_fingerprint_of_the_address_as_sent(): void {

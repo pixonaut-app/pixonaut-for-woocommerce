@@ -12,9 +12,9 @@ namespace Pixonaut\WooCommerce\Fulfilment;
 use Pixonaut\WooCommerce\Api\Answers\OrderTracking;
 
 /**
- * The tracking `order.status_changed` carries when an order ships, and
- * `order.tracking_added` or `order.tracking_changed` when it comes later, as a
- * line stores it in `LineState::REF_TRACKING`: a number, with the carrier and
+ * The tracking of the parcel a line's item left in, from Pixonaut's answer
+ * to a move the store made or from a read of the order, as a line stores it
+ * in `LineState::REF_TRACKING`: a number, with the carrier and
  * a link when Pixonaut knows them. `LineState::REF_TRACKING_AT` holds when the
  * event that carried it was created, so an older event never replaces it.
  */

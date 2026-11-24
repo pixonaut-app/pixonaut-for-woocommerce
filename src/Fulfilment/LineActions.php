@@ -12,10 +12,11 @@ namespace Pixonaut\WooCommerce\Fulfilment;
 use Closure;
 use Pixonaut\WooCommerce\Api\Answers\Order;
 use Pixonaut\WooCommerce\Api\Answers\OrderDetail;
+use Pixonaut\WooCommerce\Api\Answers\OrderItem;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
-use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\OrdersUpdateRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\OrdersPrintshopOrdersUpdateRequest;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
 use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -89,12 +90,6 @@ final class LineActions {
 	 */
 	public const ORDER_REF_MAX_LENGTH = 256;
 
-	/**
-	 * Replacements of a failed order followed to the one that stands, for
-	 * an order retried again while the answers to its retries were lost.
-	 */
-	private const MAX_REPLACEMENT_HOPS = 3;
-
 	// What running an action came to, as LineActionResult codes.
 	public const DONE                = 'done';
 	public const NOT_AVAILABLE       = 'not_available';
@@ -146,7 +141,7 @@ final class LineActions {
 	/**
 	 * The line and its printshop order as Pixonaut has them now: the order
 	 * is read, the line brought in step with it, and the order read again
-	 * when the line took on the order that replaced it.
+	 * when the line took on another order meanwhile.
 	 *
 	 * @param LineState $line The line.
 	 *
@@ -172,27 +167,25 @@ final class LineActions {
 	 * answered it. An action whose answer was lost changed the order but not
 	 * the line, and Pixonaut's own event of it, sent `via: store_key`, is
 	 * skipped; without this the line would keep a state no action leads on
-	 * from. A status other than the one last applied is applied now, and a
-	 * failed order that was retried hands the line to the order that
-	 * replaced it.
+	 * from. A status of the line's item other than the one last applied is
+	 * applied now.
 	 *
 	 * @param LineState   $line The line.
 	 * @param OrderDetail $read Its printshop order, from order_of().
 	 *
 	 * @return LineState The line as it stands now.
-	 *
-	 * @throws ApiException When Pixonaut could not be reached or refused while the replacement was looked for.
 	 */
 	public function reconcile( LineState $line, OrderDetail $read ): LineState {
-		$order_id = $read->order->id;
-		$status   = $read->order->status;
-		if ( '' === $status || self::order_id( $line ) !== $order_id ) {
+		$order_id   = $read->order->id;
+		$order_item = $line->item_of( $read->order );
+		$status     = $order_item->status ?? '';
+		if ( null === $order_item || '' === $status || self::order_id( $line ) !== $order_id ) {
 			return $line;
 		}
 		$line = $this->keep_erasure( $line, $read );
 		$item = $line->item();
 		try {
-			if ( self::applied( $line ) !== $status && $this->apply_status( $line, $order_id, $status, $read->order ) ) {
+			if ( self::applied( $line ) !== $status && $this->apply_status( $line, $order_id, $status, $read->order, $order_item ) ) {
 				$line = LineState::of( $item );
 				if ( self::applied( $line ) === $status ) {
 					$this->note(
@@ -206,16 +199,6 @@ final class LineActions {
 			if ( OrderStatus::HELD === $status ) {
 				OrderHold::keep( $item, $order_id, $read->order->hold );
 			}
-			$line = LineState::of( $item );
-			if ( OrderStatus::FAILED === $status && ! $read->can_retry && LineState::NEEDS_ATTENTION === $line->state() ) {
-				$replacement = $this->replacement( $read->order );
-				if ( null !== $replacement ) {
-					$this->adopt( $line, $replacement );
-				}
-			}
-		} catch ( ApiException $e ) {
-			// A replacement that could not be read is the caller's to try again.
-			throw $e;
 		} catch ( RuntimeException $e ) {
 			// The next read tries again.
 			$this->log_unsaved( 'reconcile', $line, $e );
@@ -355,8 +338,12 @@ final class LineActions {
 		}
 		try {
 			$order_id = (string) self::order_id( $line );
+			$item     = null === $order ? null : $line->item_of( $order->order );
 			if ( self::RETRY === $action ) {
-				return null === $order ? $this->retry_line( $line ) : $this->retry_order( $line, $order_id );
+				if ( null === $order ) {
+					return $this->retry_line( $line );
+				}
+				return null === $item ? new LineActionResult( self::REFUSED, ApiException::UNEXPECTED_RESPONSE ) : $this->retry_order( $line, $order_id, $item->id );
 			}
 			if ( self::REORDER === $action ) {
 				return $this->reorder( $line );
@@ -366,13 +353,13 @@ final class LineActions {
 					return new LineActionResult( self::REASON_MISSING );
 				}
 				return self::SETTLE_SUBMITTED === $action
-					? $this->settle_submitted( $line, $order_id, $reason, $ref )
-					: $this->settle_failed( $line, $order_id, $reason );
+					? $this->settle_submitted( $line, $order_id, (string) $item?->printshop_order_id(), $reason, $ref )
+					: $this->settle_failed( $line, $order_id, (string) $item?->printshop_order_id(), (string) $item?->id, $reason );
 			}
 			if ( self::CANCEL === $action ) {
-				return $this->cancel( $line, $order_id );
+				return $this->cancel( $line, $order_id, (string) $item?->id );
 			}
-			return $this->rehearse( $line, $order_id, $order?->order->status ?? '', substr( $action, strlen( self::REHEARSE ) ) );
+			return $this->rehearse( $line, $order_id, (string) $item?->printshop_order_id(), $item->status ?? '', substr( $action, strlen( self::REHEARSE ) ) );
 		} catch ( ApiException $e ) {
 			$this->logger->warning(
 				'Order line action refused by Pixonaut.',
@@ -388,7 +375,7 @@ final class LineActions {
 			if ( $unanswered ) {
 				return new LineActionResult( self::UNREACHABLE );
 			}
-			return 'orders.retry' === $e->operation ? $this->retry_refused( $line, $e ) : self::refused( $e );
+			return 'orders.items.retry' === $e->operation ? $this->retry_refused( $line, $e ) : self::refused( $e );
 		} catch ( RuntimeException $e ) {
 			$this->log_unsaved( $action, $line, $e );
 			return new LineActionResult( self::LINE_CHANGED );
@@ -439,11 +426,13 @@ final class LineActions {
 	 * @return list<string>
 	 */
 	private function order_actions( LineState $line, ?OrderDetail $read ): array {
-		$status  = $read->order->status ?? '';
-		$moves   = $read->status_moves ?? array();
+		$item   = null === $read ? null : $line->item_of( $read->order );
+		$status = $item->status ?? '';
+		// Moves and settles are of the printshop order the item was sent in; one not sent yet has none.
+		$moves   = null === $item?->printshop_order_id() ? array() : $item->status_moves;
 		$actions = array();
 		if ( LineState::NEEDS_ATTENTION === $line->state() ) {
-			if ( true === $read?->can_retry ) {
+			if ( true === $item?->can_retry ) {
 				$actions[] = self::RETRY;
 			}
 			if ( OrderStatus::OUTCOME_UNKNOWN === $status ) {
@@ -521,20 +510,22 @@ final class LineActions {
 	}
 
 	/**
-	 * Pixonaut's retry of the line's failed printshop order. When an
-	 * earlier retry placed one already, or an automation ordered the design
-	 * again meanwhile, the line adopts that order.
+	 * Pixonaut's retry of the line's failed item, in its order. When an
+	 * automation ordered the design again meanwhile, or an earlier retry
+	 * placed another order already, the line adopts that order's item.
 	 *
 	 * @param LineState $line     The line.
-	 * @param string    $order_id Its failed order.
+	 * @param string    $order_id Its order.
+	 * @param string    $item_id  Its failed item.
 	 *
 	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
-	private function retry_order( LineState $line, string $order_id ): LineActionResult {
+	private function retry_order( LineState $line, string $order_id, string $item_id ): LineActionResult {
 		$by_automation = null;
 		try {
-			// No reroute: the order goes back to the printshop it went to.
-			$placed = Order::retry( $this->pixonaut, $order_id );
+			// No reroute: the item goes back to the printshop it went to.
+			$placed = Order::retry( $this->pixonaut, $order_id, $item_id );
+			$item   = $placed->item( $item_id, null );
 		} catch ( ApiException $e ) {
 			$automation = AdoptedOrder::named_by( $e );
 			$newer      = ErrorCode::ORDER_SUPERSEDED === $e->errorCode ? ( $e->details['newerOrderId'] ?? null ) : $automation;
@@ -542,38 +533,48 @@ final class LineActions {
 				throw $e;
 			}
 			$read = OrderDetail::get( $this->pixonaut, $newer );
-			if ( null !== $automation && ! AdoptedOrder::takes( $line, $read ) ) {
+			$item = null === $automation ? $line->item_of( $read->order ) : AdoptedOrder::takes( $line, $read, AdoptedOrder::item_named_by( $e ) );
+			if ( null === $item ) {
 				// Only an automation's order of the item as bought is taken on; the merchant settles any other.
 				throw $e;
 			}
 			$placed        = $read->order;
 			$by_automation = null === $automation ? null : $read;
 		}
-		return $this->adopt( $line, $placed, $by_automation );
+		if ( null === $item ) {
+			return new LineActionResult( self::REFUSED, ApiException::UNEXPECTED_RESPONSE );
+		}
+		return $this->adopt( $line, $placed, $item, $by_automation );
 	}
 
 	/**
-	 * Makes a new printshop order the line's. A status on the way to the
-	 * customer is applied as an `order.status_changed` event would be, so a
-	 * replacement that shipped already ships the line, with its tracking,
-	 * and one Pixonaut holds shows as held, with its hold.
+	 * Makes an order's item the line's: its own item sent again, or one of
+	 * another order. A status on the way to the customer is applied as an
+	 * `item.status_changed` event would be, so an item that shipped already
+	 * ships the line, with its tracking, and one Pixonaut holds shows as
+	 * held, with its hold.
 	 *
 	 * @param LineState        $line          The line.
-	 * @param Order            $placed        The new order.
+	 * @param Order            $placed        The order.
+	 * @param OrderItem        $item          The line's item in it.
 	 * @param OrderDetail|null $by_automation The same order read on its own, when one of the workspace's automations placed it, not the store's retry.
 	 *
 	 * @throws RuntimeException When the line kept changing while the status was applied.
 	 */
-	private function adopt( LineState $line, Order $placed, ?OrderDetail $by_automation = null ): LineActionResult {
+	private function adopt( LineState $line, Order $placed, OrderItem $item, ?OrderDetail $by_automation = null ): LineActionResult {
 		$id     = $placed->id;
-		$status = $placed->status;
+		$status = $item->status;
 		if ( '' === $id ) {
 			return new LineActionResult( self::REFUSED, ApiException::UNEXPECTED_RESPONSE );
 		}
-		$line->replace_order( $id );
+		if ( self::order_id( $line ) === $id ) {
+			// Sent again in the same order: its statuses start over from the retry.
+			$line->set_ref( LineState::REF_ORDER_STATUS, null );
+		}
+		$line->replace_order( $id, $item->id );
 		$address = null;
 		if ( null !== $by_automation ) {
-			AdoptedOrder::record( $line, $by_automation );
+			AdoptedOrder::record( $line, $by_automation, $item );
 			// The delivery the failed order had is not this order's: it ships where the automation sent it.
 			$address = AdoptedOrder::address( $placed );
 			$line->set_ref( LineState::REF_DELIVERY, array( DeliveryChange::FIELD_ADDRESS => $address ) );
@@ -596,7 +597,7 @@ final class LineActions {
 				__( 'Pixonaut: "%1$s" was sent to the printshop again, as order %2$s.', 'pixonaut-for-woocommerce' ),
 				$id
 			);
-			$this->status_changed->apply_to( $line->item(), OrderStatusChanged::store_move( $id, '', $placed ) );
+			$this->status_changed->apply_to( $line->item(), OrderStatusChanged::store_move( $id, '', $placed, $item ) );
 			if ( OrderStatus::HELD === $status ) {
 				OrderHold::keep( $line->item(), $id, $placed->hold );
 			}
@@ -615,15 +616,16 @@ final class LineActions {
 	/**
 	 * The printshop has the order: Pixonaut follows it from here.
 	 *
-	 * @param LineState $line     The line.
-	 * @param string    $order_id Its order, whose outcome is unknown.
-	 * @param string    $reason   What the printshop said.
-	 * @param string    $ref      The printshop's own reference; empty for none.
+	 * @param LineState $line               The line.
+	 * @param string    $order_id           Its order.
+	 * @param string    $printshop_order_id The printshop order its item went in, whose outcome is unknown.
+	 * @param string    $reason             What the printshop said.
+	 * @param string    $ref                The printshop's own reference; empty for none.
 	 *
 	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 * @throws RuntimeException When the line kept changing.
 	 */
-	private function settle_submitted( LineState $line, string $order_id, string $reason, string $ref ): LineActionResult {
+	private function settle_submitted( LineState $line, string $order_id, string $printshop_order_id, string $reason, string $ref ): LineActionResult {
 		$body = array(
 			'status' => OrderStatus::SUBMITTED,
 			'reason' => $reason,
@@ -631,29 +633,32 @@ final class LineActions {
 		if ( '' !== $ref ) {
 			$body['externalOrderRef'] = $ref;
 		}
-		$settled = Order::update( $this->pixonaut, $order_id, OrdersUpdateRequest::fromArray( $body ) );
+		$settled = Order::update_printshop_order( $this->pixonaut, $order_id, $printshop_order_id, OrdersPrintshopOrdersUpdateRequest::fromArray( $body ) );
 		$this->note(
 			$line,
 			/* translators: 1: product name of the order line, 2: what the merchant learned from the printshop. */
 			__( 'Pixonaut: the printshop has the order for "%1$s". %2$s', 'pixonaut-for-woocommerce' ),
 			$reason
 		);
-		$this->status_changed->apply_to( $line->item(), OrderStatusChanged::store_move( $order_id, OrderStatus::OUTCOME_UNKNOWN, $settled ) );
+		$this->apply_move( $line, $order_id, OrderStatus::OUTCOME_UNKNOWN, $settled );
 		return new LineActionResult( self::DONE );
 	}
 
 	/**
-	 * The printshop does not have the order: Pixonaut marks it failed, and it
-	 * is placed again at once.
+	 * The printshop does not have the order: Pixonaut marks it failed, and
+	 * the item is placed again at once.
 	 *
-	 * @param LineState $line     The line.
-	 * @param string    $order_id Its order, whose outcome is unknown.
-	 * @param string    $reason   What the printshop said.
+	 * @param LineState $line               The line.
+	 * @param string    $order_id           Its order.
+	 * @param string    $printshop_order_id The printshop order its item went in, whose outcome is unknown.
+	 * @param string    $item_id            The line's item.
+	 * @param string    $reason             What the printshop said.
 	 *
-	 * @throws ApiException When Pixonaut refused or could not be reached; a refused retry leaves the order failed, to retry.
+	 * @throws ApiException When Pixonaut refused or could not be reached; a refused retry leaves the item failed, to retry.
 	 */
-	private function settle_failed( LineState $line, string $order_id, string $reason ): LineActionResult {
-		Order::update( $this->pixonaut, $order_id, new OrdersUpdateRequest( status: OrderStatus::FAILED, reason: $reason ) );
+	private function settle_failed( LineState $line, string $order_id, string $printshop_order_id, string $item_id, string $reason ): LineActionResult {
+		$moved = Order::update_printshop_order( $this->pixonaut, $order_id, $printshop_order_id, new OrdersPrintshopOrdersUpdateRequest( status: OrderStatus::FAILED, reason: $reason ) );
+		$this->fail_moved_with( $line, $order_id, $printshop_order_id, $moved, $reason );
 		$line->set_ref( LineState::REF_ORDER_STATUS, OrderStatus::FAILED );
 		if ( ! $line->save() ) {
 			return new LineActionResult( self::LINE_CHANGED );
@@ -664,19 +669,23 @@ final class LineActions {
 			__( 'Pixonaut: the printshop does not have the order for "%1$s". %2$s', 'pixonaut-for-woocommerce' ),
 			$reason
 		);
-		return $this->retry_order( $line, $order_id );
+		return $this->retry_order( $line, $order_id, $item_id );
 	}
 
 	/**
-	 * Asks the printshop to stop the order; the line is cancelled once it did.
+	 * Asks the printshop to stop the line's item; the line is cancelled once
+	 * it did. A printshop that stops whole orders stops the items sent with
+	 * it too, and their lines follow from their own `item.cancelled`.
 	 *
 	 * @param LineState $line     The line.
 	 * @param string    $order_id Its order.
+	 * @param string    $item_id  The line's item.
 	 *
 	 * @throws ApiException When the printshop could not stop it, or Pixonaut refused or could not be reached.
 	 */
-	private function cancel( LineState $line, string $order_id ): LineActionResult {
-		$line->set_ref( LineState::REF_ORDER_STATUS, Order::cancel( $this->pixonaut, $order_id )->status );
+	private function cancel( LineState $line, string $order_id, string $item_id ): LineActionResult {
+		$cancelled = Order::cancel_item( $this->pixonaut, $order_id, $item_id )->item( $item_id, null );
+		$line->set_ref( LineState::REF_ORDER_STATUS, $cancelled->status ?? OrderStatus::CANCELLED );
 		if ( ! $line->transition( LineState::CANCELLED ) ) {
 			return new LineActionResult( self::LINE_CHANGED );
 		}
@@ -689,25 +698,78 @@ final class LineActions {
 	}
 
 	/**
-	 * Moves a sandbox order on as its printshop would, and the line with it.
+	 * Moves a sandbox printshop order on as its printshop would, and the line with it.
 	 *
-	 * @param LineState $line     The line.
-	 * @param string    $order_id Its sandbox order.
-	 * @param string    $from     The order's status now.
-	 * @param string    $to       One of REHEARSALS.
+	 * @param LineState $line               The line.
+	 * @param string    $order_id           Its sandbox order.
+	 * @param string    $printshop_order_id The printshop order its item went in.
+	 * @param string    $from               The item's status now.
+	 * @param string    $to                 One of REHEARSALS.
 	 *
 	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 * @throws RuntimeException When the line kept changing.
 	 */
-	private function rehearse( LineState $line, string $order_id, string $from, string $to ): LineActionResult {
-		$moved = Order::update( $this->pixonaut, $order_id, new OrdersUpdateRequest( status: $to ) );
+	private function rehearse( LineState $line, string $order_id, string $printshop_order_id, string $from, string $to ): LineActionResult {
+		$moved = Order::update_printshop_order( $this->pixonaut, $order_id, $printshop_order_id, new OrdersPrintshopOrdersUpdateRequest( status: $to ) );
 		if ( OrderStatus::FAILED === $to ) {
 			/* translators: Reason in an order note when a merchant rehearses a failed printshop order in the Pixonaut sandbox. */
-			$this->failed->apply_to( $line, __( 'Rehearsed in the Pixonaut sandbox.', 'pixonaut-for-woocommerce' ) );
+			$reason = __( 'Rehearsed in the Pixonaut sandbox.', 'pixonaut-for-woocommerce' );
+			$this->failed->apply_to( $line, $reason );
+			$this->fail_moved_with( $line, $order_id, $printshop_order_id, $moved, $reason );
 		} else {
-			$this->status_changed->apply_to( $line->item(), OrderStatusChanged::store_move( $order_id, $from, $moved ) );
+			$this->apply_move( $line, $order_id, $from, $moved );
 		}
 		return new LineActionResult( self::DONE );
+	}
+
+	/**
+	 * Fails the order's other lines whose items a failure the store reported
+	 * moved with the line's: the whole printshop order failed, and their
+	 * events of it come `via: store_key`, which the handlers skip.
+	 *
+	 * @param LineState $line               The line the merchant acted on.
+	 * @param string    $order_id           Its order.
+	 * @param string    $printshop_order_id The printshop order that failed.
+	 * @param Order     $moved              Pixonaut's answer: the order as it is now.
+	 * @param string    $reason             Why it failed.
+	 *
+	 * @throws RuntimeException When a line kept changing.
+	 */
+	private function fail_moved_with( LineState $line, string $order_id, string $printshop_order_id, Order $moved, string $reason ): void {
+		foreach ( LineState::for_order_id( $order_id ) as $other ) {
+			$item = $other->item()->get_id() === $line->item()->get_id() ? null : $other->item_of( $moved );
+			if ( null !== $item && OrderStatus::FAILED === $item->status && $printshop_order_id === $item->printshop_order_id() ) {
+				$this->failed->apply_to( $other, $reason );
+			}
+		}
+	}
+
+	/**
+	 * Applies a move the store made to the line, from Pixonaut's answer, and
+	 * to the order's other lines its printshop order moved with it: their
+	 * events of it come `via: store_key`, which the handlers skip.
+	 *
+	 * @param LineState $line     The line.
+	 * @param string    $order_id Its order.
+	 * @param string    $from     The item's status before the move.
+	 * @param Order     $moved    Pixonaut's answer: the order as it is now.
+	 *
+	 * @throws RuntimeException When the line kept changing.
+	 */
+	private function apply_move( LineState $line, string $order_id, string $from, Order $moved ): void {
+		$item = $line->item_of( $moved );
+		if ( null === $item ) {
+			return;
+		}
+		$this->status_changed->apply_to( $line->item(), OrderStatusChanged::store_move( $order_id, $from, $moved, $item ) );
+		$printshop_order = $item->printshop_order_id();
+		foreach ( LineState::for_order_id( $order_id ) as $other ) {
+			$moved_with = $other->item()->get_id() === $line->item()->get_id() ? null : $other->item_of( $moved );
+			if ( null !== $moved_with && null !== $printshop_order && $moved_with->printshop_order_id() === $printshop_order ) {
+				$applied = $other->ref( LineState::REF_ORDER_STATUS );
+				$this->status_changed->apply_to( $other->item(), OrderStatusChanged::store_move( $order_id, is_string( $applied ) ? $applied : '', $moved, $moved_with ) );
+			}
+		}
 	}
 
 	/**
@@ -720,7 +782,8 @@ final class LineActions {
 	private static function refused( ApiException $error ): LineActionResult {
 		return match ( $error->errorCode ) {
 			ErrorCode::ORDER_STATUS_NOT_ALLOWED,
-			ErrorCode::ORDER_NOT_RETRYABLE => new LineActionResult( self::STATUS_NOT_ALLOWED ),
+			ErrorCode::ORDER_NOT_RETRYABLE,
+			ErrorCode::RETRY_REFUSED => new LineActionResult( self::STATUS_NOT_ALLOWED ),
 			ErrorCode::ORDER_REFERENCE_TAKEN => new LineActionResult( self::REFERENCE_TAKEN ),
 			default => new LineActionResult( self::REFUSED, $error->errorCode ),
 		};
@@ -762,22 +825,23 @@ final class LineActions {
 	 *
 	 * @param LineState $line     The line.
 	 * @param string    $order_id Its order.
-	 * @param string    $status   The order's status, other than the one last applied.
+	 * @param string    $status   Its item's status, other than the one last applied.
 	 * @param Order     $order    The order as Pixonaut answered it.
+	 * @param OrderItem $placed   The line's item in it.
 	 *
 	 * @return bool False for a status this version does not know, which is left alone.
 	 *
 	 * @throws RuntimeException When the line kept changing.
 	 */
-	private function apply_status( LineState $line, string $order_id, string $status, Order $order ): bool {
+	private function apply_status( LineState $line, string $order_id, string $status, Order $order, OrderItem $placed ): bool {
 		$item = $line->item();
 		if ( isset( OrderStatus::LINE_STATES[ $status ] ) || OrderStatus::OUTCOME_UNKNOWN === $status ) {
 			// Starting from the status last applied, so the move is not taken for a late one.
-			$this->status_changed->apply_to( $item, OrderStatusChanged::store_move( $order_id, (string) self::applied( $line ), $order ) );
+			$this->status_changed->apply_to( $item, OrderStatusChanged::store_move( $order_id, (string) self::applied( $line ), $order, $placed ) );
 			return true;
 		}
 		if ( OrderStatus::FAILED === $status ) {
-			$this->failed->apply_to( $line, $order->last_error ?? '' );
+			$this->failed->apply_to( $line, $placed->last_error ?? '' );
 			// A line waiting already is left as it is, but follows the order's status.
 			$this->record_status( LineState::of( $item ), $status, null );
 			return true;
@@ -807,39 +871,6 @@ final class LineActions {
 		if ( ! ( $moves ? $line->transition( $to ) : $line->save() ) ) {
 			throw new RuntimeException( sprintf( 'Order status not recorded on order item %d: the line changed meanwhile.', (int) $line->item()->get_id() ) );
 		}
-	}
-
-	/**
-	 * The order that stands in for a failed one Pixonaut retried: the one
-	 * its `replacedByOrderId` names, or the one replacing that, and so on.
-	 * A replacement placed under another `externalRef` is not the line's,
-	 * as for its `order.*` events, so it is not followed.
-	 *
-	 * @param Order $order The failed order, as Pixonaut answered it.
-	 *
-	 * @return Order|null Null when nothing replaced it.
-	 *
-	 * @throws ApiException When Pixonaut could not be reached or refused.
-	 */
-	private function replacement( Order $order ): ?Order {
-		$external_ref = $order->external_ref ?? '';
-		if ( '' === $external_ref ) {
-			return null;
-		}
-		$found = null;
-		$at    = $order;
-		for ( $hop = 0; $hop < self::MAX_REPLACEMENT_HOPS; $hop++ ) {
-			$next_id = $at->replaced_by_order_id;
-			if ( null === $next_id || '' === $next_id ) {
-				break;
-			}
-			$at = OrderDetail::get( $this->pixonaut, $next_id )->order;
-			if ( $at->external_ref !== $external_ref ) {
-				break;
-			}
-			$found = $at;
-		}
-		return $found;
 	}
 
 	/**

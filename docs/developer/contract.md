@@ -37,7 +37,7 @@ so the same file can be sent to Pixonaut:
 ```json
 {
 	"operations": ["GET /v1/orders/{id}", "POST /v1/orders"],
-	"webhooks": ["order.status_changed", "webhook.ping"],
+	"webhooks": ["item.status_changed", "webhook.ping"],
 	"keys": {
 		"GET /v1/orders/{id}": "integrationKey",
 		"GET /v1/templates/{id}/constraints": ["integrationKey", "publishableKey", "shareLink"]

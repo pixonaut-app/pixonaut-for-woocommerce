@@ -129,7 +129,7 @@ export const NO_SPEC = [
 	'src/Fulfilment/OrderHeld.php',
 	'src/Fulfilment/OrderHold.php',
 	'src/Fulfilment/OrderReleased.php',
-	'src/Fulfilment/OrderTrackingChanged.php',
+	'src/Fulfilment/OrderRefused.php',
 	'src/Abilities/ChangeDeliveryAddress.php', // abilities no spec runs
 	'src/Abilities/ConnectionAction.php',
 	'src/Abilities/ConnectionStatus.php',

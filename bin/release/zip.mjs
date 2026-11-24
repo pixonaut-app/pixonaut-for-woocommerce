@@ -38,6 +38,7 @@ import {
 } from './allowlist.mjs';
 import { makeZip } from './archive.mjs';
 import {
+	COMMENTLESS_DIRS,
 	DEFAULT_FLAVOR,
 	flavorFromArgs,
 	leftOut,
@@ -208,6 +209,16 @@ mustRun('docker', [
 ]);
 // composer.json stays: it names the bundled packages.
 rmSync(join(STAGE, COMPOSER_LOCK), { force: true });
+
+if (flavor === WPORG_FLAVOR) {
+	step(`Strip the generated models' comments (${flavor})`);
+	mustRun('docker', [
+		...composerInDocker(STAGE, { [CHECKOUT_MOUNT]: root }),
+		'php',
+		`${CHECKOUT_MOUNT}/bin/release/strip-comments.php`,
+		...COMMENTLESS_DIRS,
+	]);
+}
 // A package's own dotfiles (a `.gitkeep` in an empty directory) are never loaded.
 for (const file of filesUnder(join(STAGE, 'vendor'))) {
 	if (DOTFILE.test(file)) {

@@ -14,6 +14,9 @@ use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Connection\ConnectionStore;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Fulfilment\LineState;
+use Pixonaut\WooCommerce\Fulfilment\Tracking;
+use Pixonaut\WooCommerce\Milliseconds;
+use Pixonaut\WooCommerce\Tests\Support\FulfilmentAnswers;
 use Pixonaut\WooCommerce\Tests\Support\OpenApiAssert;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Signature;
 use Pixonaut\WooCommerce\Webhooks\Processor;
@@ -26,7 +29,8 @@ use WP_UnitTestCase;
 /**
  * Delivers Pixonaut's order events to the store, signed and checked against
  * the spec, and runs the jobs that handle them, for a processing order with
- * one Pixonaut line.
+ * a Pixonaut line, its item in one Pixonaut order placed for the whole
+ * WooCommerce order.
  */
 abstract class OrderEventsTestCase extends WP_UnitTestCase {
 
@@ -40,7 +44,20 @@ abstract class OrderEventsTestCase extends WP_UnitTestCase {
 
 	protected const PRINT_ID = 'c4d5e6f7-a8b9-4c0d-9e1f-2a3b4c5d6e7f';
 
+	/**
+	 * The line's `externalRef`, its item's in ORDER_ID.
+	 */
 	protected const EXTERNAL_REF = 'wc_site_1042_7';
+
+	/**
+	 * The `externalRef` of ORDER_ID, placed for the line's WooCommerce order.
+	 */
+	protected const ORDER_EXTERNAL_REF = 'wc_site_1042';
+
+	/**
+	 * The line's item in ORDER_ID, as FulfilmentAnswers::item_id() names it.
+	 */
+	protected const ITEM_ID = 'oi_' . self::ORDER_ID;
 
 	protected const TRACKING = array(
 		'carrier' => 'PostNord',
@@ -49,7 +66,7 @@ abstract class OrderEventsTestCase extends WP_UnitTestCase {
 	);
 
 	/**
-	 * Pixonaut's order statuses on the way to the customer, as change events.
+	 * Pixonaut's item statuses on the way to the customer, as change events.
 	 */
 	protected const JOURNEY = array(
 		array( 'submitted', 'queued' ),
@@ -65,86 +82,55 @@ abstract class OrderEventsTestCase extends WP_UnitTestCase {
 	}
 
 	/**
-	 * An `order.status_changed` envelope for ORDER_ID.
+	 * An `item.status_changed` envelope for ITEM_ID of ORDER_ID.
 	 *
-	 * @param string                     $previous Previous status.
-	 * @param string                     $status   New status.
-	 * @param array<string, string>|null $tracking Tracking, for `shipped`.
-	 * @param array<string, string>      $payload  Payload fields to override.
+	 * @param string               $previous Previous status.
+	 * @param string               $status   New status.
+	 * @param array<string, mixed> $payload  Payload fields to override, e.g. `itemId` for another item.
 	 * @return array{id: string, type: string, payload: array<string, mixed>, createdAt: int}
 	 */
-	protected function status_event( string $previous, string $status, ?array $tracking = null, array $payload = array() ): array {
-		++$this->sequence;
-		$created = time() * 1000 + $this->sequence;
-		$fields  = array(
-			'orderId'        => self::ORDER_ID,
-			'printId'        => self::PRINT_ID,
-			'externalRef'    => self::EXTERNAL_REF,
-			'previousStatus' => $previous,
-			'status'         => $status,
-			'via'            => 'integration',
-		);
-		if ( null !== $tracking ) {
-			$fields['tracking'] = $tracking;
-		}
-		return array(
-			'id'        => "{$created}-0f1e2d3c-4b5a-4968-8776-6554433221" . str_pad( (string) $this->sequence, 2, '0', STR_PAD_LEFT ),
-			'type'      => 'order.status_changed',
-			'payload'   => array_merge( $fields, $payload ),
-			'createdAt' => $created,
+	protected function status_event( string $previous, string $status, array $payload = array() ): array {
+		return $this->item_event(
+			'item.status_changed',
+			$payload + array(
+				'previousStatus' => $previous,
+				'status'         => $status,
+				'via'            => 'integration',
+			)
 		);
 	}
 
 	/**
-	 * An `order.failed` event.
+	 * An `item.failed` envelope for ITEM_ID of ORDER_ID.
 	 *
-	 * @param string $reason   Why it failed.
-	 * @param string $order_id The order that failed.
+	 * @param string               $reason  Why it failed.
+	 * @param array<string, mixed> $payload Payload fields to override.
 	 * @return array{id: string, type: string, payload: array<string, mixed>, createdAt: int}
 	 */
-	protected function failed_event( string $reason, string $order_id = self::ORDER_ID ): array {
-		++$this->sequence;
-		$created = time() * 1000 + $this->sequence;
-		return array(
-			'id'        => "{$created}-1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c" . str_pad( (string) $this->sequence, 2, '0', STR_PAD_LEFT ),
-			'type'      => 'order.failed',
-			'payload'   => array(
-				'orderId'     => $order_id,
-				'printId'     => self::PRINT_ID,
-				'externalRef' => self::EXTERNAL_REF,
-				'reason'      => $reason,
-				'via'         => 'integration',
-			),
-			'createdAt' => $created,
+	protected function failed_event( string $reason, array $payload = array() ): array {
+		return $this->item_event(
+			'item.failed',
+			$payload + array(
+				'reason' => $reason,
+				'via'    => 'integration',
+			)
 		);
 	}
 
 	/**
-	 * An `order.submitted` envelope: an order placed, replacing $replaces when
-	 * it is a retry of that order.
+	 * An `item.submitted` envelope: ITEM_ID of ORDER_ID handed to its
+	 * printshop, once its prints were done or again after a retry.
 	 *
-	 * @param string      $order_id     The new order.
-	 * @param string|null $replaces     The order it replaced; null for a first order.
-	 * @param string      $external_ref The new order's `externalRef`.
+	 * @param array<string, mixed> $payload Payload fields to override.
 	 * @return array{id: string, type: string, payload: array<string, mixed>, createdAt: int}
 	 */
-	protected function submitted_event( string $order_id, ?string $replaces, string $external_ref = self::EXTERNAL_REF ): array {
-		++$this->sequence;
-		$created = time() * 1000 + $this->sequence;
-		return array(
-			'id'        => "{$created}-2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d" . str_pad( (string) $this->sequence, 2, '0', STR_PAD_LEFT ),
-			'type'      => 'order.submitted',
-			'payload'   => array(
-				'orderId'          => $order_id,
-				'printId'          => self::PRINT_ID,
-				'printIds'         => array( self::PRINT_ID ),
-				'adapter'          => 'custom',
-				'quantity'         => 1,
-				'externalRef'      => $external_ref,
+	protected function submitted_event( array $payload = array() ): array {
+		return $this->item_event(
+			'item.submitted',
+			$payload + array(
+				'printshopOrderId' => 'po_' . self::ITEM_ID,
 				'externalOrderRef' => null,
-				'replacesOrderId'  => $replaces,
-			),
-			'createdAt' => $created,
+			)
 		);
 	}
 
@@ -155,20 +141,84 @@ abstract class OrderEventsTestCase extends WP_UnitTestCase {
 	 * @return array{id: string, type: string, payload: array<string, mixed>, createdAt: int}
 	 */
 	protected function cancelled_event( string $via = 'member' ): array {
+		return $this->order_event( 'order.cancelled', array( 'via' => $via ) );
+	}
+
+	/**
+	 * An `item.cancelled` envelope for ITEM_ID of ORDER_ID.
+	 *
+	 * @param array<string, mixed> $payload Payload fields to override.
+	 * @return array{id: string, type: string, payload: array<string, mixed>, createdAt: int}
+	 */
+	protected function item_cancelled_event( array $payload = array() ): array {
+		return $this->item_event( 'item.cancelled', $payload + array( 'via' => 'member' ) );
+	}
+
+	/**
+	 * An `item.*` envelope, about ITEM_ID of ORDER_ID unless $fields say otherwise.
+	 *
+	 * @param string               $type   Event type.
+	 * @param array<string, mixed> $fields Payload fields beside, or replacing, the item's.
+	 * @return array{id: string, type: string, payload: array<string, mixed>, createdAt: int}
+	 */
+	protected function item_event( string $type, array $fields ): array {
+		$item_id = is_string( $fields['itemId'] ?? null ) ? $fields['itemId'] : self::ITEM_ID;
+		return $this->order_event(
+			$type,
+			$fields + array(
+				'itemId'          => $item_id,
+				'itemExternalRef' => self::EXTERNAL_REF,
+				'submissionId'    => 'sub_' . $item_id,
+				'printIds'        => array( self::PRINT_ID ),
+			)
+		);
+	}
+
+	/**
+	 * An `order.*` envelope, about ORDER_ID unless $fields say otherwise.
+	 *
+	 * @param string               $type   Event type.
+	 * @param array<string, mixed> $fields Payload fields beside, or replacing, the order's.
+	 * @return array{id: string, type: string, payload: array<string, mixed>, createdAt: int}
+	 */
+	protected function order_event( string $type, array $fields ): array {
 		++$this->sequence;
 		$created = time() * 1000 + $this->sequence;
 		return array(
-			'id'        => "{$created}-1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c" . str_pad( (string) $this->sequence, 2, '0', STR_PAD_LEFT ),
-			'type'      => 'order.cancelled',
-			'payload'   => array(
+			'id'        => "{$created}-0f1e2d3c-4b5a-4968-8776-6554433221" . str_pad( (string) $this->sequence, 2, '0', STR_PAD_LEFT ),
+			'type'      => $type,
+			'payload'   => $fields + array(
 				'orderId'     => self::ORDER_ID,
-				'printId'     => self::PRINT_ID,
-				'printIds'    => array( self::PRINT_ID ),
-				'externalRef' => self::EXTERNAL_REF,
-				'via'         => $via,
+				'externalRef' => self::ORDER_EXTERNAL_REF,
 			),
 			'createdAt' => $created,
 		);
+	}
+
+	/**
+	 * Leaves tracking on the line as the `parcel.shipped` event Pixonaut
+	 * sends before its items' `item.status_changed` to `shipped` does.
+	 *
+	 * @param WC_Order_Item_Product                                 $item     The line.
+	 * @param array{carrier?: string, number: string, url?: string} $tracking The parcel's tracking.
+	 */
+	protected function parcel_shipped( WC_Order_Item_Product $item, array $tracking ): void {
+		$line = LineState::of( $item );
+		Tracking::set( $line, $tracking, Milliseconds::of( time() ) );
+		$this->assertTrue( $line->save() );
+	}
+
+	/**
+	 * `200` of `GET /v1/orders/{id}`: ORDER_ID, placed for the WooCommerce
+	 * order under ORDER_EXTERNAL_REF, its item ITEM_ID at the last of $statuses.
+	 *
+	 * @param string[]             $statuses  The item's statuses so far, oldest first.
+	 * @param array<string, mixed> $overrides Fields of the order to replace, e.g. `externalRef`.
+	 * @phpstan-param non-empty-list<string> $statuses
+	 * @return array<string, mixed>
+	 */
+	protected static function order_read( array $statuses, array $overrides = array() ): array {
+		return $overrides + array( 'externalRef' => self::ORDER_EXTERNAL_REF ) + FulfilmentAnswers::order_read( self::ORDER_ID, self::PRINT_ID, self::EXTERNAL_REF, $statuses );
 	}
 
 	/**
@@ -237,10 +287,13 @@ abstract class OrderEventsTestCase extends WP_UnitTestCase {
 	}
 
 	/**
-	 * A processing order with one Pixonaut line, ordered at ORDER_ID and approved;
-	 * or such a line added to `order`, ordered at `order_id`.
+	 * A processing order with one Pixonaut line, ordered at ORDER_ID as its
+	 * item ITEM_ID and approved; or such a line added to `order`, ordered at
+	 * `order_id` as its item `item_id`. An `item_id` of null makes a line
+	 * placed before orders held items: it keeps no item id, and its order
+	 * was placed under the line's own `externalRef`.
 	 *
-	 * @param array{quantity?: int, tenant?: string, order?: WC_Order, order_id?: string, external_ref?: string} $options Line options.
+	 * @param array{quantity?: int, tenant?: string, order?: WC_Order, order_id?: string, item_id?: string|null, external_ref?: string} $options Line options.
 	 */
 	protected function pixonaut_line( array $options = array() ): WC_Order_Item_Product {
 		$order = $options['order'] ?? new WC_Order();
@@ -252,10 +305,16 @@ abstract class OrderEventsTestCase extends WP_UnitTestCase {
 		$order->set_status( 'processing' );
 		$order->save();
 
-		$line = LineState::start( $item, array( 'front' ) );
+		$order_id = $options['order_id'] ?? self::ORDER_ID;
+		$item_id  = array_key_exists( 'item_id', $options ) ? $options['item_id'] : FulfilmentAnswers::item_id( $order_id );
+		$line     = LineState::start( $item, array( 'front' ) );
 		$line->set_ref( LineState::REF_TENANT_ID, $options['tenant'] ?? self::TENANT_ID );
 		$line->set_ref( LineState::REF_EXTERNAL_REF, $options['external_ref'] ?? self::EXTERNAL_REF );
-		$line->set_ref( LineState::REF_ORDER_ID, $options['order_id'] ?? self::ORDER_ID );
+		$line->set_ref( LineState::REF_ORDER_ID, $order_id );
+		if ( null !== $item_id ) {
+			$line->set_ref( LineState::REF_ORDER_ITEM_ID, $item_id );
+			$line->set_ref( LineState::REF_ORDER_EXTERNAL_REF, self::ORDER_EXTERNAL_REF );
+		}
 		$line->save();
 		$line->transition( LineState::APPROVED );
 		return $item;

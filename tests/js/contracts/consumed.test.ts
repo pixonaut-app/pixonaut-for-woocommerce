@@ -128,20 +128,20 @@ describe('pending', () => {
 	it('reports the pending entries a new spec declares and the pinned one did not', () => {
 		const pinned = structuredClone(spec);
 		delete pinned.paths['/v1/orders/{id}'];
-		delete pinned.webhooks['order.submitted'];
+		delete pinned.webhooks['item.submitted'];
 
 		expect(
 			arrivedPending(
 				consumed([
 					{ op: 'GET /v1/orders/{id}', requirement: 'R3' },
-					{ op: 'WEBHOOK order.submitted', requirement: 'R4' },
+					{ op: 'WEBHOOK item.submitted', requirement: 'R4' },
 					{ op: 'GET /v1/not-yet', requirement: 'R1' },
 					{ op: 'GET /v1/blanks', requirement: 'R5' },
 				]),
 				pinned,
 				spec,
 			),
-		).toEqual(['GET /v1/orders/{id}', 'WEBHOOK order.submitted']);
+		).toEqual(['GET /v1/orders/{id}', 'WEBHOOK item.submitted']);
 	});
 });
 

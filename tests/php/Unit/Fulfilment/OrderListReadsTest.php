@@ -113,7 +113,7 @@ final class OrderListReadsTest extends TestCase {
 		Mockery::mock( 'alias:WC_Order_Factory' )->allows( 'get_order_item' )->with( self::ITEM_ID )->andReturn( $item );
 		$this->transport
 			->off_spec( self::answer( FulfilmentAnswers::orders( array( self::unread_fields_left_out( FulfilmentAnswers::order( 'o_1', array( 'p_front' ), self::EXTERNAL_REF ) ) ) ) ) )
-			->json( 200, FulfilmentAnswers::order( 'o_1', array( 'p_front' ), self::EXTERNAL_REF, array( 'status' => 'cancelled' ) ) );
+			->json( 200, FulfilmentAnswers::order( 'o_1', array( 'p_front' ), self::EXTERNAL_REF, array( 'status' => 'cancelled' ) ) + array( 'cancelledItemIds' => array( FulfilmentAnswers::item_id( 'o_1' ) ) ) );
 
 		( new LineCancellation( $this->sdk(), fn (): StoredConnection => self::connection(), new RecordingLogger() ) )->run( self::ITEM_ID );
 
@@ -163,7 +163,7 @@ final class OrderListReadsTest extends TestCase {
 	 * @return array<string, mixed> The order without fields the store does not read.
 	 */
 	private static function unread_fields_left_out( array $order ): array {
-		unset( $order['adapter'], $order['printshopAsPlaced'], $order['blank'], $order['submittedAt'] );
+		unset( $order['items'][0]['printshopAsPlaced'], $order['items'][0]['blank'], $order['printshopOrders'] );
 		return $order;
 	}
 
@@ -173,9 +173,7 @@ final class OrderListReadsTest extends TestCase {
 	 * @return array<string, mixed> `POST /v1/orders/{id}/erase-personal-data`'s answer.
 	 */
 	private static function erased( string $order_id ): array {
-		$order = FulfilmentAnswers::order( $order_id, array( 'p_front' ), self::EXTERNAL_REF, array( 'personalDataErasedAt' => self::ERASED_AT ) );
-		unset( $order['recipientEmailBounced'] );
-		return $order;
+		return FulfilmentAnswers::order( $order_id, array( 'p_front' ), self::EXTERNAL_REF, array( 'personalDataErasedAt' => self::ERASED_AT ) );
 	}
 
 	/**

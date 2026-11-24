@@ -33,8 +33,8 @@ test.beforeEach(async ({ request }) => {
 	checkoutUrls = await openCheckouts(request);
 });
 
-/** The printshop ships a line's Pixonaut order, and Pixonaut tells the store
- *  about each step. */
+/** The printshop ships a line's item of the order's Pixonaut order, and
+ *  Pixonaut tells the store about each step. */
 async function ship(
 	fake: FakePixonaut,
 	line: Line,
@@ -43,7 +43,7 @@ async function ship(
 	const moved = await fake.control.post('/__fake/orders/move', {
 		data: {
 			orderId: line.refs.orderId,
-			externalRef: line.refs.externalRef,
+			itemExternalRef: line.refs.externalRef,
 			tracking,
 		},
 	});
@@ -51,6 +51,7 @@ async function ship(
 	const { attempts } = (await moved.json()) as {
 		attempts: { status: number }[];
 	};
+	// An item event per step, the only kind the store subscribes to.
 	expect(attempts.map((a) => a.status)).toEqual([200, 200, 200]);
 }
 
@@ -89,11 +90,15 @@ test('a mixed order ships its personalised items at different times and is never
 	await runJobs(request);
 	const placed = await readOrder(request, orderId);
 	expect(placed.lines.map((l) => l.state)).toEqual(['ordered', 'ordered']);
-	expect(await statuses(fake, 'POST /v1/orders')).toEqual([201, 201]);
+	// One printshop order holds both personalised lines.
+	expect(await statuses(fake, 'POST /v1/orders')).toEqual([201]);
 	const [firstLine, secondLine] = placed.lines as [Line, Line];
+	expect(secondLine.refs.orderId).toBe(firstLine.refs.orderId);
 
 	// The first ships; the order stays open.
 	await ship(fake, firstLine, FIRST_TRACKING);
+	await runJobs(request);
+	// The item's event carries no tracking: the read of the order it queued finds its parcel's.
 	await runJobs(request);
 	const partly = await readOrder(request, orderId);
 	expect(partly.status).toBe('processing');

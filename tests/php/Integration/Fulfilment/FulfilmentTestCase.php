@@ -56,7 +56,7 @@ abstract class FulfilmentTestCase extends WP_UnitTestCase {
 	/**
 	 * When the customer agreed, epoch milliseconds.
 	 */
-	private const CONSENT_AT_MS = 1_800_000_000_000;
+	protected const CONSENT_AT_MS = 1_800_000_000_000;
 
 	protected const QUANTITY = 2;
 

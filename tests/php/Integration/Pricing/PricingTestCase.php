@@ -244,6 +244,7 @@ abstract class PricingTestCase extends WP_UnitTestCase {
 				'readAt'    => '2026-11-14T06:00:00.000Z',
 				'changedAt' => null,
 				'times'     => $times ?? self::NO_TIMES,
+				'pages'     => array(),
 			);
 		}
 		$this->recorder->json(

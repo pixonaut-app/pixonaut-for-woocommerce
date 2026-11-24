@@ -27,6 +27,13 @@ use WC_Order_Item_Product;
 
 final class WebhookTest extends OrderEventsTestCase {
 
+	/**
+	 * A second item of ORDER_ID, another line's.
+	 */
+	private const OTHER_ITEM_ID = 'oi_second';
+
+	private const OTHER_EXTERNAL_REF = 'wc_site_1042_8';
+
 	public function test_a_bad_signature_is_refused_and_nothing_is_kept(): void {
 		$envelope = $this->status_event( 'submitted', 'queued' );
 
@@ -50,7 +57,7 @@ final class WebhookTest extends OrderEventsTestCase {
 	}
 
 	public function test_a_copied_site_has_pixonaut_deliver_again_later(): void {
-		$envelope = $this->status_event( 'printed', 'shipped', self::TRACKING );
+		$envelope = $this->status_event( 'printed', 'shipped' );
 		$this->copy_site();
 
 		$response = $this->deliver( $envelope );
@@ -63,7 +70,7 @@ final class WebhookTest extends OrderEventsTestCase {
 
 	public function test_a_kept_event_waits_while_the_site_is_a_copy(): void {
 		$item     = $this->pixonaut_line();
-		$envelope = $this->status_event( 'printed', 'shipped', self::TRACKING );
+		$envelope = $this->status_event( 'printed', 'shipped' );
 		$this->deliver( $envelope );
 		$copied = $this->copy_site();
 
@@ -121,7 +128,7 @@ final class WebhookTest extends OrderEventsTestCase {
 		$this->pixonaut_line();
 		$fired = 0;
 		add_action(
-			'pixonaut_wc_webhook_order_status_changed',
+			'pixonaut_wc_webhook_item_status_changed',
 			static function () use ( &$fired ): void {
 				++$fired;
 			}
@@ -156,10 +163,11 @@ final class WebhookTest extends OrderEventsTestCase {
 	 * @phpstan-param list<int> $order
 	 */
 	public function test_shuffled_and_duplicate_deliveries_end_in_the_same_line_state( array $order ): void {
-		$item   = $this->pixonaut_line( array( 'quantity' => 2 ) );
+		$item = $this->pixonaut_line( array( 'quantity' => 2 ) );
+		$this->parcel_shipped( $item, self::TRACKING );
 		$events = array();
 		foreach ( self::JOURNEY as $index => $change ) {
-			$events[ $index ] = $this->status_event( $change[0], $change[1], 'shipped' === $change[1] ? self::TRACKING : null );
+			$events[ $index ] = $this->status_event( $change[0], $change[1] );
 		}
 
 		foreach ( $order as $index ) {
@@ -199,8 +207,9 @@ final class WebhookTest extends OrderEventsTestCase {
 
 	public function test_shipped_notes_the_tracking_and_completes_a_single_line_order(): void {
 		$item = $this->pixonaut_line();
+		$this->parcel_shipped( $item, self::TRACKING );
 
-		$this->deliver( $this->status_event( 'printed', 'shipped', self::TRACKING ) );
+		$this->deliver( $this->status_event( 'printed', 'shipped' ) );
 		$this->run_jobs();
 
 		$this->assertStringContainsString( 'PostNord PN123456789SE', $this->notes( $item ) );
@@ -261,7 +270,7 @@ final class WebhookTest extends OrderEventsTestCase {
 	public function test_an_echo_of_the_stores_own_change_is_ignored(): void {
 		$item = $this->pixonaut_line();
 
-		$this->deliver( $this->status_event( 'submitted', 'queued', null, array( 'via' => 'store_key' ) ) );
+		$this->deliver( $this->status_event( 'submitted', 'queued', array( 'via' => 'store_key' ) ) );
 		$this->run_jobs();
 
 		$this->assertSame( LineState::APPROVED, LineState::of( $item )->state() );
@@ -270,7 +279,7 @@ final class WebhookTest extends OrderEventsTestCase {
 	public function test_a_line_whose_external_ref_differs_is_not_touched(): void {
 		$item = $this->pixonaut_line();
 
-		$this->deliver( $this->status_event( 'submitted', 'queued', null, array( 'externalRef' => 'someone_else' ) ) );
+		$this->deliver( $this->status_event( 'submitted', 'queued', array( 'externalRef' => 'someone_else' ) ) );
 		$this->run_jobs();
 
 		$this->assertSame( LineState::APPROVED, LineState::of( $item )->state() );
@@ -283,8 +292,47 @@ final class WebhookTest extends OrderEventsTestCase {
 		$line->set_ref( LineState::REF_ORDER_EXTERNAL_REF, 'automation_ref' );
 		$line->save();
 
-		$this->deliver( $this->status_event( 'submitted', 'queued', null, array( 'externalRef' => 'automation_ref' ) ) );
-		$this->deliver( $this->status_event( 'queued', 'printed', null, array( 'externalRef' => 'someone_else' ) ) );
+		$this->deliver( $this->status_event( 'submitted', 'queued', array( 'externalRef' => 'automation_ref' ) ) );
+		$this->deliver( $this->status_event( 'queued', 'printed', array( 'externalRef' => 'someone_else' ) ) );
+		$this->run_jobs();
+
+		$this->assertSame( LineState::ORDERED, LineState::of( $item )->state() );
+		$this->assertSame( 'queued', LineState::of( $item )->ref( LineState::REF_ORDER_STATUS ) );
+	}
+
+	public function test_an_item_event_moves_only_the_line_of_its_item(): void {
+		$first  = $this->pixonaut_line();
+		$second = $this->pixonaut_line(
+			array(
+				'order'        => $this->order_of( $first ),
+				'item_id'      => self::OTHER_ITEM_ID,
+				'external_ref' => self::OTHER_EXTERNAL_REF,
+			)
+		);
+
+		$this->deliver( $this->status_event( 'submitted', 'queued' ) );
+		$this->deliver(
+			$this->failed_event(
+				'refused',
+				array(
+					'itemId'          => self::OTHER_ITEM_ID,
+					'itemExternalRef' => self::OTHER_EXTERNAL_REF,
+				)
+			)
+		);
+		$this->run_jobs();
+
+		$this->assertSame( LineState::ORDERED, LineState::of( $first )->state() );
+		$this->assertSame( 'queued', LineState::of( $first )->ref( LineState::REF_ORDER_STATUS ) );
+		$this->assertSame( LineState::NEEDS_ATTENTION, LineState::of( $second )->state() );
+		$this->assertSame( 'failed', LineState::of( $second )->ref( LineState::REF_ORDER_STATUS ) );
+	}
+
+	public function test_a_line_placed_before_orders_held_items_takes_its_orders_item_events(): void {
+		$item = $this->pixonaut_line( array( 'item_id' => null ) );
+
+		// Its order was placed for it alone, under its own ref; the item Pixonaut made of it has an id the line never kept.
+		$this->deliver( $this->status_event( 'submitted', 'queued', array( 'externalRef' => self::EXTERNAL_REF ) ) );
 		$this->run_jobs();
 
 		$this->assertSame( LineState::ORDERED, LineState::of( $item )->state() );
@@ -303,7 +351,7 @@ final class WebhookTest extends OrderEventsTestCase {
 	public function test_an_unknown_order_id_changes_nothing(): void {
 		$item = $this->pixonaut_line();
 
-		$this->deliver( $this->status_event( 'submitted', 'queued', null, array( 'orderId' => 'ord_unknown' ) ) );
+		$this->deliver( $this->status_event( 'submitted', 'queued', array( 'orderId' => 'ord_unknown' ) ) );
 		$this->run_jobs();
 
 		$this->assertSame( LineState::APPROVED, LineState::of( $item )->state() );
@@ -367,7 +415,7 @@ final class WebhookTest extends OrderEventsTestCase {
 	public function test_an_order_failure_leaves_a_shipped_line_alone(): void {
 		$item = $this->pixonaut_line();
 		foreach ( self::JOURNEY as list( $previous, $status ) ) {
-			$this->deliver( $this->status_event( $previous, $status, 'shipped' === $status ? self::TRACKING : null ) );
+			$this->deliver( $this->status_event( $previous, $status ) );
 		}
 		$this->run_jobs();
 
@@ -410,7 +458,7 @@ final class WebhookTest extends OrderEventsTestCase {
 		$this->deliver( $this->status_event( 'submitted', 'outcome_unknown' ) );
 		$this->run_jobs();
 
-		$this->deliver( $this->status_event( 'outcome_unknown', 'submitted', null, array( 'via' => 'member' ) ) );
+		$this->deliver( $this->status_event( 'outcome_unknown', 'submitted', array( 'via' => 'member' ) ) );
 		$this->run_jobs();
 
 		$this->assertSame( LineState::ORDERED, LineState::of( $item )->state() );
@@ -424,7 +472,7 @@ final class WebhookTest extends OrderEventsTestCase {
 		$reported['createdAt'] = Milliseconds::of( time() - MINUTE_IN_SECONDS );
 		$this->deliver( $this->status_event( 'submitted', 'outcome_unknown' ) );
 		$this->run_jobs();
-		$this->deliver( $this->status_event( 'outcome_unknown', 'submitted', null, array( 'via' => 'member' ) ) );
+		$this->deliver( $this->status_event( 'outcome_unknown', 'submitted', array( 'via' => 'member' ) ) );
 		$this->run_jobs();
 		$this->assertSame( LineState::ORDERED, LineState::of( $item )->state() );
 
@@ -479,7 +527,7 @@ final class WebhookTest extends OrderEventsTestCase {
 		$handled = null;
 		add_filter( 'pixonaut_wc_webhook_handle', '__return_false' );
 		add_action(
-			'pixonaut_wc_webhook_order_status_changed',
+			'pixonaut_wc_webhook_item_status_changed',
 			static function ( array $payload, $event, bool $by_plugin ) use ( &$handled ): void {
 				$handled = $by_plugin;
 			},
@@ -558,7 +606,7 @@ final class WebhookTest extends OrderEventsTestCase {
 		$item     = $this->pixonaut_line();
 		$failures = 1;
 		add_action(
-			'pixonaut_wc_webhook_order_status_changed',
+			'pixonaut_wc_webhook_item_status_changed',
 			static function () use ( &$failures ): void {
 				if ( $failures-- > 0 ) {
 					throw new RuntimeException( 'Not now.' );
@@ -584,7 +632,7 @@ final class WebhookTest extends OrderEventsTestCase {
 		$this->pixonaut_line();
 		$attempts = 0;
 		add_action(
-			'pixonaut_wc_webhook_order_status_changed',
+			'pixonaut_wc_webhook_item_status_changed',
 			static function () use ( &$attempts ): void {
 				++$attempts;
 				throw new RuntimeException( 'Never.' );

@@ -47,19 +47,15 @@ final class FulfilmentTest extends FulfilmentTestCase {
 		};
 		// The order names the design: Pixonaut renders its print and holds the order until it is done.
 		$this->assertSame( 0, $this->count_sent( 'POST', '/v1/prints' ) );
-		$this->assertSame( array( array( 'designId' => 'd_front' ) ), json_decode( (string) $sent( '/v1/orders' )['body'], true )['designs'] ?? null );
+		$this->assertSame( array( array( 'designId' => 'd_front' ) ), json_decode( (string) $sent( '/v1/orders' )['body'], true )['items'][0]['designs'] ?? null );
 		// The order ships to the customer, not to a saved workspace address.
 		$order_body = json_decode( (string) $sent( '/v1/orders' )['body'], true );
 		$this->assertArrayHasKey( 'shipToAddressId', $order_body );
 		$this->assertNull( $order_body['shipToAddressId'] );
-		// The order names the store order it was sold in, and how many Pixonaut lines it has.
-		$this->assertSame(
-			array(
-				'items' => 1,
-				'ref'   => 'wc:' . self::SITE . ':order:' . $this->order->get_id(),
-			),
-			$order_body['storeOrder'] ?? null
-		);
+		// One printshop order per store order, under the store order's ref, an item per line under the line's.
+		$this->assertSame( 'wc:' . self::SITE . ':order:' . $this->order->get_id(), $order_body['externalRef'] ?? null );
+		$this->assertSame( array( $external_ref ), array_column( $order_body['items'] ?? array(), 'externalRef' ) );
+		$this->assertSame( FulfilmentAnswers::item_id( 'o_1' ), $line->ref( LineState::REF_ORDER_ITEM_ID ) );
 		// The line knows the address it was placed with, so only a change of it is sent later.
 		$this->assertSame( OrderAddress::fingerprint( $order_body ), DeliveryChange::of( $line )[ DeliveryChange::FIELD_ADDRESS ] ?? null );
 		$this->assertSame( array(), ActionSchedulerRunner::pending( DeliveryChange::ACTION ) );
@@ -121,7 +117,8 @@ final class FulfilmentTest extends FulfilmentTestCase {
 		$external_ref = 'wc:' . self::SITE . ':order:' . $this->order->get_id() . ':item:' . $this->item->get_id();
 		$this->recorder
 			->json( 200, FulfilmentAnswers::approved() )
-			->json( 200, FulfilmentAnswers::orders( array( FulfilmentAnswers::order( 'o_1', array( 'p_front' ), $external_ref, array( 'status' => 'shipped' ) ) ) ) );
+			->json( 200, FulfilmentAnswers::orders( array( FulfilmentAnswers::order( 'o_1', array( 'p_front' ), $external_ref, array( 'status' => 'shipped' ) ) ) ) )
+			->json( 200, FulfilmentAnswers::order( 'o_1', array( 'p_front' ), $external_ref, array( 'status' => 'shipped' ) ) );
 
 		do_action( 'woocommerce_payment_complete', $this->order->get_id() );
 		$this->assertSame( 1, ActionSchedulerRunner::run_pending( FulfilmentJobs::ACTION ) );
@@ -179,7 +176,9 @@ final class FulfilmentTest extends FulfilmentTestCase {
 		$this->order->set_shipping_city( 'Göteborg' );
 		$this->order->save();
 		$this->assertSame( array(), ActionSchedulerRunner::pending( DeliveryChange::ACTION ) );
-		$this->recorder->json( 200, FulfilmentAnswers::orders( array( FulfilmentAnswers::order( 'o_placed', array( 'p_front' ), $external_ref ) ) ) );
+		$this->recorder
+			->json( 200, FulfilmentAnswers::orders( array( FulfilmentAnswers::order( 'o_placed', array( 'p_front' ), $external_ref ) ) ) )
+			->json( 200, FulfilmentAnswers::order( 'o_placed', array( 'p_front' ), $external_ref ) );
 		$this->assertSame( 1, ActionSchedulerRunner::run_pending( FulfilmentJobs::ACTION ) );
 
 		$this->assertSame( 1, $this->count_sent( 'POST', '/v1/orders' ) );
@@ -217,7 +216,7 @@ final class FulfilmentTest extends FulfilmentTestCase {
 		$this->assertIsArray( $placed );
 		$this->assertSame(
 			array( array( 'designId' => 'd_front' ), array( 'designId' => 'd_back' ) ),
-			json_decode( (string) $placed['body'], true )['designs'] ?? null
+			json_decode( (string) $placed['body'], true )['items'][0]['designs'] ?? null
 		);
 		$line = LineState::of( new WC_Order_Item_Product( $item->get_id() ) );
 		$this->assertSame( LineState::ORDERED, $line->state() );
