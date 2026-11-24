@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-24T03:32:12+00:00\n"
+"POT-Creation-Date: 2026-11-24T03:48:12+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -308,38 +308,43 @@ msgstr ""
 "Son slug sans `pa_`, le nom qu'il porte sans nom à lui tant que celui-ci est "
 "libre."
 
-#: src/Abilities/BlankOptionRows.php:70
+#: src/Abilities/BlankOptionRows.php:84
 msgid ""
-"The blank option the attribute stands for, as Pixonaut writes it; null when "
-"it is not linked."
+"The blank option the attribute stands for, as Pixonaut writes it, or @pages "
+"when its values are a book's page count; null when it is not linked."
 msgstr ""
 "L'option du produit vierge que représente l'attribut, telle que Pixonaut "
-"l'écrit ; null quand il n'est pas lié."
+"l'écrit, ou @pages quand ses valeurs sont le nombre de pages d'un livre ; "
+"null quand il n'est pas lié."
 
-#: src/Abilities/BlankOptionRows.php:82
+#: src/Abilities/BlankOptionRows.php:96
 msgid "The option value the value was linked to; null when it was given none."
 msgstr ""
 "La valeur d'option à laquelle la valeur a été liée ; null quand elle n'en a "
 "reçu aucune."
 
-#: src/Abilities/BlankOptionRows.php:86
+#: src/Abilities/BlankOptionRows.php:100
 msgid ""
 "The option value it stands for: the one it was linked to, else the option's "
-"value of its name; null when it is not linked, and then shows as text."
+"value of its name; for @pages, the page count, the first number in the value "
+"it was linked to or else in its name. Null when it is not linked, and then "
+"shows as text."
 msgstr ""
-"La valeur d'option qu'elle représente : celle à laquelle elle a été liée, "
-"sinon la valeur de l'option portant son nom ; null quand elle n'est pas "
-"liée, et elle s'affiche alors en texte."
+"La valeur d'option qu'elle représente : celle à laquelle elle a été liée, "
+"sinon la valeur de l'option portant son nom ; pour @pages, le nombre de "
+"pages, soit le premier nombre de la valeur à laquelle elle a été liée, sinon "
+"de son nom. Null quand elle n'est pas liée, et elle s'affiche alors en texte."
 
-#: src/Abilities/BlankOptionRows.php:93
+#: src/Abilities/BlankOptionRows.php:107
 msgid ""
 "The options the attribute can be linked to, each with its values: those of "
 "the blanks the products with this attribute use, themselves or through their "
-"variations."
+"variations, and @pages, a book's page count, with no values."
 msgstr ""
-"Les options auxquelles l'attribut peut être lié, chacune avec ses valeurs : "
+"Les options auxquelles l'attribut peut être lié, chacune avec ses valeurs : "
 "celles des produits vierges qu'utilisent les produits ayant cet attribut, "
-"eux-mêmes ou par leurs variations."
+"eux-mêmes ou par leurs variations, et @pages, le nombre de pages d'un livre, "
+"sans valeurs."
 
 #: src/Abilities/ChangeDeliveryAddress.php:63
 msgid "The country's two-letter ISO code, e.g. `SE`."
@@ -2070,7 +2075,7 @@ msgstr ""
 "Impossible de joindre Pixonaut pour lire les coûts de l'imprimeur. Réessayez "
 "dans un instant."
 
-#: src/Abilities/ProductPrices.php:183
+#: src/Abilities/ProductPrices.php:184
 msgid ""
 "variation: the variation's own rule. product: the product's. attribute: a "
 "value of a global attribute the variation has. store: the store's pricing "
@@ -2080,30 +2085,30 @@ msgstr ""
 "attribute : une valeur d'un attribut global de la variation. store : les "
 "réglages de tarification de la boutique."
 
-#: src/Abilities/ProductPrices.php:185
+#: src/Abilities/ProductPrices.php:186
 msgid "The attribute's name, for an attribute value; else null."
 msgstr "Le nom de l'attribut, pour une valeur d'attribut ; sinon null."
 
-#: src/Abilities/ProductPrices.php:186
+#: src/Abilities/ProductPrices.php:187
 msgid ""
 "The attribute's taxonomy, such as pa_size, for an attribute value; else null."
 msgstr ""
 "La taxonomie de l'attribut, comme pa_size, pour une valeur d'attribut ; "
 "sinon null."
 
-#: src/Abilities/ProductPrices.php:187
+#: src/Abilities/ProductPrices.php:188
 msgid "The attribute value, by term id; else null."
 msgstr "La valeur d'attribut, par identifiant de terme ; sinon null."
 
-#: src/Abilities/ProductPrices.php:188
+#: src/Abilities/ProductPrices.php:189
 msgid "The attribute value's name; else null."
 msgstr "Le nom de la valeur d'attribut ; sinon null."
 
-#: src/Abilities/ProductPrices.php:209
+#: src/Abilities/ProductPrices.php:210
 msgid "The variation, or the product itself when it has none."
 msgstr "La variation, ou le produit lui-même s'il n'en a pas."
 
-#: src/Abilities/ProductPrices.php:212
+#: src/Abilities/ProductPrices.php:213
 msgid ""
 "Its regular price, as the store enters prices, including tax or not; null "
 "for none."
@@ -2111,7 +2116,7 @@ msgstr ""
 "Son tarif régulier, tel que la boutique saisit les prix, taxes comprises ou "
 "non ; null s'il n'y en a pas."
 
-#: src/Abilities/ProductPrices.php:215
+#: src/Abilities/ProductPrices.php:216
 msgid ""
 "What the printshop charges, in its own currency, as last read; null when no "
 "cost is known for the blank variant it sells."
@@ -2119,17 +2124,28 @@ msgstr ""
 "Ce que l'imprimeur facture, dans sa propre devise, tel que lu en dernier ; "
 "null si aucun coût n'est connu pour la variante du produit vierge qu'il vend."
 
-#: src/Abilities/ProductPrices.php:217
+#: src/Abilities/ProductPrices.php:218
 msgid "The product; null when the printshop publishes no price."
 msgstr "Le produit ; null si l'imprimeur ne publie aucun prix."
 
-#: src/Abilities/ProductPrices.php:219
+#: src/Abilities/ProductPrices.php:220
 msgid "The cheapest shipping to the shop's country; null when none is known."
 msgstr ""
 "La livraison la moins chère vers le pays de la boutique ; null si aucune "
 "n'est connue."
 
-#: src/Abilities/ProductPrices.php:224
+#: src/Abilities/ProductPrices.php:225
+msgid ""
+"The page count a book is priced at, inner pages only, by the attribute "
+"standing for its page count; null for anything else. A book at a count its "
+"printshop gives no price for has no product price, and cannot be bought."
+msgstr ""
+"Le nombre de pages auquel un livre est vendu, pages intérieures seulement, "
+"d'après l'attribut qui représente son nombre de pages ; null pour tout le "
+"reste. Un livre à un nombre de pages pour lequel son imprimeur n'indique "
+"aucun prix n'a pas de prix de produit et ne peut pas être acheté."
+
+#: src/Abilities/ProductPrices.php:229
 msgid ""
 "The product and its shipping in the store's currency, converted with the "
 "currency buffer added when charged in another; null when they price nothing."
@@ -2138,7 +2154,7 @@ msgstr ""
 "tampon de change ajouté lorsqu'ils sont facturés dans une autre ; null s'ils "
 "ne permettent de fixer aucun prix."
 
-#: src/Abilities/ProductPrices.php:227
+#: src/Abilities/ProductPrices.php:232
 msgid ""
 "The day of the exchange rate the cost was converted with; null when it was "
 "not converted."
@@ -2146,7 +2162,7 @@ msgstr ""
 "Le jour du taux de change avec lequel le coût a été converti ; null s'il n'a "
 "pas été converti."
 
-#: src/Abilities/ProductPrices.php:231
+#: src/Abilities/ProductPrices.php:236
 msgid ""
 "The currency buffer added to what was converted, in percent; null when "
 "nothing was."
@@ -2154,22 +2170,22 @@ msgstr ""
 "Le tampon de change ajouté à ce qui a été converti, en pourcentage ; null si "
 "rien ne l'a été."
 
-#: src/Abilities/ProductPrices.php:235
+#: src/Abilities/ProductPrices.php:240
 msgid "The share of the price excluding tax left after the cost, in percent."
 msgstr "La part du prix hors taxes qui reste après le coût, en pourcentage."
 
-#: src/Abilities/ProductPrices.php:237
+#: src/Abilities/ProductPrices.php:242
 msgid ""
 "What the price leaves over the cost, excluding tax, in the store's currency."
 msgstr ""
 "Ce que le prix laisse au-delà du coût, hors taxes, dans la devise de la "
 "boutique."
 
-#: src/Abilities/ProductPrices.php:238
+#: src/Abilities/ProductPrices.php:243
 msgid "The price the rule would set, when it is another than the price it has."
 msgstr "Le prix que la règle fixerait, lorsqu'il diffère du prix actuel."
 
-#: src/Abilities/ProductPrices.php:242
+#: src/Abilities/ProductPrices.php:247
 msgid ""
 "own: the rule was never applied to it. follows: its price is the one the "
 "rule set. by_hand: its price was edited after the rule set it, and is held "
@@ -2179,7 +2195,7 @@ msgstr ""
 "que la règle a fixé. by_hand : son prix a été modifié après que la règle l'a "
 "fixé, et il est conservé jusqu'à ce qu'il soit rendu à la règle."
 
-#: src/Abilities/ProductPrices.php:246
+#: src/Abilities/ProductPrices.php:251
 msgid ""
 "Why the rule cannot price it or suggests another price: margin, rule (a "
 "level of the rule changed), no_cost, unread, currency, rate_stale, no_step "
@@ -2189,17 +2205,17 @@ msgstr ""
 "margin, rule (un niveau de la règle a changé), no_cost, unread, currency, "
 "rate_stale, no_step ou sale ; null si rien de tel."
 
-#: src/Abilities/ProductPrices.php:251
+#: src/Abilities/ProductPrices.php:256
 msgid "When the rule last set its price."
 msgstr "Quand la règle a fixé son prix pour la dernière fois."
 
-#: src/Abilities/ProductPrices.php:255
+#: src/Abilities/ProductPrices.php:260
 msgid "When its cost was last asked for; null when it never was."
 msgstr ""
 "Quand son coût a été demandé pour la dernière fois ; null s'il ne l'a jamais "
 "été."
 
-#: src/Abilities/ProductPrices.php:259
+#: src/Abilities/ProductPrices.php:264
 msgid ""
 "Whether its price, once it follows the rule, is set to the rule's by itself "
 "when its cost changes and its margin left the tolerance."
@@ -2208,7 +2224,7 @@ msgstr ""
 "celui de la règle lorsque son coût change et que sa marge est sortie de la "
 "tolérance."
 
-#: src/Abilities/ProductPrices.php:264
+#: src/Abilities/ProductPrices.php:269
 msgid ""
 "What it is set to: a variation says product when it follows its product, "
 "always or never when it answers it; a simple product's one row says what the "
@@ -2218,7 +2234,7 @@ msgstr ""
 "son produit, always ou never lorsqu'elle en décide elle-même ; l'unique "
 "ligne d'un produit simple indique ce que fait le produit."
 
-#: src/Abilities/ProductPrices.php:266
+#: src/Abilities/ProductPrices.php:271
 msgid ""
 "The rule this price follows, each part from the most specific level that "
 "sets it: the variation, its product, the values of its global attributes, "
@@ -2228,14 +2244,14 @@ msgstr ""
 "la définit : la variation, son produit, les valeurs de ses attributs "
 "globaux, la boutique ; vide pour une partie qu'aucun niveau ne définit."
 
-#: src/Abilities/ProductPrices.php:269
+#: src/Abilities/ProductPrices.php:274
 msgid ""
 "Where each part of `rule` comes from, by part; null for a part no level sets."
 msgstr ""
 "D'où vient chaque partie de `rule`, par partie ; null pour une partie "
 "qu'aucun niveau ne définit."
 
-#: src/Abilities/ProductPrices.php:273
+#: src/Abilities/ProductPrices.php:278
 msgid ""
 "The parts of the rule the variation changes itself; empty for a part it "
 "leaves to the levels after it, and always empty for a simple product."
@@ -2244,7 +2260,7 @@ msgstr ""
 "partie qu'elle laisse aux niveaux suivants, et toujours vide pour un produit "
 "simple."
 
-#: src/Abilities/ProductPrices.php:276
+#: src/Abilities/ProductPrices.php:281
 msgid ""
 "Each part two of the variation's attribute values both set: the one whose "
 "attribute comes first in the store's attribute order wins."
@@ -2253,7 +2269,7 @@ msgstr ""
 "toutes deux : celle dont l'attribut vient en premier dans l'ordre des "
 "attributs de la boutique l'emporte."
 
-#: src/Abilities/ProductPrices.php:304
+#: src/Abilities/ProductPrices.php:309
 msgid ""
 "Which page of the prices the answer lists; it changes nothing about which "
 "are priced."
@@ -2261,7 +2277,7 @@ msgstr ""
 "La page des prix que la réponse liste ; cela ne change rien à ceux dont le "
 "prix est fixé."
 
-#: src/Abilities/ProductPrices.php:347
+#: src/Abilities/ProductPrices.php:352
 msgid "How many prices the product has, on every page."
 msgstr "Le nombre de prix du produit, toutes pages confondues."
 
@@ -2733,25 +2749,33 @@ msgid ""
 "value are named as `get-attribute-blank-options` lists them in `options`. A "
 "value given an empty `value`, or not linked yet, stands for the option's "
 "value of its name; values not given keep their link while the option stays "
-"the same, and lose it when it changes. An empty `option` unlinks the "
-"attribute. Products with the attribute are re-checked in the background. The "
-"answer is the attribute's row; a `503` when the re-check could not be "
-"queued, the link being saved."
+"the same, and lose it when it changes. `option` @pages links it to a book's "
+"page count instead: each value then stands for a count of inner pages, the "
+"number given as its `value`, else the first number in its name, and a "
+"variation sells its book at that count, priced by the printshop's cost at "
+"it. An empty `option` unlinks the attribute. Products with the attribute are "
+"re-checked in the background. The answer is the attribute's row; a `503` "
+"when the re-check could not be queued, the link being saved."
 msgstr ""
 "Lie un attribut global à une option des produits vierges Pixonaut "
 "qu'utilisent ses produits, et ses valeurs aux valeurs de l'option, comme le "
-"fait le champ « Option du produit vierge » de sa page de modification : un "
+"fait le champ « Option du produit vierge » de sa page de modification : un "
 "attribut de couleur de cadre à l'option Color du produit vierge, sa valeur "
 "Svart à Black. Ses valeurs choisissent alors la variante du produit vierge "
 "et s'affichent dans l'outil de personnalisation comme boutons de couleur ou "
 "d'image des valeurs d'option. `option` et chaque valeur se nomment comme "
 "`get-attribute-blank-options` les liste dans `options`. Une valeur dont "
 "`value` est vide, ou pas encore liée, représente la valeur de l'option "
-"portant son nom ; les valeurs non indiquées gardent leur lien tant que "
-"l'option reste la même, et le perdent quand elle change. Une `option` vide "
-"supprime le lien de l'attribut. Les produits ayant l'attribut sont "
-"revérifiés en arrière-plan. La réponse est la ligne de l'attribut ; un `503` "
-"quand la revérification n'a pas pu être planifiée, le lien étant enregistré."
+"portant son nom ; les valeurs non indiquées gardent leur lien tant que "
+"l'option reste la même, et le perdent quand elle change. Avec `option` "
+"@pages, il est lié à la place au nombre de pages d'un livre : chaque valeur "
+"représente alors un nombre de pages intérieures, le nombre indiqué comme son "
+"`value`, sinon le premier nombre de son nom, et une variation vend son livre "
+"avec ce nombre de pages, au prix que facture l'imprimeur pour ce nombre. Une "
+"`option` vide supprime le lien de l'attribut. Les produits ayant l'attribut "
+"sont revérifiés en arrière-plan. La réponse est la ligne de l'attribut ; un "
+"`503` quand la revérification n'a pas pu être planifiée, le lien étant "
+"enregistré."
 
 #: src/Abilities/SetAttributeBlankOption.php:48
 #: src/Abilities/SetAttributeChoicePrice.php:37
@@ -2793,14 +2817,23 @@ msgstr ""
 "Une valeur indiquée n'est pas l'une des valeurs de l'attribut : nommez "
 "chacune par son `term_id` ou son `slug`."
 
-#. translators: 1: the option value asked for. 2: the blank option. 3: its values, comma-separated. Error an AI assistant or an MCP client reads.
+#. translators: %s: the value asked for. Error an AI assistant or an MCP client reads.
 #: src/Abilities/SetAttributeBlankOption.php:123
+#, php-format
+msgid ""
+"\"%s\" is not a page count: give a whole number of inner pages, such as 44."
+msgstr ""
+"« %s » n'est pas un nombre de pages : indiquez un nombre entier de pages "
+"intérieures, par exemple 44."
+
+#. translators: 1: the option value asked for. 2: the blank option. 3: its values, comma-separated. Error an AI assistant or an MCP client reads.
+#: src/Abilities/SetAttributeBlankOption.php:129
 #, php-format
 msgid "\"%1$s\" is not a value of the option \"%2$s\". Values: %3$s."
 msgstr "« %1$s » n'est pas une valeur de l'option « %2$s ». Valeurs : %3$s."
 
 #. translators: Error an AI assistant or an MCP client reads. `recheck-products` is the name of another ability; keep it as it is.
-#: src/Abilities/SetAttributeBlankOption.php:147
+#: src/Abilities/SetAttributeBlankOption.php:153
 msgid ""
 "The link is saved, but the products with this attribute could not be queued "
 "for a re-check, so they keep the blank variants they had. Run `recheck-"
@@ -5748,14 +5781,30 @@ msgstr "Prix maximum"
 msgid "%1$s + %2$s shipping"
 msgstr "%1$s + %2$s de livraison"
 
-#. translators: 1: a cost as the printshop charges it, in its own currency, such as "€16.71 + €3.00 shipping"; 2: the day of the exchange rate, such as 2026-11-14; 3: the currency buffer in percent, such as 3. Under a converted cost in the Prices table of the product edit page.
+#. translators: %d: a book's page count. Under a cost in the Prices table of the product edit page: the count of inner pages the cost is at.
 #: src/Admin/PricingPanel.php:399
+#, php-format
+msgid "At %d page"
+msgid_plural "At %d pages"
+msgstr[0] "Pour %d page"
+msgstr[1] "Pour %d pages"
+
+#. translators: 1: a cost's parts, such as "€16.71 + €3.00 shipping"; 2: a book's page count. Under a cost in the Prices table of the product edit page.
+#: src/Admin/PricingPanel.php:401
+#, php-format
+msgid "%1$s, at %2$d page"
+msgid_plural "%1$s, at %2$d pages"
+msgstr[0] "%1$s, pour %2$d page"
+msgstr[1] "%1$s, pour %2$d pages"
+
+#. translators: 1: a cost as the printshop charges it, in its own currency, such as "€16.71 + €3.00 shipping"; 2: the day of the exchange rate, such as 2026-11-14; 3: the currency buffer in percent, such as 3. Under a converted cost in the Prices table of the product edit page.
+#: src/Admin/PricingPanel.php:406
 #, php-format
 msgid "%1$s (rate %2$s, +%3$s %%)"
 msgstr "%1$s (taux du %2$s, +%3$s %%)"
 
 #. translators: %s: a cost converted to the store's currency, such as 192 kr. In the Prices table of the product edit page: the amount is approximate.
-#: src/Admin/PricingPanel.php:412
+#: src/Admin/PricingPanel.php:419
 #, php-format
 msgid "≈ %s"
 msgstr "≈ %s"
@@ -5763,44 +5812,44 @@ msgstr "≈ %s"
 #. translators: 1: a value of a product attribute, e.g. 70×100 cm; 2: the attribute, e.g. Size. Where a part of a price's pricing rule comes from, in the Prices table of the product edit page.
 #. translators: 1: a print size's name as customers see it, e.g. "Large", 2: its width and height, e.g. "700 × 1000 mm".
 #. translators: 1: a value of a part of the pricing rule, e.g. 50; 2: where it comes from, e.g. Store or 70×100 cm (Size). Placeholder of a pricing rule field on a variation.
-#: src/Admin/PricingPanel.php:439 src/Catalogue/PrintSize.php:73
+#: src/Admin/PricingPanel.php:446 src/Catalogue/PrintSize.php:73
 #: templates/admin/variation-price-rule.php:36
 #, php-format
 msgid "%1$s (%2$s)"
 msgstr "%1$s (%2$s)"
 
 #. translators: Where a part of a price's pricing rule comes from: the product's own rule. In the Prices table of the product edit page.
-#: src/Admin/PricingPanel.php:441
+#: src/Admin/PricingPanel.php:448
 msgctxt "source of a pricing rule part"
 msgid "Product"
 msgstr "Produit"
 
 #. translators: Where a part of a price's pricing rule comes from: the variation's own rule. In the Prices table of the product edit page.
-#: src/Admin/PricingPanel.php:443
+#: src/Admin/PricingPanel.php:450
 msgctxt "source of a pricing rule part"
 msgid "Variation"
 msgstr "Variation"
 
 #. translators: Where a part of a price's pricing rule comes from: the store's pricing rule. In the Prices table of the product edit page.
-#: src/Admin/PricingPanel.php:445
+#: src/Admin/PricingPanel.php:452
 msgctxt "source of a pricing rule part"
 msgid "Store"
 msgstr "Boutique"
 
 #. translators: Separates the places a price's pricing rule comes from, e.g. "Ram (Frame), Store".
-#: src/Admin/PricingPanel.php:460
+#: src/Admin/PricingPanel.php:467
 msgctxt "list of pricing rule sources"
 msgid ", "
 msgstr ", "
 
 #. translators: 1: a part of the pricing rule, e.g. Target margin (%); 2: its value, e.g. 50; 3: where it comes from, e.g. Store. One line of a tooltip in the Prices table of the product edit page.
-#: src/Admin/PricingPanel.php:477
+#: src/Admin/PricingPanel.php:484
 #, php-format
 msgid "%1$s: %2$s from %3$s"
 msgstr "%1$s : %2$s (source : %3$s)"
 
 #. translators: 1: a part of the pricing rule, e.g. Fixed amount per item; 2: the attribute value that sets it, e.g. Ram (Frame); 3: another value that sets it too, e.g. 70×100 cm (Size). In the Prices table of the product edit page.
-#: src/Admin/PricingPanel.php:493
+#: src/Admin/PricingPanel.php:500
 #, php-format
 msgid ""
 "%1$s is set by both %2$s and %3$s; %2$s wins, being first in the store’s "
@@ -5810,7 +5859,7 @@ msgstr ""
 "attribut vient en premier dans l'ordre des attributs de la boutique."
 
 #. translators: %s: a margin as a number, such as 50.2. In the Prices table of the product edit page.
-#: src/Admin/PricingPanel.php:510
+#: src/Admin/PricingPanel.php:517
 #, php-format
 msgid "%s %%"
 msgstr "%s %%"
@@ -7232,7 +7281,7 @@ msgid "The product does not offer %1$s for %2$s."
 msgstr "Le produit ne propose pas %1$s pour %2$s."
 
 #. translators: 1: a variation's id. 2: its values, e.g. "Size: Any, Frame: Black". 3: values the plan offers, e.g. "Size: M, Frame: Black".
-#: src/Catalogue/VariationCombinations.php:340
+#: src/Catalogue/VariationCombinations.php:342
 #, php-format
 msgid ""
 "Variation #%1$d (%2$s) is sold for \"Any\" value, and so for %3$s, which the "
@@ -7244,13 +7293,13 @@ msgstr ""
 "entière. Donnez d'abord ses valeurs à la variation, ou désactivez-la."
 
 #. translators: 1: an option's name. 2: a blank's id.
-#: src/Catalogue/VariationCombinations.php:466
+#: src/Catalogue/VariationCombinations.php:468
 #, php-format
 msgid "The blank %2$s has no option %1$s."
 msgstr "Le produit vierge %2$s n'a pas d'option %1$s."
 
 #. translators: 1: an option's name. 2: a blank's id. 3: its values, comma-separated.
-#: src/Catalogue/VariationCombinations.php:482
+#: src/Catalogue/VariationCombinations.php:484
 #, php-format
 msgid ""
 "No attribute offers the option %1$s of %2$s, which has several values "
@@ -7262,7 +7311,7 @@ msgstr ""
 "y un attribut."
 
 #. translators: %d: the most variations a plan may make.
-#: src/Catalogue/VariationCombinations.php:543
+#: src/Catalogue/VariationCombinations.php:545
 #, php-format
 msgid "The plan offers more than %d variations."
 msgstr "Le plan propose plus de %d variations."
@@ -10891,18 +10940,18 @@ msgid "The attribute was saved without this name in addresses: %s"
 msgstr "L'attribut a été enregistré sans ce nom dans les adresses web : %s"
 
 #. translators: Label of a select on the screen that edits a product attribute: the option of the Pixonaut blank (product base) the attribute stands for, such as a frame's Color.
-#: templates/admin/blank-option-field.php:22
+#: templates/admin/blank-option-field.php:23
 msgid "Blank option"
 msgstr "Option du produit vierge"
 
 #. translators: Option of the "Blank option" select on the screen that edits a product attribute: the attribute stands for no option of the blank.
-#: templates/admin/blank-option-field.php:24
+#: templates/admin/blank-option-field.php:25
 msgctxt "blank option of an attribute"
 msgid "Not linked"
 msgstr "Non lié"
 
 #. translators: Help under the "Blank option" select on the screen that edits a product attribute.
-#: templates/admin/blank-option-field.php:26
+#: templates/admin/blank-option-field.php:27
 msgid ""
 "The option of the Pixonaut blank this attribute stands for, such as a "
 "frame's colour. Its values then pick the blank's variant and show in the "
@@ -10916,30 +10965,30 @@ msgstr ""
 "vierges qu'utilisent les produits ayant cet attribut."
 
 #. translators: Column heading in the table of an attribute's values on the screen that edits a product attribute.
-#: templates/admin/blank-option-field.php:28
+#: templates/admin/blank-option-field.php:29
 msgctxt "attribute value"
 msgid "Value"
 msgstr "Valeur"
 
 #. translators: Column heading in the table of an attribute's values: the value of the blank's option each one stands for.
-#: templates/admin/blank-option-field.php:30
+#: templates/admin/blank-option-field.php:31
 msgid "Blank option value"
 msgstr "Valeur de l'option du produit vierge"
 
 #. translators: Option of a value's "Blank option value" select: the value stands for no value of the blank's option.
-#: templates/admin/blank-option-field.php:32
+#: templates/admin/blank-option-field.php:33
 msgctxt "blank option value of an attribute value"
 msgid "Not linked"
 msgstr "Non liée"
 
 #. translators: %s: the blank option's value of the same name as the attribute value. Option of a value's "Blank option value" select: the value stands for the option value of its name.
-#: templates/admin/blank-option-field.php:34
+#: templates/admin/blank-option-field.php:35
 #, php-format
 msgid "Same name: %s"
 msgstr "Même nom : %s"
 
 #. translators: Help under the table of an attribute's values on the screen that edits a product attribute.
-#: templates/admin/blank-option-field.php:36
+#: templates/admin/blank-option-field.php:37
 msgid ""
 "A value that is not linked shows as text and picks no variant by this "
 "option. Save after choosing another option to list its values."
@@ -10948,8 +10997,31 @@ msgstr ""
 "cette option. Enregistrez après avoir choisi une autre option pour lister "
 "ses valeurs."
 
+#. translators: Option of the "Blank option" select on the screen that edits a product attribute: the attribute's values are the page counts a book (a notebook, a photo book) is sold at.
+#: templates/admin/blank-option-field.php:39
+msgid "Page count (books)"
+msgstr "Nombre de pages (livres)"
+
+#. translators: Column heading in the table of an attribute's values, when they are a book's page counts: the number of inner pages each one stands for.
+#: templates/admin/blank-option-field.php:41
+msgid "Inner pages"
+msgstr "Pages intérieures"
+
+#. translators: Help under the table of an attribute's values, when they are a book's page counts.
+#: templates/admin/blank-option-field.php:43
+msgid ""
+"Each value sells the book at a count of inner pages (covers not counted), "
+"priced by what the printshop charges at that count; a count it gives no "
+"price for cannot be bought. A value left empty stands for the first number "
+"in its name."
+msgstr ""
+"Chaque valeur vend le livre avec un nombre de pages intérieures (couverture "
+"non comprise), au prix que demande l'imprimeur pour ce nombre ; un nombre "
+"pour lequel il n'indique aucun prix ne peut pas être acheté. Une valeur "
+"laissée vide correspond au premier nombre de son nom."
+
 #. translators: Shown under the "Blank option" select on the screen that edits a product attribute, while the attribute stands for no option.
-#: templates/admin/blank-option-field.php:40
+#: templates/admin/blank-option-field.php:47
 msgid ""
 "Not linked: its values show as text, and pick the blank's variant only where "
 "they have the names of an option and its values."
@@ -14224,6 +14296,61 @@ msgid "%s view"
 msgid_plural "%s views"
 msgstr[0] "%s vue"
 msgstr[1] "%s vues"
+
+#~ msgid ""
+#~ "The blank option the attribute stands for, as Pixonaut writes it; null "
+#~ "when it is not linked."
+#~ msgstr ""
+#~ "L'option du produit vierge que représente l'attribut, telle que Pixonaut "
+#~ "l'écrit ; null quand il n'est pas lié."
+
+#~ msgid ""
+#~ "The option value it stands for: the one it was linked to, else the "
+#~ "option's value of its name; null when it is not linked, and then shows as "
+#~ "text."
+#~ msgstr ""
+#~ "La valeur d'option qu'elle représente : celle à laquelle elle a été liée, "
+#~ "sinon la valeur de l'option portant son nom ; null quand elle n'est pas "
+#~ "liée, et elle s'affiche alors en texte."
+
+#~ msgid ""
+#~ "The options the attribute can be linked to, each with its values: those "
+#~ "of the blanks the products with this attribute use, themselves or through "
+#~ "their variations."
+#~ msgstr ""
+#~ "Les options auxquelles l'attribut peut être lié, chacune avec ses "
+#~ "valeurs : celles des produits vierges qu'utilisent les produits ayant cet "
+#~ "attribut, eux-mêmes ou par leurs variations."
+
+#~ msgid ""
+#~ "Links a global attribute to an option of the Pixonaut blanks its products "
+#~ "use, and its values to the option's values, as its edit screen's \"Blank "
+#~ "option\" does: a frame colour attribute to the blank's Color, its value "
+#~ "Svart to Black. Its values then pick the blank's variant and show in the "
+#~ "designer as the option values' colour or picture swatches. `option` and "
+#~ "each value are named as `get-attribute-blank-options` lists them in "
+#~ "`options`. A value given an empty `value`, or not linked yet, stands for "
+#~ "the option's value of its name; values not given keep their link while "
+#~ "the option stays the same, and lose it when it changes. An empty `option` "
+#~ "unlinks the attribute. Products with the attribute are re-checked in the "
+#~ "background. The answer is the attribute's row; a `503` when the re-check "
+#~ "could not be queued, the link being saved."
+#~ msgstr ""
+#~ "Lie un attribut global à une option des produits vierges Pixonaut "
+#~ "qu'utilisent ses produits, et ses valeurs aux valeurs de l'option, comme "
+#~ "le fait le champ « Option du produit vierge » de sa page de "
+#~ "modification : un attribut de couleur de cadre à l'option Color du "
+#~ "produit vierge, sa valeur Svart à Black. Ses valeurs choisissent alors la "
+#~ "variante du produit vierge et s'affichent dans l'outil de "
+#~ "personnalisation comme boutons de couleur ou d'image des valeurs "
+#~ "d'option. `option` et chaque valeur se nomment comme `get-attribute-blank-"
+#~ "options` les liste dans `options`. Une valeur dont `value` est vide, ou "
+#~ "pas encore liée, représente la valeur de l'option portant son nom ; les "
+#~ "valeurs non indiquées gardent leur lien tant que l'option reste la même, "
+#~ "et le perdent quand elle change. Une `option` vide supprime le lien de "
+#~ "l'attribut. Les produits ayant l'attribut sont revérifiés en arrière-"
+#~ "plan. La réponse est la ligne de l'attribut ; un `503` quand la "
+#~ "revérification n'a pas pu être planifiée, le lien étant enregistré."
 
 #~ msgid ""
 #~ "Sent to the customer when a personalised item ships before the rest of "
