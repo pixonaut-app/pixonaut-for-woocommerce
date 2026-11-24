@@ -20,6 +20,11 @@ const SATURATED_SPREAD = 150;
  *  photo is drawn: the template alone draws none. */
 const PHOTO_SHARE = 0.05;
 
+/** How long a tile scrolled into view has to draw its photo before it is
+ *  scrolled to again, and how long it has in all. */
+const PHOTO_SCROLL_RETRY_MS = 1000;
+const PHOTO_DRAWN_TIMEOUT_MS = 10_000;
+
 /** The largest share of saturated pixels among the pictures of the views
  *  beside the preview, which draw the side's print on each view; 0 while
  *  none is drawn. */
@@ -61,6 +66,19 @@ async function photoShareInViews(page: Page): Promise<number> {
 		)
 		.catch(() => []);
 	return Math.max(0, ...shares);
+}
+
+/** Scrolls an upload tile into view until it draws its photo. The designer
+ *  reads the photo once the tile is first on screen, and WooCommerce focuses
+ *  its notice half a second after the page loads, which scrolls a phone back
+ *  to the top: a single scroll can be undone before the tile is seen. */
+async function bringPhotoIntoView(photo: Locator): Promise<void> {
+	await expect(async () => {
+		await photo.scrollIntoViewIfNeeded();
+		await expect(photo.locator('img')).toHaveAttribute('src', /^blob:/, {
+			timeout: PHOTO_SCROLL_RETRY_MS,
+		});
+	}).toPass({ timeout: PHOTO_DRAWN_TIMEOUT_MS });
 }
 
 /** A phone, where shoppers come back to their cart, and a desktop. */
@@ -237,10 +255,9 @@ for (const screen of SCREENS) {
 		await expect(page).toHaveURL(/[?&]pixonaut_edit=[0-9a-f]+/);
 		await expect(photo).toHaveAttribute('aria-label', 'Current picture');
 		await expect(form.getByRole('textbox').first()).toHaveValue('Alma');
-		await photo.scrollIntoViewIfNeeded();
 		// The photo itself, as Pixonaut keeps it, drawn on the tile.
 		const thumbnail = photo.locator('img');
-		await expect(thumbnail).toHaveAttribute('src', /^blob:/);
+		await bringPhotoIntoView(photo);
 		await expect
 			.poll(() =>
 				thumbnail.evaluate((img: HTMLImageElement) => img.naturalWidth),
@@ -266,8 +283,7 @@ for (const screen of SCREENS) {
 		await expect(page).toHaveURL(/pixonaut_edit=/);
 		await expect(photo).toHaveAttribute('aria-label', 'Current picture');
 		await expect(form.getByRole('textbox').first()).toHaveValue('Alma Maria');
-		await photo.scrollIntoViewIfNeeded();
-		await expect(thumbnail).toHaveAttribute('src', /^blob:/);
+		await bringPhotoIntoView(photo);
 		await expect
 			.poll(() => photoShareInViews(page))
 			.toBeGreaterThan(PHOTO_SHARE);
