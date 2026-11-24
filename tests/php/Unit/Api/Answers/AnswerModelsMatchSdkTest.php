@@ -19,6 +19,8 @@ use Pixonaut\WooCommerce\Api\Answers\OrderList;
 use Pixonaut\WooCommerce\Api\Answers\OrderListRow;
 use Pixonaut\WooCommerce\Api\Answers\OrderParcel;
 use Pixonaut\WooCommerce\Api\Answers\PrintSizeVerdicts;
+use Pixonaut\WooCommerce\Api\Answers\ProofSet;
+use Pixonaut\WooCommerce\Api\Answers\ProofSetProof;
 use Pixonaut\WooCommerce\Api\Answers\ShareLinkPage;
 use Pixonaut\WooCommerce\Api\Answers\WebhookEndpoint;
 use Pixonaut\WooCommerce\Api\Answers\WebhookPing;
@@ -128,6 +130,19 @@ final class AnswerModelsMatchSdkTest extends TestCase {
 	);
 
 	/**
+	 * Answer models of operations the pinned SDK does not describe yet
+	 * (`Api\Pixonaut::PENDING`), nested ones included, with the Pixonaut
+	 * issue each awaits. Once the pin brings the SDK model, the model moves
+	 * to ANSWERS and its entry here goes.
+	 *
+	 * @var array<class-string, string>
+	 */
+	private const AWAITED = array(
+		ProofSet::class      => 'pixonaut-app/pixonaut#4129',
+		ProofSetProof::class => 'pixonaut-app/pixonaut#4129',
+	);
+
+	/**
 	 * Classes in the folder that are not answer models.
 	 *
 	 * @var list<class-string>
@@ -146,7 +161,7 @@ final class AnswerModelsMatchSdkTest extends TestCase {
 			$this->match( $answer, $answers );
 		}
 
-		$unmatched = array_diff( self::models_in_folder(), array_keys( $this->matched ), self::NOT_MODELS );
+		$unmatched = array_diff( self::models_in_folder(), array_keys( $this->matched ), self::NOT_MODELS, array_keys( self::AWAITED ) );
 		$this->assertSame( array(), array_values( $unmatched ), 'Every answer model is matched with an SDK model: list a new top-level one in ANSWERS.' );
 	}
 

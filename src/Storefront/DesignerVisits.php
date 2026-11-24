@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Storefront;
 
 use Closure;
+use Pixonaut\WooCommerce\Cart\ProofTokens;
 use WC_Session;
 use WC_Session_Handler;
 
@@ -36,7 +37,7 @@ use WC_Session_Handler;
  * A trip opened before links were kept per product is kept under a random
  * `state` the hosted designer carries back, which is still taken.
  *
- * @phpstan-type Visit array{product_id: int, variation_id: int, quantity: int, attributes: array<string, string>, tokens: array<string, string>|null, state: string|null, expires: int}
+ * @phpstan-type Visit array{product_id: int, variation_id: int, quantity: int, attributes: array<string, string>, tokens: array<string, string|array<int, string>>|null, proof_set: string|null, state: string|null, expires: int}
  */
 final class DesignerVisits {
 
@@ -145,6 +146,7 @@ final class DesignerVisits {
 			'quantity'     => 1,
 			'attributes'   => array(),
 			'tokens'       => null,
+			'proof_set'    => null,
 			'state'        => null,
 			'expires'      => ( $this->clock )() + self::LIFETIME_SECONDS,
 		);
@@ -155,22 +157,24 @@ final class DesignerVisits {
 	 * them can be tried again until the visit expires. Its trip's state has
 	 * been used, and no later return matches it.
 	 *
-	 * @param string                $key  Its key.
-	 * @param array<string, mixed>  $visit  The visit as `take()` gave it.
-	 * @param array<string, string> $tokens Proof token by side key.
+	 * @param string                                   $key  Its key.
+	 * @param array<string, mixed>                     $visit  The visit as `take()` gave it.
+	 * @param array<string, string|array<int, string>> $tokens Proof token by side key; a side printed as pages has its pages' by page.
+	 * @param string                                   $proof_set The proof set the tokens were read from, read again when there are none yet; empty when the return carried its tokens.
 	 * @phpstan-param Visit $visit
 	 */
-	public function keep( string $key, array $visit, array $tokens ): void {
+	public function keep( string $key, array $visit, array $tokens, string $proof_set = '' ): void {
 		$session = WC()->session;
 		// Typed as always set, but null until WooCommerce starts a session.
 		if ( null === $session ) { // @phpstan-ignore identical.alwaysFalse
 			return;
 		}
 		self::persist( $session );
-		$visits          = $this->open_visits();
-		$visit['tokens'] = $tokens;
-		$visit['state']  = null;
-		$visits[ $key ]  = $visit;
+		$visits             = $this->open_visits();
+		$visit['tokens']    = $tokens;
+		$visit['proof_set'] = '' === $proof_set ? null : $proof_set;
+		$visit['state']     = null;
+		$visits[ $key ]     = $visit;
 		$session->set( self::SESSION_KEY, array_slice( $visits, -self::MAX_OPEN, null, true ) );
 	}
 
@@ -196,10 +200,25 @@ final class DesignerVisits {
 	}
 
 	/**
+	 * Whether the visit a key names was kept for another try of a proof set.
+	 *
+	 * @param string $key       The visit's key.
+	 * @param string $proof_set The proof set.
+	 */
+	public function kept_for( string $key, string $proof_set ): bool {
+		// Typed as always set, but null until WooCommerce starts a session.
+		if ( null === WC()->session ) {
+			return false;
+		}
+		$kept = $this->open_visits()[ $key ]['proof_set'] ?? null;
+		return $kept === $proof_set;
+	}
+
+	/**
 	 * Whether this session sees a return's proof tokens for the first time;
 	 * they are remembered either way.
 	 *
-	 * @param array<string, string> $tokens Proof token by side key.
+	 * @param array<string, string|array<int, string>> $tokens Proof token by side key; a side printed as pages has its pages' by page.
 	 */
 	public function first_return( array $tokens ): bool {
 		$session = WC()->session;
@@ -270,7 +289,8 @@ final class DesignerVisits {
 					'variation_id' => (int) ( $visit['variation_id'] ?? 0 ),
 					'quantity'     => max( 1, (int) ( $visit['quantity'] ?? 1 ) ),
 					'attributes'   => self::strings( $visit['attributes'] ?? null ),
-					'tokens'       => is_array( $visit['tokens'] ?? null ) ? self::strings( $visit['tokens'] ) : null,
+					'tokens'       => is_array( $visit['tokens'] ?? null ) ? ProofTokens::stored( $visit['tokens'] ) : null,
+					'proof_set'    => is_string( $visit['proof_set'] ?? null ) ? $visit['proof_set'] : null,
 					'state'        => is_string( $visit['state'] ?? null ) ? $visit['state'] : null,
 					'expires'      => $visit['expires'],
 				);

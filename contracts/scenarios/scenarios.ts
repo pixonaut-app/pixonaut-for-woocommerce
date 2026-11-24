@@ -48,6 +48,8 @@ const PKCE_VERIFIER_BYTES = 32;
 const IMPROVED = [201, 200];
 /** `improve-resolution` on an upload it was not offered for. */
 const NOT_OFFERED = 404;
+/** A proof set the target never made. */
+const NOT_FOUND = 404;
 /** A cut-out: asked now, or asked before. */
 const CUT_OUT = [202, 200];
 /** A cut-out of an upload made for no picture, or of a picture whose
@@ -1023,6 +1025,16 @@ export const SCENARIOS: Scenario[] = [
 					links: { variationSetting: null, cleanUp: null },
 					products: [],
 				},
+			});
+		},
+	},
+	{
+		name: 'read a proof set the hosted designer did not return',
+		async run(session) {
+			// Only a hosted designer's approval of pages makes a set, which a scenario cannot drive.
+			await session.call('GET /v1/proof-sets/{proofSet}', {
+				params: { proofSet: 'pset_unknown' },
+				expect: [NOT_FOUND],
 			});
 		},
 	},

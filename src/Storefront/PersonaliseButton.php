@@ -9,12 +9,16 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Storefront;
 
+use Closure;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
 use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
+use Pixonaut\WooCommerce\Api\Answers\ProofSet;
 use Pixonaut\WooCommerce\Cart\AddToCart;
 use Pixonaut\WooCommerce\Cart\CartEdit;
 use Pixonaut\WooCommerce\Cart\CartLine;
 use Pixonaut\WooCommerce\Cart\LinePicture;
+use Pixonaut\WooCommerce\Cart\ProofTokens;
 use Pixonaut\WooCommerce\Catalogue\MovedAttributes;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Connection\Connection;
@@ -121,6 +125,28 @@ final class PersonaliseButton {
 	public const TOKEN_ARG = 'proofToken';
 
 	/**
+	 * The return address's argument naming the set of proofs an approval
+	 * holding a side printed as pages returned, in place of its tokens.
+	 */
+	public const PROOF_SET_ARG = 'proofSet';
+
+	/**
+	 * A page's name in a change link: its side's name and its number, which
+	 * reads the same in every language.
+	 */
+	private const PAGE_NAME = '%1$s %2$d';
+
+	/**
+	 * Pixonaut's refusal of a proof set it did not make for this workspace.
+	 */
+	private const UNKNOWN_PROOF_SET = 'unknown_proof_set';
+
+	/**
+	 * Pixonaut's refusal of a proof set past its expiry, or one whose proof is gone.
+	 */
+	private const PROOF_SET_EXPIRED = 'proof_set_expired';
+
+	/**
 	 * The query argument naming the cart line whose product page opens with
 	 * its design.
 	 */
@@ -196,6 +222,7 @@ final class PersonaliseButton {
 	 * @param LinePicture         $picture    Which picture of a design a product shows.
 	 * @param AddAfterApprove     $after_approve Adds the design of the customer's own return.
 	 * @param ServerReads         $reads      Whether a template's background shows through.
+	 * @param Sdk                 $pixonaut   Reads the proof set an approval of pages returned.
 	 */
 	public function __construct(
 		private readonly ButtonProducts $products,
@@ -213,6 +240,7 @@ final class PersonaliseButton {
 		private readonly LinePicture $picture,
 		private readonly AddAfterApprove $after_approve,
 		private readonly ServerReads $reads,
+		private readonly Sdk $pixonaut,
 	) {
 	}
 
@@ -417,11 +445,14 @@ final class PersonaliseButton {
 		$context = array( 'product_id' => $product->get_id() );
 		$links   = array();
 		foreach ( $line->sides as $side ) {
+			$name = self::side_label( $product, $variation_id, $side->key );
+			// Each page of a side printed as pages is changed on its own, named by its number.
+			$name    = null === $side->page ? $name : sprintf( self::PAGE_NAME, $name, $side->page );
 			$links[] = array(
 				'text' => 1 === count( $line->sides )
 					? $this->labels->get( $label, $context )
-					: sprintf( $this->labels->get( Labels::CHANGE_DESIGN_SIDE, $context ), self::side_label( $product, $variation_id, $side->key ) ),
-				'url'  => HostedCorrection::product_url( $key, $side->key ),
+					: sprintf( $this->labels->get( Labels::CHANGE_DESIGN_SIDE, $context ), $name ),
+				'url'  => HostedCorrection::product_url( $key, $side->slot_of() ),
 			);
 		}
 		return $links;
@@ -690,7 +721,8 @@ final class PersonaliseButton {
 				isset( $_GET[ self::PRODUCT_ARG ] ) ? absint( wp_unslash( $_GET[ self::PRODUCT_ARG ] ) ) : 0,
 				isset( $_GET[ self::VARIATION_ARG ] ) ? absint( wp_unslash( $_GET[ self::VARIATION_ARG ] ) ) : 0,
 				isset( $_GET[ self::TOKEN_ARG ] ) ? map_deep( wp_unslash( $_GET[ self::TOKEN_ARG ] ), 'sanitize_text_field' ) : null,
-				isset( $_GET[ self::STATE_ARG ] ) ? sanitize_text_field( wp_unslash( $_GET[ self::STATE_ARG ] ) ) : ''
+				isset( $_GET[ self::STATE_ARG ] ) ? sanitize_text_field( wp_unslash( $_GET[ self::STATE_ARG ] ) ) : '',
+				isset( $_GET[ self::PROOF_SET_ARG ] ) && is_string( $_GET[ self::PROOF_SET_ARG ] ) ? sanitize_text_field( wp_unslash( $_GET[ self::PROOF_SET_ARG ] ) ) : ''
 			);
 		} else {
 			return;
@@ -782,25 +814,69 @@ final class PersonaliseButton {
 	 *
 	 * @param int    $product_id   The product the link names (the parent of a variation).
 	 * @param int    $variation_id The variation it names, or 0.
-	 * @param mixed  $tokens       The proof token, or tokens by side key; null when the customer cancelled.
+	 * @param mixed  $tokens       The proof token, or tokens by side key (and by page, for a side printed as pages); null when the customer cancelled or a proof set came back.
 	 * @param string $state        The state carried back: the trip's own, or one a link minted before links were kept per product named its visit by; empty when none.
+	 * @param string $proof_set    The proof set an approval holding a side printed as pages returned in place of tokens; empty when none.
 	 *
 	 * @return string Where to send the customer.
 	 */
-	public function finish( int $product_id, int $variation_id, mixed $tokens, string $state = '' ): string {
+	public function finish( int $product_id, int $variation_id, mixed $tokens, string $state = '', string $proof_set = '' ): string {
 		$visit = '' === $state ? null : $this->visits->take( $state );
 		if ( null === $visit ) {
-			return $this->finish_kept( $product_id, $variation_id, $tokens, $state );
+			return $this->finish_kept( $product_id, $variation_id, $tokens, $state, $proof_set );
 		}
 		$key     = $state;
 		$product = wc_get_product( $visit['variation_id'] > 0 ? $visit['variation_id'] : $visit['product_id'] );
 		if ( ! $product instanceof WC_Product ) {
 			return $this->unknown_visit();
 		}
-		if ( null === $tokens ) {
+		if ( null === $tokens && '' === $proof_set ) {
 			return $product->get_permalink();
 		}
-		return $this->commit( $key, $visit, $product, self::tokens( ProductConfig::config_for( $product )->for_designer(), $tokens ) );
+		$returned = $this->returned( $product, $tokens, $proof_set, fn () => $this->visits->keep( $key, $visit, array(), $proof_set ) );
+		return is_string( $returned ) ? $returned : $this->commit( $key, $visit, $product, $returned, false, $proof_set );
+	}
+
+	/**
+	 * The proof tokens a return carried, or read from the proof set it named.
+	 *
+	 * @param WC_Product  $product   The product or variation.
+	 * @param mixed       $tokens    What the return address carried as tokens.
+	 * @param string      $proof_set The proof set it named; empty when none.
+	 * @param Closure     $keep      `fn(): void`, keeping the return to read its set again, when the read failed for a reason that may pass.
+	 * @param string|null $kept      The key of a visit that may have been kept for another try of this set, dropped when the set expired.
+	 *
+	 * @return array<string, string|array<int, string>>|string Tokens by side key; where to send the customer when the set could not be read.
+	 */
+	private function returned( WC_Product $product, mixed $tokens, string $proof_set, Closure $keep, ?string $kept = null ): array|string {
+		$config = ProductConfig::config_for( $product )->for_designer();
+		if ( '' === $proof_set ) {
+			return ProofTokens::returned( $config, $tokens );
+		}
+		try {
+			$set = ProofSet::get( $this->pixonaut, $proof_set );
+		} catch ( ApiException $error ) {
+			if ( self::UNKNOWN_PROOF_SET === $error->errorCode ) {
+				return $this->unknown_visit();
+			}
+			if ( self::PROOF_SET_EXPIRED === $error->errorCode ) {
+				// Only the try kept for this set: another may be pending for the same product.
+				if ( null !== $kept && $this->visits->kept_for( $kept, $proof_set ) ) {
+					$this->visits->take( $kept );
+				}
+				return $this->refuse( Labels::DESIGN_EXPIRED, $product, $product->get_permalink() );
+			}
+			$this->logger->warning( sprintf( 'Could not read the proof set returned for product %d: %s', $product->get_id(), $error->getMessage() ), array( 'code' => $error->errorCode ) );
+			// The set stays readable until it expires: the product page offers to try again.
+			$keep();
+			return $this->refuse( Labels::PERSONALISATION_UNAVAILABLE, $product, $product->get_permalink() );
+		}
+		$returned = ProofTokens::of_set( $config, $set );
+		if ( array() === $returned ) {
+			$this->logger->warning( sprintf( 'Refused the proof set returned for product %d: its proofs name no side of the product, or a side\'s pages do not run from 1 without a gap.', $product->get_id() ) );
+			return $this->unknown_visit();
+		}
+		return $returned;
 	}
 
 	/**
@@ -812,19 +888,29 @@ final class PersonaliseButton {
 	 *
 	 * @param int    $product_id   The product the link names (the parent of a variation).
 	 * @param int    $variation_id The variation it names, or 0.
-	 * @param mixed  $tokens       The proof token, or tokens by side key; null when the customer cancelled.
+	 * @param mixed  $tokens       The proof token, or tokens by side key (and by page); null when the customer cancelled or a proof set came back.
 	 * @param string $state        The trip's state the hosted designer carried back; empty when none.
+	 * @param string $proof_set    The proof set returned in place of tokens; empty when none.
 	 *
 	 * @return string Where to send the customer.
 	 */
-	private function finish_kept( int $product_id, int $variation_id, mixed $tokens, string $state ): string {
+	private function finish_kept( int $product_id, int $variation_id, mixed $tokens, string $state, string $proof_set ): string {
 		$key     = DesignerVisits::key( $product_id, $variation_id );
 		$product = self::sellable( $product_id, $variation_id );
 		if ( null === $product ) {
 			return $this->unknown_visit();
 		}
-		if ( null !== $tokens ) {
-			$tokens = self::tokens( ProductConfig::config_for( $product )->for_designer(), $tokens );
+		if ( null !== $tokens || '' !== $proof_set ) {
+			$tokens = $this->returned(
+				$product,
+				$tokens,
+				$proof_set,
+				fn () => $this->visits->keep( $key, $this->visits->take( $key ) ?? $this->visits->unopened( $product_id, $variation_id ), array(), $proof_set ),
+				$key
+			);
+			if ( is_string( $tokens ) ) {
+				return $tokens;
+			}
 			if ( ! $this->visits->first_return( $tokens ) ) {
 				return $this->unknown_visit();
 			}
@@ -835,9 +921,9 @@ final class PersonaliseButton {
 		}
 		if ( null !== $visit || array() === $tokens ) {
 			$own = null !== $visit && DesignerVisits::own_trip( $visit, $state );
-			return $this->commit( $key, $visit ?? $this->visits->unopened( $product_id, $variation_id ), $product, $tokens, $own );
+			return $this->commit( $key, $visit ?? $this->visits->unopened( $product_id, $variation_id ), $product, $tokens, $own, $proof_set );
 		}
-		$this->visits->keep( $key, $this->visits->unopened( $product_id, $variation_id ), $tokens );
+		$this->visits->keep( $key, $this->visits->unopened( $product_id, $variation_id ), $tokens, $proof_set );
 		wc_add_notice( $this->labels->get( Labels::DESIGN_READY, array( 'product_id' => $product->get_id() ) ), 'notice' );
 		return $product->get_permalink();
 	}
@@ -855,7 +941,15 @@ final class PersonaliseButton {
 		if ( null === $visit || null === $visit['tokens'] || ! $product instanceof WC_Product ) {
 			return $this->unknown_visit();
 		}
-		return $this->commit( $state, $visit, $product, $visit['tokens'] );
+		$tokens = $visit['tokens'];
+		// A return whose proof set could not be read yet reads it again.
+		if ( array() === $tokens && null !== $visit['proof_set'] ) {
+			$tokens = $this->returned( $product, null, $visit['proof_set'], fn () => $this->visits->keep( $state, $visit, array(), $visit['proof_set'] ) );
+			if ( is_string( $tokens ) ) {
+				return $tokens;
+			}
+		}
+		return $this->commit( $state, $visit, $product, $tokens, false, $visit['proof_set'] ?? '' );
 	}
 
 	/**
@@ -864,20 +958,21 @@ final class PersonaliseButton {
 	 * the cart and lands on that line's page; keeps them for another try when
 	 * the refusal may pass next time.
 	 *
-	 * @param string                $state   The visit's key.
-	 * @param array<string, mixed>  $visit   The visit, taken out of the session.
-	 * @param WC_Product            $product The product or variation.
-	 * @param array<string, string> $tokens  Proof token by side key.
-	 * @param bool                  $own     Whether the return carried the state of the trip it took.
-	 * @phpstan-param array{product_id: int, variation_id: int, quantity: int, attributes: array<string, string>, tokens: array<string, string>|null, state: string|null, expires: int} $visit
+	 * @param string                                   $state   The visit's key.
+	 * @param array<string, mixed>                     $visit   The visit, taken out of the session.
+	 * @param WC_Product                               $product The product or variation.
+	 * @param array<string, string|array<int, string>> $tokens Proof token by side key; a side printed as pages has its pages' by page.
+	 * @param bool                                     $own     Whether the return carried the state of the trip it took.
+	 * @param string                                   $proof_set The proof set the tokens were read from; empty when the return carried them.
+	 * @phpstan-param array{product_id: int, variation_id: int, quantity: int, attributes: array<string, string>, tokens: array<string, string|array<int, string>>|null, proof_set: string|null, state: string|null, expires: int} $visit
 	 *
 	 * @return string Where to send the customer.
 	 */
-	private function commit( string $state, array $visit, WC_Product $product, array $tokens, bool $own = false ): string {
+	private function commit( string $state, array $visit, WC_Product $product, array $tokens, bool $own = false, string $proof_set = '' ): string {
 		$line = $this->add->commit_designed( $product, $tokens );
 		if ( null === $line ) {
 			if ( $this->add->retryable() ) {
-				$this->visits->keep( $state, $visit, $tokens );
+				$this->visits->keep( $state, $visit, $tokens, $proof_set );
 			}
 			return $product->get_permalink();
 		}
@@ -1005,27 +1100,6 @@ final class PersonaliseButton {
 		return null !== $this->connection->current()
 			&& null === $this->connection->paused()
 			&& null !== DesignerLinkBody::for_config( $config, '', DesignerLanguage::ENGLISH );
-	}
-
-	/**
-	 * Proof tokens by side key: a single token is the only side's.
-	 *
-	 * @param ProductConfig $config The product's configuration.
-	 * @param mixed         $tokens What the designer returned.
-	 *
-	 * @return array<string, string>
-	 */
-	private static function tokens( ProductConfig $config, mixed $tokens ): array {
-		if ( is_string( $tokens ) ) {
-			return 1 === count( $config->sides ) ? array( $config->sides[0]->key => $tokens ) : array();
-		}
-		$by_side = array();
-		foreach ( is_array( $tokens ) ? $tokens : array() as $side => $token ) {
-			if ( is_string( $side ) && is_string( $token ) ) {
-				$by_side[ $side ] = $token;
-			}
-		}
-		return $by_side;
 	}
 
 	/**

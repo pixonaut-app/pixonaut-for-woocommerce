@@ -1690,7 +1690,27 @@ handler, at `wp_loaded`, the plugin:
 
 Pixonaut sends the customer back to `returnUrl`, keeping its query, with
 `proofToken` (one side) or `proofToken[<side key>]`, or with no token when
-they cancel, and the trip's `state` unchanged. Pixonaut neither checks nor
+they cancel, and the trip's `state` unchanged. An approval holding a side
+printed as pages, such as a notebook designed a page at a time, returns
+`proofSet=<ref>` instead of tokens: the handler reads it with
+`GET /v1/proof-sets/{proofSet}` (`Api\Answers\ProofSet`), which lists one
+proof per side and one per page of a side of pages (`page` from 1; `key`
+null on a link of one side). The pages must run from 1 with none missing or
+repeated, or nothing is committed. Each page's token is committed as a
+side's is, as a design of its own (`Cart\ProofTokens`); the cart line keeps
+each design with its page (`CommittedSide::$page`, its slot `<side key>#<page>`),
+and the line's page count is the number of its pages. The product page offers
+a change button per page, which corrects that page alone. A set Pixonaut does not
+know (`404 unknown_proof_set`) is treated as an unknown visit; an expired one
+(`410 proof_set_expired`) drops the retry kept for that set, and no other, and
+asks the customer to approve again (`design_expired`). A set that cannot be
+read now (a timeout, another refusal) is kept with the visit, and the
+product page's `pixonaut_add_design` button reads it again. A commit refused `429 rate_limited`, which a
+long book's commits may meet, is sent again after its `Retry-After`, while the
+waits of all the return's commits together fit in
+`Api\Designs::RATE_LIMIT_BUDGET_SECONDS` (`Api\RateLimitBudget`); past that the return is
+kept for another try, and the pages committed already are adopted again under
+their idempotency keys. Pixonaut neither checks nor
 stores the state; matching it to a trip is the plugin's job. The session
 remembers the latest returns' proof tokens: the same return again is refused
 with the `designer_visit_unknown` label before any visit is touched. A

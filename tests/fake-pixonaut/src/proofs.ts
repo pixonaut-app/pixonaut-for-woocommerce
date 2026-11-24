@@ -72,6 +72,9 @@ export type Proof = {
 	 *  with `adjustLayout`: `POST /v1/designs/standing` makes a standing
 	 *  design of its own from it, and `PATCH` refuses it. */
 	adjustsLayout?: boolean;
+	/** The page it is, from 1, and its book's page count, on a side printed
+	 *  as pages; absent on any other side. Its design carries both. */
+	page?: { page: number; pageCount: number };
 };
 
 export type ProofRequest = {
@@ -92,6 +95,8 @@ export type ProofRequest = {
 	sessionId?: string | null;
 	/** The request's `lang`; absent or unknown: the workspace's default. */
 	language?: string | null;
+	/** Absent: a side of no pages. */
+	page?: { page: number; pageCount: number };
 };
 
 /** The proof `token` the store made, or undefined. */
@@ -159,11 +164,13 @@ export function mintProof(
 					printSize,
 					blankId,
 					placementId,
+					request.page ?? null,
 				]),
 			)
 			.digest('hex'),
 		expiresAt: clock.now() + (request.lifetimeMs ?? PROOF_LIFETIME_MS),
 		sessionId: request.sessionId ?? null,
+		...(request.page === undefined ? {} : { page: request.page }),
 	};
 	putOwned(state, PROOFS, token, store.id, proof);
 	return proof;

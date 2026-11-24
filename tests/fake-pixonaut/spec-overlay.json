@@ -1,3 +1,176 @@
 {
-	"entries": []
+	"entries": [
+		{
+			"pointer": "/paths/~1v1~1designs~1{id}/get/responses/200/content/application~1json/schema/properties/page",
+			"awaits": "pixonaut-app/pixonaut#4123",
+			"value": {
+				"type": ["integer", "null"],
+				"minimum": 1,
+				"description": "The page the design is, from 1, on a side printed as pages; null on any other."
+			}
+		},
+		{
+			"pointer": "/paths/~1v1~1designs~1{id}/get/responses/200/content/application~1json/schema/properties/pageCount",
+			"awaits": "pixonaut-app/pixonaut#4123",
+			"value": {
+				"type": ["integer", "null"],
+				"minimum": 1,
+				"description": "How many pages the design's book was proofed at; null on a design of no pages."
+			}
+		},
+		{
+			"pointer": "/paths/~1v1~1orders/post/requestBody/content/application~1json/schema/properties/designs/items/properties/page",
+			"awaits": "pixonaut-app/pixonaut#4129",
+			"value": {
+				"type": "integer",
+				"minimum": 1,
+				"description": "The page the design is, from 1, on a placement printed as pages; left out on any other."
+			}
+		},
+		{
+			"pointer": "/paths/~1v1~1orders/post/requestBody/content/application~1json/schema/properties/prints/items/properties/page",
+			"awaits": "pixonaut-app/pixonaut#4129",
+			"value": {
+				"type": "integer",
+				"minimum": 1,
+				"description": "The page the print is, from 1, on a placement printed as pages; left out on any other."
+			}
+		},
+		{
+			"pointer": "/paths/~1v1~1proof-sets~1{proofSet}",
+			"awaits": "pixonaut-app/pixonaut#4129",
+			"value": {
+				"get": {
+					"operationId": "proofSets.get",
+					"summary": "Read a proof set",
+					"tags": ["Designs"],
+					"description": "The proofs a hosted designer's approval returned as one set (`proofSet` on the return address), in place of their tokens: one per side, and one per page of a side printed as pages, by side in the link's order and each side's pages from 1.",
+					"security": [
+						{
+							"secretKey": []
+						},
+						{
+							"integrationKey": []
+						}
+					],
+					"parameters": [
+						{
+							"in": "path",
+							"name": "proofSet",
+							"required": true,
+							"schema": {
+								"type": "string"
+							}
+						}
+					],
+					"responses": {
+						"200": {
+							"description": "The set.",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							},
+							"content": {
+								"application/json": {
+									"schema": {
+										"type": "object",
+										"required": ["proofs", "expiresAt"],
+										"properties": {
+											"proofs": {
+												"type": "array",
+												"minItems": 1,
+												"items": {
+													"type": "object",
+													"required": [
+														"key",
+														"page",
+														"proofToken",
+														"proofUrl",
+														"expiresAt"
+													],
+													"properties": {
+														"key": {
+															"type": ["string", "null"],
+															"description": "The side's key; null on a link of one side."
+														},
+														"page": {
+															"type": ["integer", "null"],
+															"minimum": 1,
+															"description": "The page, from 1, on a side printed as pages; null on any other side."
+														},
+														"proofToken": {
+															"type": "string",
+															"minLength": 1,
+															"description": "The proof's token, committed with `POST /v1/designs`."
+														},
+														"proofUrl": {
+															"type": "string",
+															"description": "The proof's image."
+														},
+														"expiresAt": {
+															"type": "integer",
+															"description": "Epoch milliseconds."
+														}
+													}
+												}
+											},
+											"expiresAt": {
+												"type": "integer",
+												"description": "Epoch milliseconds."
+											}
+										}
+									}
+								}
+							}
+						},
+						"404": {
+							"description": "Refused: unknown_proof_set",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							},
+							"content": {
+								"application/json": {
+									"schema": {
+										"type": "object",
+										"required": ["error"],
+										"properties": {
+											"error": {
+												"type": "string",
+												"x-extensible-enum": ["unknown_proof_set"]
+											}
+										}
+									}
+								}
+							}
+						},
+						"410": {
+							"description": "Refused: proof_set_expired",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							},
+							"content": {
+								"application/json": {
+									"schema": {
+										"type": "object",
+										"required": ["error"],
+										"properties": {
+											"error": {
+												"type": "string",
+												"x-extensible-enum": ["proof_set_expired"]
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	]
 }

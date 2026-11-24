@@ -15,6 +15,7 @@ use Closure;
 use Pixonaut\WooCommerce\Admin\Notices;
 use Pixonaut\WooCommerce\Api\Answers\Design;
 use Pixonaut\WooCommerce\Api\Designs;
+use Pixonaut\WooCommerce\Api\RateLimitBudget;
 use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
@@ -264,8 +265,8 @@ final class AddToCart {
 	 * Commits the designs the hosted designer returned proof tokens for, so
 	 * they can wait on the product page; nothing joins the cart.
 	 *
-	 * @param WC_Product            $product The product or variation.
-	 * @param array<string, string> $tokens  Proof token by side key.
+	 * @param WC_Product                               $product The product or variation.
+	 * @param array<string, string|array<int, string>> $tokens  Proof token by side key; a side printed as pages has its pages' by page.
 	 *
 	 * @return CartLine|null The line they will join the cart as; null when refused, and notices say why.
 	 */
@@ -386,14 +387,16 @@ final class AddToCart {
 		list( $variant, $connection ) = $this->sellable( $product, $config );
 		$sides                        = $config->personalised_sides();
 		$standing                     = self::standing_sides( $config, $variant );
-		$same_sides                   = array_map( static fn ( CommittedSide $side ): string => $side->key, $line->sides ) === array_map( static fn ( Side $side ): string => $side->key, $sides );
-		$same_standing                = array_map( static fn ( StandingSide $side ): array => $side->to_array(), $line->standing ) === array_map( static fn ( StandingSide $side ): array => $side->to_array(), $standing );
+		// A side printed as pages holds a design per page.
+		$same_sides    = array_values( array_unique( array_map( static fn ( CommittedSide $side ): string => $side->key, $line->sides ) ) ) === array_map( static fn ( Side $side ): string => $side->key, $sides );
+		$same_standing = array_map( static fn ( StandingSide $side ): array => $side->to_array(), $line->standing ) === array_map( static fn ( StandingSide $side ): array => $side->to_array(), $standing );
 		if ( $line->variant !== $variant || $line->tenant_id !== $connection->tenant_id || ! $same_sides || ! $same_standing ) {
 			$this->personalised?->forget( $key );
 			throw new AddRefused( Labels::DESIGN_OUTDATED );
 		}
-		foreach ( $sides as $position => $side ) {
-			$mismatch = DesignCheck::mismatch( $this->read( $line->sides[ $position ]->design_id ), $side, $config->blank_id );
+		$by_key = array_combine( array_map( static fn ( Side $side ): string => $side->key, $sides ), $sides );
+		foreach ( $line->sides as $held ) {
+			$mismatch = DesignCheck::mismatch( $this->read( $held->design_id ), $by_key[ $held->key ], $config->blank_id );
 			if ( null !== $mismatch ) {
 				$this->personalised?->forget( $key );
 				throw new AddRefused( DesignCheck::TEMPLATE_OUTDATED === $mismatch ? Labels::DESIGN_OUTDATED : Labels::DESIGN_MISMATCH );
@@ -425,10 +428,10 @@ final class AddToCart {
 		$sides  = array();
 		try {
 			foreach ( $line->sides as $side ) {
-				$copy                 = Designs::id( 'designs.duplicate', $this->pixonaut->designs()->duplicate( $side->design_id )->designId );
-				$copies[ $side->key ] = $copy;
-				$design               = $this->read( $copy );
-				$sides[]              = new CommittedSide(
+				$copy                       = Designs::id( 'designs.duplicate', $this->pixonaut->designs()->duplicate( $side->design_id )->designId );
+				$copies[ $side->slot_of() ] = $copy;
+				$design                     = $this->read( $copy );
+				$sides[]                    = new CommittedSide(
 					$side->key,
 					$copy,
 					$design->revision,
@@ -436,7 +439,8 @@ final class AddToCart {
 					$side->template_version,
 					$side->commit_key,
 					'' !== $design->proof_id ? $design->proof_id : null,
-					$side->fields
+					$side->fields,
+					$side->page
 				);
 			}
 			$line_key = Refs::line_key( $copies, self::cart_owner() );
@@ -631,12 +635,12 @@ final class AddToCart {
 	}
 
 	/**
-	 * @param WC_Product            $product The product or variation.
-	 * @param ProductConfig         $config  Its configuration.
-	 * @param string                $mode    Its approval mode.
-	 * @param array<string, string> $tokens  Proof token by personalised side key.
-	 * @param array<string, array>  $fields  Field values by personalised side key.
-	 * @param array<string, bool>   $previews Whether each side's preview was opened before the approval box was ticked, by side key; none where no box asked.
+	 * @param WC_Product                               $product The product or variation.
+	 * @param ProductConfig                            $config  Its configuration.
+	 * @param string                                   $mode    Its approval mode.
+	 * @param array<string, string|array<int, string>> $tokens Proof token by personalised side key; a side printed as pages has its pages' by page.
+	 * @param array<string, array>                     $fields  Field values by personalised side key.
+	 * @param array<string, bool>                      $previews Whether each side's preview was opened before the approval box was ticked, by side key; none where no box asked.
 	 * @phpstan-param array<string, list<FieldValue>> $fields
 	 *
 	 * @throws AddRefused When the line cannot join the cart.
@@ -647,47 +651,55 @@ final class AddToCart {
 		$ordered                      = array();
 		foreach ( $config->personalised_sides() as $side ) {
 			$ordered[ $side->key ] = $tokens[ $side->key ] ?? '';
-			if ( '' === $ordered[ $side->key ] ) {
+			if ( '' === $ordered[ $side->key ] || array() === $ordered[ $side->key ] ) {
 				throw new AddRefused( Labels::DESIGN_REQUIRED );
 			}
 		}
 
 		$site     = $connection->site;
-		$line_key = Refs::line_key( $ordered, self::cart_owner() );
+		$line_key = Refs::line_key( ProofTokens::by_slot( $ordered ), self::cart_owner() );
 		$ref      = Refs::cart_ref( $site, $line_key );
 		$ours     = array();
 		$sides    = array();
+		// The customer waits on every page's commit: they share one wait for Pixonaut's commit budget.
+		$budget = new RateLimitBudget();
 		try {
 			foreach ( $config->personalised_sides() as $side ) {
-				$opened     = $previews[ $side->key ] ?? null;
-				$commit_key = Refs::commit_key( $site, $ordered[ $side->key ], $opened );
-				$design_id  = $this->commit_side( $product, $ordered[ $side->key ], $ref, $commit_key, self::fulfilment_payload( $side ), $opened );
-				$design     = $this->read( $design_id );
-				if ( $this->held_elsewhere( $design_id, $design, $ref ) ) {
-					throw new AddRefused( Labels::DESIGN_ALREADY_USED );
-				}
-				$ours[]   = $design_id;
-				$mismatch = DesignCheck::mismatch( $design, $side, $config->blank_id );
-				if ( null !== $mismatch ) {
-					$this->logger->warning(
-						sprintf( 'Refused a design for product %d: its %s does not match side "%s".', $product->get_id(), $mismatch, $side->key ),
-						array(
-							'design_id' => $design_id,
-							'mismatch'  => $mismatch,
-						)
+				$opened = $previews[ $side->key ] ?? null;
+				// A side printed as pages commits each page as a design of its own.
+				$paged = is_array( $ordered[ $side->key ] );
+				foreach ( $paged ? $ordered[ $side->key ] : array( $ordered[ $side->key ] ) as $page => $token ) {
+					$page       = $paged ? $page : null;
+					$commit_key = Refs::commit_key( $site, $token, $opened );
+					$design_id  = $this->commit_side( $product, $token, $ref, $commit_key, self::fulfilment_payload( $side ), $opened, $budget );
+					$design     = $this->read( $design_id );
+					if ( $this->held_elsewhere( $design_id, $design, $ref ) ) {
+						throw new AddRefused( Labels::DESIGN_ALREADY_USED );
+					}
+					$ours[]   = $design_id;
+					$mismatch = DesignCheck::mismatch( $design, $side, $config->blank_id );
+					if ( null !== $mismatch ) {
+						$this->logger->warning(
+							sprintf( 'Refused a design for product %d: its %s does not match side "%s".', $product->get_id(), $mismatch, $side->key ),
+							array(
+								'design_id' => $design_id,
+								'mismatch'  => $mismatch,
+							)
+						);
+						throw new AddRefused( DesignCheck::TEMPLATE_OUTDATED === $mismatch ? Labels::DESIGN_OUTDATED : Labels::DESIGN_MISMATCH, true );
+					}
+					$sides[] = new CommittedSide(
+						$side->key,
+						$design_id,
+						$design->revision,
+						$side->template_base_id,
+						$design->template_version ?? 0,
+						$commit_key,
+						'' !== $design->proof_id ? $design->proof_id : null,
+						$fields[ $side->key ] ?? array(),
+						$page
 					);
-					throw new AddRefused( DesignCheck::TEMPLATE_OUTDATED === $mismatch ? Labels::DESIGN_OUTDATED : Labels::DESIGN_MISMATCH, true );
 				}
-				$sides[] = new CommittedSide(
-					$side->key,
-					$design_id,
-					$design->revision,
-					$side->template_base_id,
-					$design->template_version ?? 0,
-					$commit_key,
-					'' !== $design->proof_id ? $design->proof_id : null,
-					$fields[ $side->key ] ?? array()
-				);
 			}
 		} catch ( AddRefused $refused ) {
 			// Only a mismatch condemns the line; after any other refusal the
@@ -725,12 +737,13 @@ final class AddToCart {
 	 * @param string                $commit_key         The commit's idempotency key.
 	 * @param array<string, string> $fulfilment_payload Fulfilment keys known at commit.
 	 * @param bool|null             $preview_opened     What the design records of its preview; null where no box asked.
+	 * @param RateLimitBudget       $budget             The waits the line's commits share.
 	 *
 	 * @throws AddRefused When Pixonaut refused the commit.
 	 */
-	private function commit_side( WC_Product $product, string $proof_token, string $ref, string $commit_key, array $fulfilment_payload, ?bool $preview_opened ): string {
+	private function commit_side( WC_Product $product, string $proof_token, string $ref, string $commit_key, array $fulfilment_payload, ?bool $preview_opened, RateLimitBudget $budget ): string {
 		try {
-			return $this->designs->commit( $proof_token, $ref, $commit_key, $fulfilment_payload, $preview_opened );
+			return $this->designs->commit( $proof_token, $ref, $commit_key, $fulfilment_payload, $preview_opened, $budget );
 		} catch ( ApiException $error ) {
 			if ( in_array( $error->errorCode, self::ROUTING_REFUSALS, true ) ) {
 				$this->notice_routing( $product, $error->errorCode );

@@ -28,6 +28,7 @@
 		"GET /v1/orders/{id}",
 		"GET /v1/printshop-catalogue-products",
 		"GET /v1/printshop-connections",
+		"GET /v1/proof-sets/{proofSet}",
 		"GET /v1/share-links",
 		"GET /v1/templates",
 		"GET /v1/templates/{id}",
@@ -124,6 +125,7 @@
 		"GET /v1/orders/{id}": "integrationKey",
 		"GET /v1/printshop-catalogue-products": "integrationKey",
 		"GET /v1/printshop-connections": "integrationKey",
+		"GET /v1/proof-sets/{proofSet}": "integrationKey",
 		"GET /v1/share-links": "integrationKey",
 		"GET /v1/templates": "integrationKey",
 		"GET /v1/templates/{id}": ["integrationKey", "publishableKey"],
@@ -164,5 +166,7 @@
 		"PUT /v1/connect/store-access": "integrationKey",
 		"PUT /v1/designs/{id}/external-ref": "integrationKey"
 	},
-	"pending": []
+	"pending": [
+		{ "op": "GET /v1/proof-sets/{proofSet}", "requirement": "pixonaut-app/pixonaut-for-woocommerce#388" }
+	]
 }

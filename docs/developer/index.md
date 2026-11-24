@@ -309,7 +309,11 @@ state:
    cart, kept as the line's `variant` ref) and, for a product on no blank,
    the `printshopId` it chose; a blank decides its own printshop. A line an
    earlier version stored as `printed` names its prints (`prints:
-   [{printId}]`) instead. Pixonaut renders the prints and holds each item
+   [{printId}]`) instead. A book names each design of its pages with its page
+   (`{designId, page}`, every page from 1 once), and a standing side's
+   position counts the book as one side; a refusal of the pages
+   (`page_not_as_proofed`, `page_missing`, `duplicate_page`, …) is not
+   retried, and the line needs attention. Pixonaut renders the prints and holds each item
    (`awaiting_prints`) until they are done, then hands it to its printshop
    (`item.submitted`); items for one printshop go to it together. A print
    that fails, or prints not done within an hour, fail the item

@@ -137,24 +137,32 @@ final class OrderAgain {
 		if ( $state->ref( LineState::REF_TENANT_ID ) !== $connection->tenant_id ) {
 			throw new AddRefused( Labels::DESIGN_REQUIRED );
 		}
+		// Each side's designs by slot, with the page a side printed as pages holds them at.
 		$sources = array();
 		foreach ( $config->personalised_sides() as $side ) {
-			$source = in_array( $side->key, $state->sides(), true ) && ! $state->is_side_erased( $side->key ) ? $state->side_ref( $side->key, LineState::SIDE_DESIGN_ID ) : null;
-			if ( ! is_string( $source ) || '' === $source ) {
-				// The product has a side the order line was not designed for, or its design was erased.
+			$slots = $state->slots_of( $side->key );
+			if ( array() === $slots ) {
+				// The product has a side the order line was not designed for.
 				throw new AddRefused( Labels::DESIGN_REQUIRED );
 			}
-			$sources[ $side->key ] = $source;
+			foreach ( $slots as $page => $slot ) {
+				$source = $state->is_side_erased( $slot ) ? null : $state->side_ref( $slot, LineState::SIDE_DESIGN_ID );
+				if ( ! is_string( $source ) || '' === $source ) {
+					// Its design was erased.
+					throw new AddRefused( Labels::DESIGN_REQUIRED );
+				}
+				$sources[ $slot ] = array( $side, $source, $slot === $side->key ? null : $page );
+			}
 		}
 
 		$copies = array();
 		$sides  = array();
 		try {
-			foreach ( $config->personalised_sides() as $side ) {
-				$copy                 = $this->copy( $product, $sources[ $side->key ] );
-				$copies[ $side->key ] = $copy;
-				$design               = Design::get( $this->pixonaut, $copy );
-				$mismatch             = DesignCheck::mismatch( $design, $side, $config->blank_id );
+			foreach ( $sources as $slot => list( $side, $source, $page ) ) {
+				$copy            = $this->copy( $product, $source );
+				$copies[ $slot ] = $copy;
+				$design          = Design::get( $this->pixonaut, $copy );
+				$mismatch        = DesignCheck::mismatch( $design, $side, $config->blank_id );
 				if ( null !== $mismatch ) {
 					$this->logger->warning(
 						sprintf( 'Refused to order product %d again: the copy of its design for side "%s" does not match the product\'s %s.', $product->get_id(), $side->key, $mismatch ),
@@ -166,7 +174,7 @@ final class OrderAgain {
 					);
 					throw new AddRefused( DesignCheck::TEMPLATE_OUTDATED === $mismatch ? Labels::DESIGN_REQUIRED : Labels::DESIGN_MISMATCH );
 				}
-				$commit_key = $state->side_ref( $side->key, LineState::SIDE_COMMIT_KEY );
+				$commit_key = $state->side_ref( $slot, LineState::SIDE_COMMIT_KEY );
 				$sides[]    = new CommittedSide(
 					$side->key,
 					$copy,
@@ -176,7 +184,8 @@ final class OrderAgain {
 					// The copy was made by no commit: the line keeps the key that committed its source.
 					is_string( $commit_key ) && '' !== $commit_key ? $commit_key : Refs::commit_key( $connection->site, $copy ),
 					'' !== $design->proof_id ? $design->proof_id : null,
-					$state->side_fields( $side->key )
+					$state->side_fields( $slot ),
+					$page
 				);
 			}
 			$line_key = Refs::line_key( $copies, $owner );

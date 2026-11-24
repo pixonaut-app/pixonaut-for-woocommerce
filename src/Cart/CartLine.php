@@ -127,7 +127,8 @@ final class CartLine {
 	}
 
 	/**
-	 * The line with one side replaced, matched by its key, and the consent
+	 * The line with one side replaced, matched by its slot (a page of a side
+	 * of pages by its page too), and the consent
 	 * given for it.
 	 *
 	 * @param CommittedSide                     $side    The side's new state.
@@ -140,7 +141,7 @@ final class CartLine {
 			$this->tenant_id,
 			$this->approval_mode,
 			$consent,
-			array_map( static fn ( CommittedSide $held ): CommittedSide => $held->key === $side->key ? $side : $held, $this->sides ),
+			array_map( static fn ( CommittedSide $held ): CommittedSide => $held->slot_of() === $side->slot_of() ? $side : $held, $this->sides ),
 			$this->variant,
 			$this->standing
 		);
@@ -157,17 +158,37 @@ final class CartLine {
 	}
 
 	/**
-	 * The side with a key, if the line has it.
+	 * How many pages a side printed as pages holds on the line: its book's
+	 * page count. Zero for a side of one design.
 	 *
 	 * @param string $key The side's key.
 	 */
-	public function side( string $key ): ?CommittedSide {
+	public function page_count( string $key ): int {
+		$pages = 0;
 		foreach ( $this->sides as $side ) {
-			if ( $side->key === $key ) {
-				return $side;
+			if ( $side->key === $key && null !== $side->page ) {
+				++$pages;
 			}
 		}
-		return null;
+		return $pages;
+	}
+
+	/**
+	 * The design in a slot (`CommittedSide::slot()`), if the line has it: a
+	 * side by its key, a page of a side of pages by its key and page. A side
+	 * of pages named by its key alone gives its first page.
+	 *
+	 * @param string $slot The design's slot, or its side's key.
+	 */
+	public function side( string $slot ): ?CommittedSide {
+		$first = null;
+		foreach ( $this->sides as $side ) {
+			if ( $side->slot_of() === $slot ) {
+				return $side;
+			}
+			$first ??= $side->key === $slot ? $side : null;
+		}
+		return $first;
 	}
 
 	/**

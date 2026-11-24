@@ -35,6 +35,7 @@ import {
 	printshopFor,
 	refuseOrdered,
 	refuseOtherRow,
+	refusePages,
 	refusePrints,
 	takeArmedHold,
 	takeArmedOutcome,
@@ -130,7 +131,14 @@ function itemPlacings(
 	const placings: ItemPlacing[] = [];
 	for (const [index, item] of request.items.entries()) {
 		const prints = printsOf[index] ?? [];
-		const refused = refusePrints(context, storeId, prints);
+		const refused =
+			refusePrints(context, storeId, prints) ??
+			refusePages(
+				context,
+				storeId,
+				prints,
+				(item.designs ?? item.prints ?? []).map((named) => named.page),
+			);
 		if (refused !== null) {
 			return ofItem(refused, index);
 		}

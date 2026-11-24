@@ -392,13 +392,26 @@ sent. `PUT /v1/designs/{id}/external-ref` replaces the store's reference and
 `DELETE /v1/designs/{id}` deletes a design that is not approved. Another
 store's design answers `404`.
 
+A test approves a side of a hosted designer link as a book by adding
+`pages=<count>` (a link of one side) or `pages[<side key>]=<count>` to the
+approve address: the fake then mints a proof per page, keeps the approval's
+proofs as a proof set, and returns `proofSet` in place of tokens.
+`GET /v1/proof-sets/{proofSet}` answers the set to the store that made it
+(`404 unknown_proof_set` otherwise) until its first proof expires
+(`410 proof_set_expired`). A design committed from a page's proof reads its
+`page` and `pageCount`.
+
 ## Orders
 
 `POST /v1/orders` places one order of `items`. An item with `designs` makes
 a print of each design, finished at once, so it goes on as an item of
 `prints` would; naming both or neither, or no item at all, is `400`. A
 refusal of one item names it with `itemIndex`; a malformed request is
-refused whole. A design with a live item (any status but `failed` and
+refused whole. A design proofed as a page must be named with that page
+(`422 page_not_as_proofed`), each page of its book once (`duplicate_page`,
+`page_missing`), and a design of no pages with none
+(`page_on_unpaged_placement`); the pages of a book share their placement.
+A design with a live item (any status but `failed` and
 `cancelled`) refuses another order `409 design_already_ordered`, naming the
 design, its newest live item (`itemId`) and that item's `orderId`, unless
 the item sends `reorder: true`. Items whose printshop answered alike go in

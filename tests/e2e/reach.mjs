@@ -85,6 +85,7 @@ export const NO_SPEC = [
 	'src/Api/HookListener.php',
 	'src/Api/NetworkFailure.php',
 	'src/Api/Pixonaut.php',
+	'src/Api/RateLimitBudget.php',
 	'src/Api/SdkLogger.php',
 	'src/Api/StoredRequest.php',
 	'src/Api/WcLogger.php',
@@ -319,6 +320,12 @@ export const REACH = {
 		'src/Catalogue/ProductVariants.php',
 		'src/Catalogue/VariantWatch.php',
 		'src/Catalogue/Purchasability.php',
+	],
+	'button-book.spec.ts': [
+		'src/Cart/ProofTokens.php',
+		'src/Api/Answers/ProofSet.php',
+		'src/Api/Answers/ProofSetProof.php',
+		'tests/fake-pixonaut/src/handlers/proof-sets.ts',
 	],
 	'button-corrections.spec.ts': [
 		'src/Storefront/HostedCorrection.php',

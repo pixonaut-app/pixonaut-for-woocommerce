@@ -69,9 +69,12 @@ moves the operation out of `pending` if it was planned there).
 An operation Pixonaut has agreed to add but the pinned SDK does not
 describe yet is listed in `Api\Pixonaut::PENDING` with its method and path,
 so the SDK can send it; the spec overlay describes it for the fake and the
-contract checks (`connectedStore.reportPictureStorage`, the picture report
-`Catalogue\PictureReport` sends, is one today). The list empties when a pin
-brings the operation.
+contract checks (`proofSets.get`, which reads a book's proof set on the
+hosted designer's return, is one today). The list empties when a pin brings
+the operation. Its answer models are listed in `AnswerModelsMatchSdkTest`'s
+`AWAITED` until then. Likewise the `page` of an order's `designs` and
+`prints` items, which the pinned SDK's request models leave out, is put back
+on the encoded body by `Fulfilment\Fulfiller`.
 
 Requests are built with the SDK's typed request models. Answers are read
 through the plugin's answer models in `Api\Answers`, which hold only the
