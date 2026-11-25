@@ -61,9 +61,9 @@ function timesOf(
 }
 
 /** `GET /v1/blanks/{id}/variants/costs`: every variant's cost with shipping
- *  to `region`, every variant read (`complete`), a variant without a
- *  published price with `product` null, a book with its cost at each page
- *  count (`pages`);
+ *  to `region`, every variant read (`read`), a variant without a published
+ *  price with `product` null and named in `missing`, a book with its cost at
+ *  each page count (`pages`);
  *  refused `unknown_region` for a region no printshop ships to. */
 export const listVariantCosts: Handler = (context): HandlerResult => {
 	const blank = tenantBlank(context, context.params.id ?? '');
@@ -75,11 +75,21 @@ export const listVariantCosts: Handler = (context): HandlerResult => {
 		return refusal(422, 'unknown_region');
 	}
 	const readAt = new Date(context.clock.now()).toISOString();
+	// The fake prices shipping for everything it sells, so a variant lacks
+	// only its product price.
+	const missing = blank.variants
+		.filter((variant) => costOf(blank, variant.ref).product === null)
+		.map((variant) => ({
+			variant: variant.ref,
+			reason: 'no_product' as const,
+		}));
 	return {
 		status: 200,
 		body: {
 			// The fake holds every variant's cost at once, so a read is whole.
-			complete: true,
+			read: true,
+			complete: missing.length === 0,
+			missing,
 			// Every cost the fake holds names its own currency.
 			currencyNeeded: false,
 			costs: blank.variants.map((variant) => {

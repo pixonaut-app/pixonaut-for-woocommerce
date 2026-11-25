@@ -307,6 +307,8 @@ final class BookPagesPricingTest extends PricingTestCase {
 					),
 				),
 				'complete'       => true,
+				'read'           => true,
+				'missing'        => array(),
 				'currencyNeeded' => false,
 			)
 		);

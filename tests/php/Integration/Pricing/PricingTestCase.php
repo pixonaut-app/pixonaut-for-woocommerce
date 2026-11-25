@@ -252,6 +252,8 @@ abstract class PricingTestCase extends WP_UnitTestCase {
 			array(
 				'costs'          => $costs,
 				'complete'       => true,
+				'read'           => true,
+				'missing'        => array(),
 				// Every cost of the fixture names its own currency.
 				'currencyNeeded' => false,
 			)
