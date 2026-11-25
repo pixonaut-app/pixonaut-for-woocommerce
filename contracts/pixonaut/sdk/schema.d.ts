@@ -35182,7 +35182,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        /** @description Whether every variant on sale has been read for the region, so no variant is missing from `costs` for not being read yet. false from when a region is first asked for until its last variant is read, and while a variant put on sale since waits for its read. It tells of the whole region, also when `variant` narrows the list. Always true for a blank no printshop is bound to. */
+                        /** @description Whether a store can price every variant on sale in the region: each has been read, and has both a `product` price and a `shipping`. false while any is listed in `missing`. It tells of the whole region, also when `variant` narrows the list. Never true for a blank no printshop is bound to, which no printshop prices. */
                         complete: boolean;
                         costs: {
                             /** @description When the cost was last told as changed, as an ISO 8601 time: a read found a product or shipping amount more than 2 % from the one last told, or one that appeared, went or changed currency. null while the first read still stands. An amount that moves less, as one billed in another currency than it is priced in does with the exchange rate, is held as read without being told. */
@@ -35277,6 +35277,15 @@ export interface operations {
                         }[];
                         /** @description Whether the costs wait for the printshop's billing currency: its printshop names no currency in what it answers, and nobody has stated the one it bills the connected account in (`PUT /v1/printshop-connections/{id}/billing-currency`). `costs` is then empty and `complete` false: no amount is read, or shown in a guessed currency. Once it is stated the costs are read in it within moments, and a cost held in another currency is left out until it is read again. */
                         currencyNeeded: boolean;
+                        /** @description Each variant on sale a store cannot price in the region, in the blank's order, with what it lacks first. Of the whole region, also when `variant` narrows the list. Empty when `complete` is true, and while `currencyNeeded` is. */
+                        missing: {
+                            /** @description What it lacks: `unread`, no cost read for it yet; `no_product`, its printshop publishes no price for it; `no_shipping`, a price but no shipping of one to the region, which a store does not price a variant without. */
+                            reason: string;
+                            /** @description The variant's `ref`. */
+                            variant: string;
+                        }[];
+                        /** @description Whether every variant on sale has been read for the region, so no variant is missing from `costs` for not being read yet: what a page waiting on the read asks again for. false from when a region is first asked for until its last variant is read, and while a variant put on sale since waits for its read. A variant read with no price or no shipping is read: asking again soon does not change it. It tells of the whole region, also when `variant` narrows the list. Always true for a blank no printshop is bound to. */
+                        read: boolean;
                     };
                 };
             };
