@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.31.2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.31.1...v1.31.2) (2026-11-25)
+
+
+### Bug Fixes
+
+* **contracts:** pin Pixonaut SDK 0.48.1, API 14.4.0 and pixonaut-php 31 ([#402](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/402)) ([8505eda](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/8505eda73fb335bec0a91b06d25fa0d4ed83ca88))
+* **pricing:** a cost with no shipping is flagged no_shipping and keeps its price ([#401](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/401)) ([8005c02](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/8005c02959c00424edbf1a4853887426f6913ad5))
+
 ## [1.31.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.31.0...v1.31.1) (2026-11-24)
 
 
