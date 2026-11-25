@@ -203,7 +203,7 @@ final class MarginFloor {
 			return;
 		}
 		$margin = $this->pricing->margin_now( $item );
-		if ( null === $margin && $this->pricing->awaits_rate( $item ) ) {
+		if ( null === $margin && $this->pricing->cost_unknown_for_now( $item ) ) {
 			// Not known for now rather than recovered: an unsent warning is kept, a sent one not sent again.
 			return;
 		}

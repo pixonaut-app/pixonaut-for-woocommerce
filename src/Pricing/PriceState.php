@@ -55,6 +55,13 @@ final class PriceState {
 	public const FLAG_NO_COST = 'no_cost';
 
 	/**
+	 * The printshop publishes a price for its variant and no shipping of one
+	 * to the store's country: priced on the product alone, a variation would
+	 * be sold as if shipping were free.
+	 */
+	public const FLAG_NO_SHIPPING = 'no_shipping';
+
+	/**
 	 * No cost was read for it: Pixonaut has not read its variant's yet, or
 	 * it sells no blank variant.
 	 */

@@ -165,7 +165,7 @@ final class MarginFloorTest extends PricingTestCase {
 		$this->plugin->settings()->set( Settings::PRICE_CURRENCY_BUFFER, '0' );
 		$this->plugin->settings()->set( Settings::PRICE_MARGIN_FLOOR, '30' );
 		$id = $this->simple_product( 'v_a3', '250' );
-		$this->script_costs( array( 'v_a3' => '20' ), null, 'EUR' );
+		$this->script_costs( array( 'v_a3' => '20' ), '0', 'EUR' );
 
 		// 230 SEK against 250: 8 %.
 		$this->pricing->refresh( $this->product( $id ) );
@@ -178,6 +178,20 @@ final class MarginFloorTest extends PricingTestCase {
 		$this->assertSame( array( $id => $id ), $this->floor->low( MarginFloor::NEW ) );
 		$this->floor->report();
 		$this->assertSame( array(), $this->floor_mails(), 'a price whose margin is not known is not named' );
+		$this->assertSame( array( $id => $id ), $this->floor->low( MarginFloor::NEW ) );
+	}
+
+	public function test_a_cost_whose_shipping_is_gone_keeps_the_mark_until_it_is_known_again(): void {
+		$this->plugin->settings()->set( Settings::PRICE_MARGIN_FLOOR, '30' );
+		$id = $this->simple_product( 'v_a3', '250' );
+		$this->script_costs( array( 'v_a3' => '230' ) );
+		$this->pricing->refresh( $this->product( $id ) );
+		$this->assertSame( array( $id => $id ), $this->floor->low( MarginFloor::NEW ) );
+
+		// The printshop gives no shipping now: the margin is not known, which is no recovery.
+		$this->script_costs( array( 'v_a3' => '230' ), null );
+		$this->pricing->refresh( $this->product( $id ) );
+
 		$this->assertSame( array( $id => $id ), $this->floor->low( MarginFloor::NEW ) );
 	}
 
