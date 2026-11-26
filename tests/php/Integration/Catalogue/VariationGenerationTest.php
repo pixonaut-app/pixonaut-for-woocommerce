@@ -17,6 +17,7 @@ use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
 use Pixonaut\WooCommerce\Catalogue\Side;
 use Pixonaut\WooCommerce\Catalogue\VariationChanges;
+use Pixonaut\WooCommerce\Catalogue\VariationCombinations;
 use Pixonaut\WooCommerce\Catalogue\VariationPlan;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
@@ -586,6 +587,20 @@ final class VariationGenerationTest extends PricingTestCase {
 		$this->assertStringContainsString( $says, $answer->get_error_message() );
 		$this->assertSame( array(), $this->reread( $product )->get_children() );
 		$this->assertNull( VariationPlan::stored_on( $this->reread( $product ) ) );
+	}
+
+	public function test_an_option_no_attribute_offers_is_refused_with_its_reason(): void {
+		$product = $this->poster();
+
+		$answer = $this->generate->execute(
+			array(
+				'product_id' => $product->get_id(),
+				'entries'    => array( array( 'blank_id' => self::POSTER ) ),
+			)
+		);
+
+		$this->assertInstanceOf( WP_Error::class, $answer );
+		$this->assertSame( VariationCombinations::OPTION_UNLINKED, $answer->get_error_data()['reason'] ?? null );
 	}
 
 	public function test_the_plan_reads_with_the_attributes_and_the_options_they_stand_for(): void {

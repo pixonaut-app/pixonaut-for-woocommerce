@@ -51,6 +51,13 @@ use WP_Term;
 final class VariationCombinations {
 
 	/**
+	 * Why a plan is refused that leaves an option of a blank with several
+	 * values on sale to no attribute and no fixed value: an attribute linked
+	 * to the option (`BlankOptionLinks`) would offer it.
+	 */
+	public const OPTION_UNLINKED = 'option_unlinked';
+
+	/**
 	 * The most combinations one plan may offer: beyond it a product page
 	 * lists more variations than WooCommerce shows well.
 	 */
@@ -481,7 +488,8 @@ final class VariationCombinations {
 			if ( count( $on_sale ) > 1 ) {
 				return self::refused(
 					/* translators: 1: an option's name. 2: a blank's id. 3: its values, comma-separated. */
-					sprintf( __( 'No attribute offers the option %1$s of %2$s, which has several values (%3$s): name the one to sell in the entry\'s fixed options, or link an attribute to it.', 'pixonaut-for-woocommerce' ), $axis, $blank_id, implode( ', ', $on_sale ) )
+					sprintf( __( 'No attribute offers the option %1$s of %2$s, which has several values (%3$s): name the one to sell in the entry\'s fixed options, or link an attribute to it.', 'pixonaut-for-woocommerce' ), $axis, $blank_id, implode( ', ', $on_sale ) ),
+					self::OPTION_UNLINKED
 				);
 			}
 			if ( 1 === count( $on_sale ) ) {
@@ -547,9 +555,14 @@ final class VariationCombinations {
 	}
 
 	/**
-	 * @param string $message Why the plan cannot be used.
+	 * @param string      $message Why the plan cannot be used.
+	 * @param string|null $reason  Its code, for a refusal Pixonaut tells apart (`OPTION_UNLINKED`).
 	 */
-	private static function refused( string $message ): WP_Error {
-		return new WP_Error( 'pixonaut_wc_invalid_variation_plan', $message, array( 'status' => WP_Http::BAD_REQUEST ) );
+	private static function refused( string $message, ?string $reason = null ): WP_Error {
+		$data = array( 'status' => WP_Http::BAD_REQUEST );
+		if ( null !== $reason ) {
+			$data['reason'] = $reason;
+		}
+		return new WP_Error( 'pixonaut_wc_invalid_variation_plan', $message, $data );
 	}
 }

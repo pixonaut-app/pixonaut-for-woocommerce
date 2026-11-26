@@ -101,7 +101,7 @@ final class SetAttributeBlankOption implements Ability {
 		$option   = is_array( $input ) && is_string( $input['option'] ?? null ) ? trim( $input['option'] ) : '';
 		$choices  = $this->choices->for_taxonomy( $taxonomy );
 		if ( '' === $option ) {
-			return self::answer( BlankOptionLinks::set( $attribute_id, '', array() ), $attribute_id, (string) $attribute->name, $choices );
+			return self::answer( self::link( $attribute_id, '', array() ), $attribute_id, (string) $attribute->name, $choices );
 		}
 		if ( ! isset( $choices[ $option ] ) ) {
 			return self::refused(
@@ -131,7 +131,23 @@ final class SetAttributeBlankOption implements Ability {
 			}
 			$values[ $term->term_id ] = $value;
 		}
-		return self::answer( BlankOptionLinks::set( $attribute_id, $option, $values ), $attribute_id, (string) $attribute->name, $choices );
+		return self::answer( self::link( $attribute_id, $option, $values ), $attribute_id, (string) $attribute->name, $choices );
+	}
+
+	/**
+	 * Saves the link and queues its products' re-check, which the same link
+	 * given again, or the same unlinking, queues anyway: it is how a caller
+	 * recovers from a link saved whose re-check was not queued.
+	 *
+	 * @param int                $attribute_id The attribute.
+	 * @param string             $option       The option; empty to unlink.
+	 * @param array<int, string> $values       Option values by term id.
+	 * @return bool Whether the re-check was queued.
+	 */
+	private static function link( int $attribute_id, string $option, array $values ): bool {
+		$before = BlankOptionLinks::of( $attribute_id );
+		$queued = BlankOptionLinks::set( $attribute_id, $option, $values );
+		return $queued && BlankOptionLinks::of( $attribute_id ) === $before ? BlankOptionLinks::recheck( $attribute_id ) : $queued;
 	}
 
 	/**

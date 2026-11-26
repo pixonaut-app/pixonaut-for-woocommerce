@@ -62,7 +62,7 @@ and a call answers `200 {"result": ...}`. Otherwise `{"code", "message"}`:
 | 401 | `credential_invalid` | No credential, or an unknown or revoked one |
 | 403 | `store_access_off` | The switch is off |
 | 404 | `unknown_tool` | Not one of the tools below |
-| 422 | `invalid_input` | The body is not JSON, does not fit the tool's schema, or names what is not there |
+| 422 | `invalid_input` | The body is not JSON, does not fit the tool's schema, or names what is not there; `reason` gives the plugin's code where it has one, e.g. `option_unlinked` from `generate-product-variations` for a blank option with several values that no attribute is linked to |
 | 422 | `invalid_print_size` | `set-variation-print-size` was given a size that cannot be printed; `reason` gives the code, e.g. `too_large` or `wrong_ratio` |
 | 502 | `store_error` | The shop itself failed, or Pixonaut could not give what a tool needed from it |
 
@@ -89,6 +89,7 @@ offered to a user:
 | Pricing settings | `get-pricing-settings`, `update-pricing-settings` |
 | A product's prices | `get-product-prices`, `price-product`, `set-product-price-changes` |
 | Shipping zones and their methods | `get-shipping`, `set-shipping-method` |
+| The blank option each global attribute stands for | `get-attribute-blank-options`, `set-attribute-blank-option` (the same link given again queues the products' re-check) |
 | Orders, read only | `list-orders`, `get-order` |
 
 The product and variation tools answer as the store abilities of the same

@@ -22,7 +22,8 @@ use WP_REST_Server;
 /**
  * `POST /pixonaut/v1/shop-tools/{tool}`, with `Authorization: Bearer <secret>`
  * and the tool's input as a JSON body. Answers `{result}`, or `{code, message}`,
- * with the `reason` too for a print size that cannot be printed.
+ * with the `reason` too for a print size that cannot be printed, and for input
+ * the tool refused with a code of its own (`option_unlinked`).
  *
  * Pixonaut is not a WordPress user: the credential is the authentication,
  * and each call runs as nobody, with WooCommerce's own permission check let
@@ -246,7 +247,8 @@ final class ShopToolRoute {
 		$status = is_array( $data ) ? ( $data['status'] ?? null ) : null;
 		$own    = str_starts_with( (string) $error->get_error_code(), self::OWN_ERROR_PREFIX );
 		if ( ( null === $status && $own ) || in_array( $status, self::STATUSES_OF_BAD_INPUT, true ) ) {
-			return self::error( self::UNPROCESSABLE, self::INVALID_INPUT, $error->get_error_message() );
+			$reason = $own && is_array( $data ) && is_string( $data['reason'] ?? null ) ? $data['reason'] : null;
+			return self::error( self::UNPROCESSABLE, self::INVALID_INPUT, $error->get_error_message(), $reason );
 		}
 		return self::error( self::STORE_FAILED, self::STORE_ERROR, $error->get_error_message() );
 	}
@@ -256,17 +258,19 @@ final class ShopToolRoute {
 	}
 
 	/**
-	 * @param int    $status  The HTTP status.
-	 * @param string $code    The refusal's code.
-	 * @param string $message What it means.
+	 * @param int         $status  The HTTP status.
+	 * @param string      $code    The refusal's code.
+	 * @param string      $message What it means.
+	 * @param string|null $reason  The plugin's own code for why, when it gives one.
 	 */
-	private static function error( int $status, string $code, string $message ): WP_REST_Response {
-		return new WP_REST_Response(
-			array(
-				'code'    => $code,
-				'message' => $message,
-			),
-			$status
+	private static function error( int $status, string $code, string $message, ?string $reason = null ): WP_REST_Response {
+		$body = array(
+			'code'    => $code,
+			'message' => $message,
 		);
+		if ( null !== $reason ) {
+			$body['reason'] = $reason;
+		}
+		return new WP_REST_Response( $body, $status );
 	}
 }

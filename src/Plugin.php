@@ -676,8 +676,6 @@ final class Plugin {
 					new SetAttributeChoicePrice(),
 					new GetShipping(),
 					new SetShippingMethod(),
-					new GetAttributeBlankOptions( $this->blank_option_choices() ),
-					new SetAttributeBlankOption( $this->blank_option_choices() ),
 					...$this->variation_abilities(),
 					new MoveProductTemplate( $links, $fields ),
 					new MoveProductAttribute( new WcLogger() ),
@@ -753,13 +751,19 @@ final class Plugin {
 	}
 
 	/**
-	 * The abilities that read a product's variation plan and generate its
+	 * The abilities that read and set the blank option each global
+	 * attribute stands for, read a product's variation plan and generate its
 	 * variations.
 	 *
 	 * @return list<Ability>
 	 */
 	private function variation_abilities(): array {
-		return array( new GetProductVariationPlan(), new GenerateProductVariations( $this->variation_generator() ) );
+		return array(
+			new GetAttributeBlankOptions( $this->blank_option_choices() ),
+			new SetAttributeBlankOption( $this->blank_option_choices() ),
+			new GetProductVariationPlan(),
+			new GenerateProductVariations( $this->variation_generator() ),
+		);
 	}
 
 	/**

@@ -12,7 +12,10 @@ namespace Pixonaut\WooCommerce\Tests\Integration\ShopTools;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Connection\StoreAccess;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
+use Pixonaut\WooCommerce\Catalogue\VariationCombinations;
 use Pixonaut\WooCommerce\Plugin;
+use Pixonaut\WooCommerce\ShopTools\ShopToolRoute;
+use ReflectionMethod;
 use RuntimeException;
 use WC_Order;
 use WC_Product_Simple;
@@ -165,7 +168,56 @@ final class ShopToolRouteTest extends WP_UnitTestCase {
 	}
 
 	public function test_something_that_is_not_there_is_refused_as_input(): void {
-		$this->assert_refused( 422, 'invalid_input', $this->call( 'get-product', array( 'id' => 999999 ) ) );
+		$response = $this->call( 'get-product', array( 'id' => 999999 ) );
+
+		$this->assert_refused( 422, 'invalid_input', $response );
+		$this->assertArrayNotHasKey( 'reason', $response->get_data(), 'WooCommerce gives no reason of the plugin\'s' );
+	}
+
+	public function test_input_a_tool_refuses_with_a_code_of_its_own_says_it_as_the_reason(): void {
+		$answer = new ReflectionMethod( ShopToolRoute::class, 'answer_error' );
+		$said   = 'No attribute offers the option Size of blank_tee.';
+
+		$response = $answer->invoke(
+			null,
+			new WP_Error(
+				'pixonaut_wc_invalid_variation_plan',
+				$said,
+				array(
+					'status' => 400,
+					'reason' => VariationCombinations::OPTION_UNLINKED,
+				)
+			)
+		);
+
+		$this->assertSame( 422, $response->get_status() );
+		$this->assertSame(
+			array(
+				'code'    => 'invalid_input',
+				'message' => $said,
+				'reason'  => 'option_unlinked',
+			),
+			$response->get_data()
+		);
+	}
+
+	public function test_a_reason_from_outside_the_plugin_is_not_passed_on(): void {
+		$answer = new ReflectionMethod( ShopToolRoute::class, 'answer_error' );
+
+		$response = $answer->invoke(
+			null,
+			new WP_Error(
+				'rest_invalid',
+				'Bad.',
+				array(
+					'status' => 400,
+					'reason' => 'whatever',
+				)
+			)
+		);
+
+		$this->assertSame( 'invalid_input', $response->get_data()['code'] );
+		$this->assertArrayNotHasKey( 'reason', $response->get_data() );
 	}
 
 	/**
