@@ -247,6 +247,39 @@ final class BlankOptionLinksTest extends WP_UnitTestCase {
 		);
 	}
 
+	public function test_an_unlinking_whose_recheck_cannot_be_queued_is_recovered_by_unlinking_again(): void {
+		$parent = $this->poster()['vit']->get_parent_id();
+		add_post_meta( $parent, ProductIndex::BLANK_META, self::BLANK );
+		$this->link();
+		as_unschedule_all_actions( ProductRecheck::ACTION );
+		PendingRechecks::forget( array( $parent ) );
+		$unlink = fn (): array|WP_Error => ( new SetAttributeBlankOption( $this->choices() ) )->execute(
+			array(
+				'attribute_id' => $this->attribute,
+				'option'       => '',
+			)
+		);
+		$refuse = static fn (): int => 0;
+		add_filter( 'pre_as_schedule_single_action', $refuse );
+		try {
+			$this->assertInstanceOf( WP_Error::class, $unlink() );
+		} finally {
+			remove_filter( 'pre_as_schedule_single_action', $refuse );
+		}
+		$this->assertNull( BlankOptionLinks::option_of( self::TAXONOMY ), 'the unlinking is saved' );
+
+		$this->assertIsArray( $unlink() );
+		$this->assertNotEmpty(
+			as_get_scheduled_actions(
+				array(
+					'hook'   => ProductRecheck::ACTION,
+					'status' => \ActionScheduler_Store::STATUS_PENDING,
+				)
+			),
+			'unlinking again queues the re-check it missed'
+		);
+	}
+
 	public function test_a_linked_attributes_swatches_take_the_looks_of_its_option_values_on_any_blank(): void {
 		$this->link();
 		$parent = wc_get_product( $this->poster()['vit']->get_parent_id() );
