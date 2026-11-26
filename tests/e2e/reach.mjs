@@ -102,6 +102,7 @@ export const NO_SPEC = [
 	'src/Catalogue/SmallerPictures.php', // the upgrade's conversion of PNG pictures; new pictures go through SharedPictures
 	'src/Catalogue/UnfinishedPictures.php', // pictures a stopped job left; a job is never cut off in e2e
 	'src/Catalogue/SlowedCheck.php', // a check refused for too many requests; the fake never refuses one
+	'src/Catalogue/AttributeOrderCache.php', // WooCommerce's persistent product terms cache; e2e sites have no persistent object cache
 	'src/Updates/',
 	'templates/admin/upgrade-notice.php',
 	'src/Privacy/',
