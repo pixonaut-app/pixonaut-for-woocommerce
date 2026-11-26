@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.32.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.31.2...v1.32.0) (2026-11-26)
+
+
+### Features
+
+* **shop-tools:** Pixonaut reads and sets the blank option an attribute stands for ([#404](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/404)) ([7f80e0a](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/7f80e0a9bcf58354449bfa300c77fc983eed3c49))
+
 ## [1.31.2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.31.1...v1.31.2) (2026-11-25)
 
 
