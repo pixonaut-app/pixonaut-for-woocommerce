@@ -48,10 +48,37 @@ final class AttributeOrderCache {
 	 */
 	private const SHARED_PREFIX_SINCE = '11.2.0';
 
+	/**
+	 * Before 11.2: the terms whose products were let go this request, and
+	 * those products, each let go once as it is found and once more as the
+	 * request ends, so a bulk reorder costs a product two writes at most
+	 * and a read made between two of its writes is not kept.
+	 *
+	 * @var array<int, true>
+	 */
+	private static array $terms_seen = array();
+
+	/**
+	 * @var array<int, true>
+	 */
+	private static array $products_seen = array();
+
 	public static function register(): void {
 		foreach ( self::META_WRITES as $action ) {
 			add_action( $action, array( self::class, 'meta_written' ), 10, self::META_ACTION_ARGS );
 		}
+		add_action( 'shutdown', array( self::class, 'forget_again' ) );
+	}
+
+	/**
+	 * Lets go, once more, of the products let go one by one this request.
+	 */
+	public static function forget_again(): void {
+		foreach ( array_keys( self::$products_seen ) as $product_id ) {
+			WC_Cache_Helper::invalidate_cache_group( 'product_' . $product_id );
+		}
+		self::$terms_seen    = array();
+		self::$products_seen = array();
 	}
 
 	/**
@@ -87,12 +114,21 @@ final class AttributeOrderCache {
 		if ( version_compare( (string) WC()->version, self::SHARED_PREFIX_SINCE, '>=' ) ) {
 			return;
 		}
+		if ( isset( self::$terms_seen[ $term->term_id ] ) ) {
+			return;
+		}
+		self::$terms_seen[ $term->term_id ] = true;
+
 		$products = get_objects_in_term( $term->term_id, $term->taxonomy );
 		if ( ! is_array( $products ) ) {
 			return;
 		}
 		foreach ( $products as $product_id ) {
-			WC_Cache_Helper::invalidate_cache_group( 'product_' . (int) $product_id );
+			$product_id = (int) $product_id;
+			if ( ! isset( self::$products_seen[ $product_id ] ) ) {
+				self::$products_seen[ $product_id ] = true;
+				WC_Cache_Helper::invalidate_cache_group( 'product_' . $product_id );
+			}
 		}
 	}
 }
