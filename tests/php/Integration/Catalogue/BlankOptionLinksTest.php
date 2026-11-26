@@ -227,6 +227,24 @@ final class BlankOptionLinksTest extends WP_UnitTestCase {
 		$this->assertInstanceOf( WP_Error::class, $answer );
 		$this->assertSame( 'pixonaut_wc_ability_recheck_not_queued', $answer->get_error_code() );
 		$this->assertSame( 'Color', BlankOptionLinks::option_of( self::TAXONOMY ), 'the link is saved' );
+
+		$again = ( new SetAttributeBlankOption( $this->choices() ) )->execute(
+			array(
+				'attribute_id' => $this->attribute,
+				'option'       => 'Color',
+			)
+		);
+
+		$this->assertIsArray( $again, 'the same link given again answers its row' );
+		$this->assertNotEmpty(
+			as_get_scheduled_actions(
+				array(
+					'hook'   => ProductRecheck::ACTION,
+					'status' => \ActionScheduler_Store::STATUS_PENDING,
+				)
+			),
+			'and queues the re-check it missed'
+		);
 	}
 
 	public function test_a_linked_attributes_swatches_take_the_looks_of_its_option_values_on_any_blank(): void {

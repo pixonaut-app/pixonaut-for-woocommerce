@@ -131,7 +131,14 @@ final class SetAttributeBlankOption implements Ability {
 			}
 			$values[ $term->term_id ] = $value;
 		}
-		return self::answer( BlankOptionLinks::set( $attribute_id, $option, $values ), $attribute_id, (string) $attribute->name, $choices );
+		$before = BlankOptionLinks::of( $attribute_id );
+		$queued = BlankOptionLinks::set( $attribute_id, $option, $values );
+		// The same link given again queues the re-check anyway: it is how a
+		// caller recovers from a link saved whose re-check was not queued.
+		if ( $queued && BlankOptionLinks::of( $attribute_id ) === $before ) {
+			$queued = BlankOptionLinks::recheck( $attribute_id );
+		}
+		return self::answer( $queued, $attribute_id, (string) $attribute->name, $choices );
 	}
 
 	/**

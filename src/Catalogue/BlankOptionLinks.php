@@ -180,9 +180,20 @@ final class BlankOptionLinks {
 			return true;
 		}
 		self::write( $attribute_id, $link );
+		// The products' variants are matched with the link from now on.
+		return self::recheck( $attribute_id );
+	}
+
+	/**
+	 * Queues the products with a global attribute for a re-check, so their
+	 * variants are matched with its link as it stands.
+	 *
+	 * @param int $attribute_id A global attribute's id.
+	 * @return bool False when they could not all be queued (`ProductRecheck` logs why).
+	 */
+	public static function recheck( int $attribute_id ): bool {
 		$taxonomy = wc_attribute_taxonomy_name_by_id( $attribute_id );
 		$queued   = true;
-		// The products' variants are matched with the link from now on.
 		foreach ( array_chunk( '' === $taxonomy ? array() : ProductIndex::products_with_attribute( $taxonomy ), self::RECHECK_BATCH ) as $batch ) {
 			$queued = ProductRecheck::queue_soon( $batch ) && $queued;
 		}

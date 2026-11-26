@@ -89,6 +89,7 @@ offered to a user:
 | Pricing settings | `get-pricing-settings`, `update-pricing-settings` |
 | A product's prices | `get-product-prices`, `price-product`, `set-product-price-changes` |
 | Shipping zones and their methods | `get-shipping`, `set-shipping-method` |
+| The blank option each global attribute stands for | `get-attribute-blank-options`, `set-attribute-blank-option` (the same link given again queues the products' re-check) |
 | Orders, read only | `list-orders`, `get-order` |
 
 The product and variation tools answer as the store abilities of the same
