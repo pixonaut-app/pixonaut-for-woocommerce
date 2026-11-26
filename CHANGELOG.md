@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.32.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.32.0...v1.32.1) (2026-11-26)
+
+
+### Bug Fixes
+
+* **catalogue:** a product lists an attribute's values in their new order once they are reordered ([#406](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/406)) ([55b27b6](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/55b27b669247d096ff988fa73b92643e44d4f3e2))
+
 ## [1.32.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.31.2...v1.32.0) (2026-11-26)
 
 
