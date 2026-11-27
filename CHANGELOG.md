@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.35.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.34.2...v1.35.0) (2026-11-27)
+
+
+### Features
+
+* a product sells its template with values of its own ([#425](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/425)) ([acb3e4b](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/acb3e4bd8dc8456b8eb8fa947909bcc3aa2c80b8))
+
 ## [1.34.2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.34.1...v1.34.2) (2026-11-27)
 
 
