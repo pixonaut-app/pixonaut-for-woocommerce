@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.33.2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.33.1...v1.33.2) (2026-11-27)
+
+
+### Bug Fixes
+
+* **catalogue:** a picture runner started without a login cookie carries a visitor's nonce ([#413](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/413)) ([401f1ed](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/401f1ed16ed484a25e029beade1e672ae521f66c))
+
 ## [1.33.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.33.0...v1.33.1) (2026-11-27)
 
 
