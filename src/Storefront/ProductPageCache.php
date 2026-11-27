@@ -174,6 +174,11 @@ final class ProductPageCache {
 	private const IMAGE_META = array( '_wp_attachment_metadata', '_wp_attached_file', '_wp_attachment_image_alt' );
 
 	/**
+	 * The post meta holding a post's image.
+	 */
+	private const THUMBNAIL_META = '_thumbnail_id';
+
+	/**
 	 * Products this request wrote, by id: their version is set again once
 	 * the request is done, so a request that started while they were
 	 * being written keeps nothing of them.
@@ -188,6 +193,15 @@ final class ProductPageCache {
 	 * @var array<int, string>
 	 */
 	private static array $versions = array();
+
+	/**
+	 * The posts showing each image as this request read them, by the
+	 * site's and the image's id, until a post's image is set: WordPress writes an image's
+	 * metadata once per size it makes, and each write would read them again.
+	 *
+	 * @var array<string, list<string>>
+	 */
+	private static array $showing = array();
 
 	public static function register(): void {
 		foreach ( self::META_WRITES as $action ) {
@@ -282,6 +296,7 @@ final class ProductPageCache {
 	public static function drop_again(): void {
 		$written       = array_keys( self::$written );
 		self::$written = array();
+		self::$showing = array();
 		foreach ( $written as $product_id ) {
 			self::stamp( $product_id );
 		}
@@ -297,10 +312,16 @@ final class ProductPageCache {
 		if ( ! is_numeric( $attachment_id ) || (int) $attachment_id <= 0 ) {
 			return;
 		}
-		global $wpdb;
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- the posts showing an image, read once when it is edited.
-		$posts = $wpdb->get_col( $wpdb->prepare( "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_thumbnail_id' AND meta_value = %s", (string) (int) $attachment_id ) );
-		foreach ( is_array( $posts ) ? $posts : array() as $post_id ) {
+		$attachment_id = (int) $attachment_id;
+		// Another site of a network has its own images under the same ids.
+		$key = get_current_blog_id() . ':' . $attachment_id;
+		if ( ! isset( self::$showing[ $key ] ) ) {
+			global $wpdb;
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- the posts showing an image, read once per request until one's image is set.
+			$posts                 = $wpdb->get_col( $wpdb->prepare( "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value = %s", self::THUMBNAIL_META, (string) $attachment_id ) );
+			self::$showing[ $key ] = array_values( array_map( 'strval', is_array( $posts ) ? $posts : array() ) );
+		}
+		foreach ( self::$showing[ $key ] as $post_id ) {
 			self::post_written( $post_id );
 		}
 	}
@@ -314,6 +335,9 @@ final class ProductPageCache {
 	 */
 	public static function meta_written( mixed $meta_id, mixed $post_id, mixed $meta_key ): void {
 		unset( $meta_id );
+		if ( self::THUMBNAIL_META === $meta_key ) {
+			self::$showing = array();
+		}
 		if ( in_array( $meta_key, self::IMAGE_META, true ) ) {
 			self::image_edited( $post_id );
 		} elseif ( ! in_array( $meta_key, self::UNSHOWN_META, true ) ) {

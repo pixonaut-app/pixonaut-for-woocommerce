@@ -43,6 +43,17 @@ final class WpHttpTransport implements BatchClient {
 	private const PROTOCOLS = array( 'http', 'https', 'ssl' );
 
 	/**
+	 * How long `await_all()` waits on the sockets at a time before it lets
+	 * cURL check its timeouts again, in seconds.
+	 */
+	private const SELECT_SECONDS = 1.0;
+
+	/**
+	 * How long `await_all()` waits when cURL has no socket to wait on yet: 10 ms.
+	 */
+	private const RETRY_MICROSECONDS = 10000;
+
+	/**
 	 * @param int $timeout_seconds Give up on each request after this long.
 	 */
 	public function __construct( private readonly int $timeout_seconds = self::TIMEOUT_SECONDS ) {
@@ -282,7 +293,34 @@ final class WpHttpTransport implements BatchClient {
 				$hooks->dispatch( 'curl.before_send', array( &$handle ) );
 			}
 		);
+		$hooks->register( 'curl.before_multi_exec', array( self::class, 'await_all' ) );
 		return $hooks;
+	}
+
+	/**
+	 * Runs the requests sent together until each is done, sleeping on their
+	 * sockets in between. Requests' own loop calls `curl_multi_exec()` over
+	 * and over without waiting, which keeps a CPU busy for as long as
+	 * Pixonaut takes to answer; it then finds every request done, and reads
+	 * each answer as before.
+	 *
+	 * @param mixed $multihandle The requests' multi handle, a `CurlMultiHandle`.
+	 */
+	public static function await_all( &$multihandle ): void {
+		if ( ! $multihandle instanceof \CurlMultiHandle ) {
+			return;
+		}
+		// phpcs:disable WordPress.WP.AlternativeFunctions.curl_curl_multi_exec, WordPress.WP.AlternativeFunctions.curl_curl_multi_select -- the multi handle Requests sends, run as its own loop runs it.
+		do {
+			do {
+				$status = curl_multi_exec( $multihandle, $active );
+			} while ( CURLM_CALL_MULTI_PERFORM === $status );
+			// -1 when cURL has no socket to wait on yet, as while it resolves a host: it is asked again at once.
+			if ( CURLM_OK === $status && $active > 0 && -1 === curl_multi_select( $multihandle, self::SELECT_SECONDS ) ) {
+				usleep( self::RETRY_MICROSECONDS );
+			}
+		} while ( CURLM_OK === $status && $active > 0 );
+		// phpcs:enable WordPress.WP.AlternativeFunctions.curl_curl_multi_exec, WordPress.WP.AlternativeFunctions.curl_curl_multi_select
 	}
 
 	// phpcs:enable

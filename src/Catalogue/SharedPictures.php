@@ -88,15 +88,15 @@ final class SharedPictures {
 		global $wpdb;
 		$family = array_map( 'strval', self::relatives( $product ) );
 		// Read from the database, past every cache: a job waiting for another's picture must see it once saved.
+		// The first by MIN(), not ORDER BY … LIMIT 1, which MariaDB answers by reading every meta row in post order rather than the family's rows by key.
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- as above.
 		$found = $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT picture.ID FROM {$wpdb->posts} AS picture
+				"SELECT MIN(picture.ID) FROM {$wpdb->posts} AS picture
 				INNER JOIN {$wpdb->postmeta} AS drawn_from ON drawn_from.post_id = picture.ID AND drawn_from.meta_key = %s AND drawn_from.meta_value = %s
 				INNER JOIN {$wpdb->postmeta} AS shown_by ON shown_by.post_id = picture.ID AND shown_by.meta_key = %s
 				WHERE picture.post_type = 'attachment' AND picture.post_status = 'inherit'
-				AND shown_by.meta_value IN (" . implode( ', ', array_fill( 0, count( $family ), '%s' ) ) . ')
-				ORDER BY picture.ID ASC LIMIT 1',
+				AND shown_by.meta_value IN (" . implode( ', ', array_fill( 0, count( $family ), '%s' ) ) . ')',
 				array_merge( array( self::SOURCE_META, $key, self::PICTURE_OF_META ), $family )
 			)
 		);

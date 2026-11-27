@@ -8,6 +8,8 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Tests\Integration\Abilities;
 
 use Pixonaut\WooCommerce\Abilities\Abilities;
+use Pixonaut\WooCommerce\Catalogue\PictureQueue;
+use Pixonaut\WooCommerce\Catalogue\ProductPictures;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
 use Pixonaut\WooCommerce\Catalogue\ShowcaseImages;
 use Pixonaut\WooCommerce\Catalogue\VariationPictures;
@@ -90,6 +92,26 @@ final class VariationPicturesAbilitiesTest extends WP_UnitTestCase {
 		$product = $this->succeed( self::READ, array( 'product_id' => $this->poster_id ) );
 		$this->assertSame( VariationPictures::DEFAULT, $product['choice'] );
 		$this->assertSame( count( $this->poster_variations ), $product['turning_on']['pictures'] );
+	}
+
+	public function test_it_counts_the_pictures_waiting_and_those_finished_in_the_last_hour(): void {
+		as_unschedule_all_actions( ProductPictures::ACTION );
+		as_unschedule_all_actions( PictureQueue::VARIATIONS_ACTION );
+		as_unschedule_all_actions( PictureQueue::QUEUE_ACTION );
+		$waiting = array_map( static fn ( \WC_Product $variation ): int => $variation->get_id(), array_values( $this->poster_variations ) );
+		foreach ( $waiting as $id ) {
+			PictureQueue::schedule( $id );
+		}
+		as_enqueue_async_action( PictureQueue::VARIATIONS_ACTION, array( $this->poster_id ), ProductPictures::GROUP );
+		$saved = as_enqueue_async_action( ProductPictures::ACTION, array( 0 ), ProductPictures::GROUP );
+		\ActionScheduler::store()->mark_complete( $saved );
+
+		$queue = $this->succeed( self::READ, array() )['queue'];
+
+		$this->assertSame( count( $waiting ), $queue['queued'] );
+		$this->assertSame( 1, $queue['finished_recently'] );
+		$this->assertSame( 1, $queue['checking'], 'its variations still to be queued' );
+		$this->assertSame( $queue, $this->succeed( self::READ, array( 'product_id' => $this->poster_id ) )['queue'], 'store-wide for a product too' );
 	}
 
 	public function test_turning_it_on_past_the_warning_is_refused_without_the_confirmation(): void {

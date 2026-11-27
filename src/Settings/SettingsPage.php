@@ -140,6 +140,7 @@ final class SettingsPage {
 			'pixonaut_wc_pictures'     => array(
 				Settings::PRODUCT_PICTURES,
 				Settings::VARIATION_PICTURES,
+				Settings::PICTURE_RUNNERS,
 			),
 			'pixonaut_wc_line_details' => array(
 				Settings::LINE_PICTURE_VIEW,

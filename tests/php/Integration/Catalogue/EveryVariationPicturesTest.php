@@ -46,6 +46,13 @@ final class EveryVariationPicturesTest extends WP_UnitTestCase {
 	 */
 	private const RETRY_AFTER = 42;
 
+	/**
+	 * A sign's variations, and the variants they sell between them, three variations each.
+	 */
+	private const SIGN_SIZES = 36;
+
+	private const SIGN_VARIANTS = 12;
+
 	private WC_Product_Variable $poster;
 
 	public function set_up(): void {
@@ -173,6 +180,20 @@ final class EveryVariationPicturesTest extends WP_UnitTestCase {
 		$this->assertFalse( as_has_scheduled_action( ProductPictures::RETRY_ACTION, array( $variation->get_id() ) ), 'no failure retry' );
 	}
 
+	public function test_variations_selling_the_same_variant_share_its_picture(): void {
+		$product = $this->sign_of( self::SIGN_SIZES, self::SIGN_VARIANTS );
+		VariationPictures::choose( $product, VariationPictures::ON );
+
+		$this->draw_all();
+
+		$mockups = array_filter( $this->recorder->requests, static fn ( array $request ): bool => str_contains( $request['url'], '/mockup.png?' ) );
+		$this->assertCount( self::SIGN_VARIANTS, $mockups, 'each variant drawn once' );
+		$images = array_map( static fn ( int $id ): int => (int) get_post_thumbnail_id( $id ), $this->reload( $product )->get_children() );
+		$this->assertCount( self::SIGN_SIZES, $images );
+		$this->assertNotContains( 0, $images );
+		$this->assertCount( self::SIGN_VARIANTS, array_unique( $images ), 'one attachment per variant' );
+	}
+
 	public function test_a_products_variations_are_queued_a_page_at_a_time(): void {
 		$product = $this->sign_of( PictureQueue::VARIATIONS_PAGE + 1 );
 		as_unschedule_all_actions( ProductPictures::ACTION );
@@ -248,9 +269,10 @@ final class EveryVariationPicturesTest extends WP_UnitTestCase {
 	/**
 	 * A sign in so many sizes, each a variation selling its own variant, drawn flat.
 	 *
-	 * @param int $sizes How many.
+	 * @param int      $sizes    How many.
+	 * @param int|null $variants How many variants they sell between them, in turn; null for one each.
 	 */
-	private function sign_of( int $sizes ): WC_Product_Variable {
+	private function sign_of( int $sizes, ?int $variants = null ): WC_Product_Variable {
 		$product   = new WC_Product_Variable();
 		$attribute = new \WC_Product_Attribute();
 		$names     = array_map( static fn ( int $size ): string => 'Size ' . $size, range( 1, $sizes ) );
@@ -268,7 +290,8 @@ final class EveryVariationPicturesTest extends WP_UnitTestCase {
 			$variation->set_attributes( array( 'size' => sanitize_title( $name ) ) );
 			$variation->set_regular_price( '20' );
 			$variation->save();
-			( new ProductVariant( DesignFixture::BLANK_ID, 'v_size_' . $index, 'v_size_' . $index, '', null, BlankFixture::VARIANT_VIEWS ) )->save_to( $variation );
+			$variant = 'v_size_' . ( null === $variants ? $index : $index % $variants );
+			( new ProductVariant( DesignFixture::BLANK_ID, $variant, $variant, '', null, BlankFixture::VARIANT_VIEWS ) )->save_to( $variation );
 		}
 		$fresh = wc_get_product( $product->get_id() );
 		$this->assertInstanceOf( WC_Product_Variable::class, $fresh );

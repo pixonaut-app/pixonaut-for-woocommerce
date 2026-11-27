@@ -13,6 +13,7 @@ use ActionScheduler;
 use ActionScheduler_Compatibility;
 use ActionScheduler_FatalErrorMonitor;
 use Pixonaut\WooCommerce\Schema;
+use Pixonaut\WooCommerce\Settings\Settings;
 use WP_Async_Request;
 
 /**
@@ -24,15 +25,14 @@ use WP_Async_Request;
  * and its variations' pictures are drawn side by side. A job no runner
  * reaches is run by Action Scheduler as before.
  *
- * At most `RUNNERS` run in the store at once, however often it is started:
- * each holds one of `RUNNERS` slots while it runs.
+ * At most as many as the store's "Pictures saved at once" setting run in
+ * the store at once, however often it is started: each holds one of that
+ * many slots while it runs. A request that queued a drawing to start at
+ * once starts them as it ends (`started()`), so a long queue is drained
+ * side by side rather than by WP-Cron's one runner a minute.
  */
 final class PictureRunner extends WP_Async_Request {
 
-	/**
-	 * How many runners run in the store at once, so how many pictures' jobs.
-	 */
-	public const RUNNERS = 4;
 
 	/**
 	 * Prefix of the option a runner holds while it runs, followed by its slot.
@@ -86,9 +86,10 @@ final class PictureRunner extends WP_Async_Request {
 	protected $action = 'pictures';
 
 	/**
-	 * @param \Closure|null $memory `fn(): int` the memory in use, in bytes; `memory_get_usage()` when null.
+	 * @param \Closure|null $memory   `fn(): int` the memory in use, in bytes; `memory_get_usage()` when null.
+	 * @param Settings|null $settings Says how many run at once; `Settings::DEFAULT_PICTURE_RUNNERS` when null.
 	 */
-	public function __construct( ?\Closure $memory = null ) {
+	public function __construct( ?\Closure $memory = null, private readonly ?Settings $settings = null ) {
 		parent::__construct();
 		$this->memory = $memory;
 	}
@@ -98,7 +99,8 @@ final class PictureRunner extends WP_Async_Request {
 	 * runners run on.
 	 */
 	public function start(): void {
-		for ( $slot = 0; $slot < self::RUNNERS; ++$slot ) {
+		$runners = $this->runners();
+		for ( $slot = 0; $slot < $runners; ++$slot ) {
 			if ( null === self::holder( $slot ) ) {
 				$this->dispatch();
 			}
@@ -113,18 +115,29 @@ final class PictureRunner extends WP_Async_Request {
 	 * @return int How many jobs it ran.
 	 */
 	public function run(): int {
-		$slot = self::take();
+		$slot = $this->take();
 		if ( null === $slot ) {
 			return 0;
 		}
+		$left_work = false;
 		try {
-			return $this->claim_and_run();
+			[ $ran, $left_work ] = $this->claim_and_run();
+			return $ran;
 		} finally {
 			self::release( $slot[0], $slot[1] );
+			if ( $left_work ) {
+				// Stopped by its time or memory with jobs still due: the queue goes on side by side.
+				$this->start();
+			}
 		}
 	}
 
-	private function claim_and_run(): int {
+	/**
+	 * Claims and runs the jobs due, one at a time.
+	 *
+	 * @return array{int, bool} How many it ran, and whether it stopped for its time or memory before the jobs due ran out.
+	 */
+	private function claim_and_run(): array {
 		ActionScheduler_Compatibility::raise_time_limit( self::RUN_SECONDS + ProductPictures::LOCK_SECONDS );
 		$store    = ActionScheduler::store();
 		$deadline = time() + self::RUN_SECONDS;
@@ -146,13 +159,32 @@ final class PictureRunner extends WP_Async_Request {
 				$store->release_claim( $claim );
 			}
 			if ( array() === $ids ) {
-				break;
+				return array( $ran, false );
 			}
 			if ( wp_cache_supports( 'flush_runtime' ) ) {
 				wp_cache_flush_runtime();
 			}
 		}
-		return $ran;
+		return array( $ran, true );
+	}
+
+	/**
+	 * Starts the runners once a request that queued a drawing to start at
+	 * once ends (`PictureQueue::queued_now()`). A WP-CLI run of Action
+	 * Scheduler draws what it queued itself.
+	 */
+	public function started(): void {
+		if ( PictureQueue::queued_now() && ! ( defined( 'WP_CLI' ) && WP_CLI ) ) {
+			$this->start();
+		}
+	}
+
+	/**
+	 * How many runners run in the store at once: its setting.
+	 */
+	public function runners(): int {
+		$runners = null === $this->settings ? Settings::DEFAULT_PICTURE_RUNNERS : (int) $this->settings->get( Settings::PICTURE_RUNNERS );
+		return max( 1, min( Settings::MAX_PICTURE_RUNNERS, $runners ) );
 	}
 
 	/**
@@ -175,9 +207,10 @@ final class PictureRunner extends WP_Async_Request {
 	 *
 	 * @return array{int, string}|null The slot and the value it holds, for `release()`; null when every slot is held.
 	 */
-	private static function take(): ?array {
-		$now = (string) time();
-		for ( $slot = 0; $slot < self::RUNNERS; ++$slot ) {
+	private function take(): ?array {
+		$now     = (string) time();
+		$runners = $this->runners();
+		for ( $slot = 0; $slot < $runners; ++$slot ) {
 			$held = self::take_slot( $slot, $now );
 			if ( null !== $held ) {
 				return $held;

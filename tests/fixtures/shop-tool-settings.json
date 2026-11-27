@@ -16,6 +16,7 @@
 		"swatch_names",
 		"product_pictures",
 		"variation_pictures",
+		"picture_runners",
 		"low_resolution_warnings",
 		"low_resolution_quiet_images",
 		"show_field_values",

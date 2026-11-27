@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Catalogue;
 
+use ActionScheduler;
 use ActionScheduler_Action;
 use ActionScheduler_Store;
 use Pixonaut\WooCommerce\Schema;
@@ -65,6 +66,11 @@ final class PictureQueue {
 	public const VARIATIONS_PAGE_SECONDS = 60;
 
 	/**
+	 * How far back `counts()` counts the drawings finished: an hour.
+	 */
+	public const RECENT_SECONDS = 60 * 60;
+
+	/**
 	 * Arguments of the queueing job: where it starts, and the blank whose
 	 * products it pages through when it is for one.
 	 */
@@ -111,6 +117,13 @@ final class PictureQueue {
 	 * @var array<int, true>
 	 */
 	private array $queued = array();
+
+	/**
+	 * Whether this request queued a drawing to start at once.
+	 *
+	 * @var bool
+	 */
+	private static bool $queued_now = false;
 
 	/**
 	 * Variable products one of whose variations changed in this request, by id.
@@ -287,10 +300,53 @@ final class PictureQueue {
 			return;
 		}
 		if ( 0 === $at ) {
-			as_enqueue_async_action( ProductPictures::ACTION, array( $product_id ), ProductPictures::GROUP, false, ProductPictures::PRIORITY );
+			self::$queued_now = 0 !== as_enqueue_async_action( ProductPictures::ACTION, array( $product_id ), ProductPictures::GROUP, false, ProductPictures::PRIORITY ) || self::$queued_now;
 		} else {
 			as_schedule_single_action( $at, ProductPictures::ACTION, array( $product_id ), ProductPictures::GROUP, false, ProductPictures::PRIORITY );
 		}
+	}
+
+	/**
+	 * The store's picture jobs: drawings waiting or running, checks of
+	 * products whose drawings are still to be queued (a page of variations,
+	 * a page of products), and drawings finished in the last
+	 * `RECENT_SECONDS`, whether a picture was saved or is to be tried again.
+	 * A queue that shortens is being worked through; one that stays while
+	 * none finish is stuck.
+	 *
+	 * @param int $now The time, as Unix time.
+	 * @return array{queued: int, checking: int, finished_recently: int}
+	 */
+	public static function counts( int $now ): array {
+		$store  = ActionScheduler::store();
+		$active = array( ActionScheduler_Store::STATUS_PENDING, ActionScheduler_Store::STATUS_RUNNING );
+		$count  = static fn ( string $hook, array $query ): int => (int) $store->query_actions(
+			array(
+				'hook'  => $hook,
+				'group' => ProductPictures::GROUP,
+			) + $query,
+			'count'
+		);
+		return array(
+			'queued'            => $count( ProductPictures::ACTION, array( 'status' => $active ) ),
+			'checking'          => $count( self::VARIATIONS_ACTION, array( 'status' => $active ) ) + $count( self::QUEUE_ACTION, array( 'status' => $active ) ),
+			'finished_recently' => $count(
+				ProductPictures::ACTION,
+				array(
+					'status'           => ActionScheduler_Store::STATUS_COMPLETE,
+					'modified'         => gmdate( 'Y-m-d H:i:s', $now - self::RECENT_SECONDS ),
+					'modified_compare' => '>=',
+				)
+			),
+		);
+	}
+
+	/**
+	 * Whether this request queued a drawing to start at once (`schedule()`),
+	 * which the pictures' runners then start on (`PictureRunner::started()`).
+	 */
+	public static function queued_now(): bool {
+		return self::$queued_now;
 	}
 
 	/**
