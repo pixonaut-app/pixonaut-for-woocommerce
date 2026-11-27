@@ -13,7 +13,7 @@ import {
 	type HandlerResult,
 	refusal,
 } from './types';
-import { namedSet, withValues } from './value-sets';
+import { formWithValues, namedSet, withValues } from './value-sets';
 
 /** The caller's tenant's template `id`, or undefined when another tenant
  *  owns it, there is none, or a share link does not reach it. */
@@ -153,6 +153,7 @@ export const readTemplate: Handler = (context) => {
 				: {
 						...read,
 						template: withValues(template.template, set),
+						formSchema: formWithValues(read.formSchema, set),
 						valueSetId: set.id,
 					},
 	};

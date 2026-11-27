@@ -107,6 +107,30 @@ export function heldSet(
 		: set;
 }
 
+/** A template read's form with each field the set gives a value starting
+ *  at it, as the form Pixonaut builds from the document the set was
+ *  written into. */
+export function formWithValues(formSchema: unknown, set: ValueSet): unknown {
+	const schema = formSchema as {
+		steps?: { fields?: { layerId: string; prop: string }[] }[];
+	};
+	if (!Array.isArray(schema?.steps)) {
+		return formSchema;
+	}
+	return {
+		...schema,
+		steps: schema.steps.map((step) => ({
+			...step,
+			fields: (step.fields ?? []).map((field) => {
+				const given = set.values[field.layerId];
+				return given !== undefined && field.prop in given
+					? { ...field, default: given[field.prop] }
+					: field;
+			}),
+		})),
+	};
+}
+
 /** The template's document with the set's values written in as its
  *  layers' own; a value for a layer or prop it no longer has is left out. */
 export function withValues(

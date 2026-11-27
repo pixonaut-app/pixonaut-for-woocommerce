@@ -72,6 +72,13 @@ describe('a template read with `valueSet`', () => {
 			(layer: { id: string }) => layer.id === 'slogan',
 		);
 		expect(slogan.props.content.value).toBe(FARMOR.slogan.content);
+		const field = body.formSchema.steps
+			.flatMap((step: { fields: object[] }) => step.fields)
+			.find(
+				(f: { layerId: string; prop: string }) =>
+					f.layerId === 'slogan' && f.prop === 'content',
+			);
+		expect(field.default).toBe(FARMOR.slogan.content);
 		expect(fake.violations).toEqual([]);
 	});
 
