@@ -19,7 +19,9 @@ use Pixonaut\WooCommerce\Connection\WorkspaceSettings;
 use Pixonaut\WooCommerce\DesignerLanguage;
 use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 
 /**
  * Reads what each side's designer opens with — its template, the placement's
@@ -78,12 +80,14 @@ final class ServerReads {
 	 * @param CatalogueCache         $cache     Keeps the answers for a few minutes.
 	 * @param Sdk                    $pixonaut  Reads the designs a correction opens.
 	 * @param ServerReadsWarmUp|null $warm_up   Notes each read, to read it again before its kept copy runs out; null notes none.
+	 * @param LoggerInterface|null   $logger    Logs a side whose value set its template does not hold; null logs nothing.
 	 */
 	public function __construct(
 		private readonly Catalogue $catalogue,
 		private readonly CatalogueCache $cache,
 		private readonly Sdk $pixonaut,
 		private readonly ?ServerReadsWarmUp $warm_up = null,
+		private readonly ?LoggerInterface $logger = null,
 	) {
 	}
 
@@ -127,9 +131,21 @@ final class ServerReads {
 			if ( ! is_string( $template_id ) || isset( $options['design'] ) ) {
 				continue;
 			}
+			$value_set = ProductMount::value_set( $options );
 			try {
-				$reads[ (string) $side ] = $this->side( $template_id, $options['blankId'] ?? null, $options['placementId'] ?? null, $options['locale'] ?? null, ProductMount::value_set( $options ) );
-			} catch ( ApiException ) {
+				$reads[ (string) $side ] = $this->side( $template_id, $options['blankId'] ?? null, $options['placementId'] ?? null, $options['locale'] ?? null, $value_set );
+			} catch ( ApiException $error ) {
+				if ( ErrorCode::VALUE_SET_NOT_FOUND === $error->errorCode ) {
+					// Read without the set, the template would print the side's fixed values wrong: the side gets no read, as one Pixonaut could not give, and the other sides' reads go on.
+					$this->logger?->warning(
+						sprintf( 'Pixonaut holds no value set %s for template %s, so its side "%s" was not read for the product page.', (string) $value_set, $template_id, (string) $side ),
+						array(
+							'template_id'  => $template_id,
+							'value_set_id' => $value_set,
+						)
+					);
+					continue;
+				}
 				set_transient( self::PAUSE_TRANSIENT, 1, self::PAUSE_SECONDS );
 			}
 		}

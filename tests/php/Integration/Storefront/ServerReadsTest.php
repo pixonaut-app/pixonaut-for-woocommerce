@@ -187,6 +187,24 @@ final class ServerReadsTest extends WP_UnitTestCase {
 		$this->assertSame( array( '/v1/templates/mini-tee%402' ), $this->paths(), 'the template without the set is another read; the placement, the blank and the set\'s are kept' );
 	}
 
+	public function test_a_side_on_a_value_set_its_template_does_not_hold_gets_no_read_and_the_other_sides_still_do(): void {
+		$this->recorder->json( 422, array( 'error' => 'value_set_not_found' ) );
+		$this->answer_side();
+		$foreign = array( 'valueSets' => array( 'mini-tee' => self::VALUE_SET ) ) + self::FRONT;
+
+		$reads = $this->reads->for_mounts(
+			array(
+				'front' => $foreign,
+				'back'  => self::FRONT,
+			)
+		);
+
+		$this->assertArrayNotHasKey( 'front', $reads, 'read without its set, the side would print another product\'s values' );
+		$this->assertArrayHasKey( 'back', $reads );
+		$this->assertFalse( get_transient( ServerReads::PAUSE_TRANSIENT ), 'the page\'s other reads are not paused' );
+		$this->assertSame( '/v1/templates/mini-tee%402?valueSet=' . self::VALUE_SET, $this->paths()[0] );
+	}
+
 	public function test_a_locale_pixonaut_does_not_speak_reads_the_template_in_the_workspaces_language(): void {
 		$this->answer_side();
 

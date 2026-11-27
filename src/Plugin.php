@@ -1293,7 +1293,7 @@ final class Plugin {
 		if ( null === $this->server_reads ) {
 			// A page waits for these reads while it renders: they give up sooner than the admin's.
 			$storefront_sdk     = $this->pixonaut()->sdk( Pixonaut::STOREFRONT_TIMEOUT_SECONDS );
-			$this->server_reads = new ServerReads( new Catalogue( $storefront_sdk ), $this->catalogue_cache(), $storefront_sdk, new ServerReadsWarmUp() );
+			$this->server_reads = new ServerReads( new Catalogue( $storefront_sdk ), $this->catalogue_cache(), $storefront_sdk, new ServerReadsWarmUp(), new WcLogger() );
 		}
 		return $this->server_reads;
 	}
