@@ -71,10 +71,8 @@ test('a personalised product shows its Pixonaut picture in the product lists onc
 		.locator('img')
 		.first();
 
-	// Until its picture is drawn, the product keeps its own image.
-	await page.goto(results);
-	await expect(page.locator('main').getByText(name).first()).toBeVisible();
-	await expect(image).not.toHaveAttribute('src', pictureOf(id));
+	// Drawn in the background, by the runners the request that saved it
+	// started, which may already have drawn it; the rest run here.
 	await runJobs(request, { hook: PICTURE_HOOK });
 
 	await page.goto(results);
