@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.34.2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.34.1...v1.34.2) (2026-11-27)
+
+
+### Bug Fixes
+
+* **catalogue:** a picture Pixonaut is still drawing when the store stops waiting is asked for again ([#426](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/426)) ([5850e55](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/5850e55e7cab4d4f7c702a0d113966d9a2169e8d))
+
 ## [1.34.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.34.0...v1.34.1) (2026-11-27)
 
 
