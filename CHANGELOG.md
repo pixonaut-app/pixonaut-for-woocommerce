@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.33.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.32.1...v1.33.0) (2026-11-27)
+
+
+### Features
+
+* **catalogue:** pictures drain without keeping the store's CPU busy, side by side as the store sets ([#408](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/408)) ([a542875](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/a542875bdd6580da84b59d86e12baf37decf33c0))
+
 ## [1.32.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.32.0...v1.32.1) (2026-11-26)
 
 
