@@ -32373,6 +32373,11 @@ export interface operations {
                                 sceneId: string;
                                 /** @description A scene from the library. */
                                 source: string;
+                                /**
+                                 * @description For a setting, true where the product is shown turned half round on its axis: a mug with its handle on the right and the other half of its wrap to the camera. Left out, it faces the way it always does, a mug's handle on the left. A setting is listed once each way round; a studio style turns its product by its cameras instead.
+                                 * @enum {boolean}
+                                 */
+                                turned?: true;
                             })[];
                             /** @description How many orders name the blank, past ones included. Answered in a list, never for one blank, and only to a caller with `orders:read`. */
                             orderCount?: number;
@@ -33008,6 +33013,11 @@ export interface operations {
                                 ready: number;
                                 /** @description The setting's id. */
                                 sceneId: string;
+                                /**
+                                 * @description Set where the setting shows the product turned half round, a mug's other side: a setting bound both ways round is listed once each way.
+                                 * @enum {boolean}
+                                 */
+                                turned?: true;
                                 /** @description The rows not drawn in the setting, in the variants' order: their variants do not show it. */
                                 waiting: {
                                     /** @description The rule that refused it, such as `footprint_exceeds_anchor` for a product larger than the room the setting has; null unless `state` is `refused`. */
@@ -33324,6 +33334,11 @@ export interface operations {
                             sceneId: string;
                             /** @description A scene from the library. */
                             source: string;
+                            /**
+                             * @description For a setting, true where the product is shown turned half round on its axis: a mug with its handle on the right and the other half of its wrap to the camera. Left out, it faces the way it always does, a mug's handle on the left. A setting is listed once each way round; a studio style turns its product by its cameras instead.
+                             * @enum {boolean}
+                             */
+                            turned?: true;
                         })[];
                         /** @description How many orders name the blank, past ones included. Answered in a list, never for one blank, and only to a caller with `orders:read`. */
                         orderCount?: number;
@@ -33959,6 +33974,11 @@ export interface operations {
                             ready: number;
                             /** @description The setting's id. */
                             sceneId: string;
+                            /**
+                             * @description Set where the setting shows the product turned half round, a mug's other side: a setting bound both ways round is listed once each way.
+                             * @enum {boolean}
+                             */
+                            turned?: true;
                             /** @description The rows not drawn in the setting, in the variants' order: their variants do not show it. */
                             waiting: {
                                 /** @description The rule that refused it, such as `footprint_exceeds_anchor` for a product larger than the room the setting has; null unless `state` is `refused`. */
@@ -34372,6 +34392,11 @@ export interface operations {
                                 };
                                 /** @description On a scene's view, whether a variant's colour recolours it. One that takes none shows only the variants of its colour. */
                                 takesDye?: boolean;
+                                /**
+                                 * @description On a setting's view, true where it shows the product turned half round on its axis: a mug with its handle on the right and the other half of its wrap to the camera. A blank shows a setting once each way round.
+                                 * @enum {boolean}
+                                 */
+                                turned?: true;
                                 /** @description The maps the view was rendered with from a 3D model of the product, each the view's photo size, opened with no key: a region naming a `piece` is read through them. Absent on a view of photos. Valid as long as a photo's `url`. */
                                 uvPassUrls?: {
                                     /** @description The multiply pass: the product's shadows and folds. */
@@ -34617,6 +34642,11 @@ export interface operations {
                             source?: string;
                             /** @description On a scene's view, whether a variant's colour recolours it. One that takes none shows only the variants of its colour. */
                             takesDye?: boolean;
+                            /**
+                             * @description On a setting's view, true where it shows the product turned half round on its axis: a mug with its handle on the right and the other half of its wrap to the camera. A blank shows a setting once each way round.
+                             * @enum {boolean}
+                             */
+                            turned?: true;
                             /** @description The maps the view was rendered with from a 3D model of the product, each the view's photo size, opened with no key: a region naming a `piece` is read through them. Absent on a view of photos. Valid as long as a photo's `url`. */
                             uvPassUrls?: {
                                 /** @description The multiply pass: the product's shadows and folds. */
@@ -53836,6 +53866,11 @@ export interface operations {
                                 sceneId: string;
                                 /** @description A scene from the library. */
                                 source: string;
+                                /**
+                                 * @description For a setting, true where the product is shown turned half round on its axis: a mug with its handle on the right and the other half of its wrap to the camera. Left out, it faces the way it always does, a mug's handle on the left. A setting is listed once each way round; a studio style turns its product by its cameras instead.
+                                 * @enum {boolean}
+                                 */
+                                turned?: true;
                             })[];
                             /** @description How many orders name the blank, past ones included. Answered in a list, never for one blank, and only to a caller with `orders:read`. */
                             orderCount?: number;
@@ -54471,6 +54506,11 @@ export interface operations {
                                 ready: number;
                                 /** @description The setting's id. */
                                 sceneId: string;
+                                /**
+                                 * @description Set where the setting shows the product turned half round, a mug's other side: a setting bound both ways round is listed once each way.
+                                 * @enum {boolean}
+                                 */
+                                turned?: true;
                                 /** @description The rows not drawn in the setting, in the variants' order: their variants do not show it. */
                                 waiting: {
                                     /** @description The rule that refused it, such as `footprint_exceeds_anchor` for a product larger than the room the setting has; null unless `state` is `refused`. */
@@ -54739,6 +54779,11 @@ export interface operations {
                                 sceneId: string;
                                 /** @description A scene from the library. */
                                 source: string;
+                                /**
+                                 * @description For a setting, true where the product is shown turned half round on its axis: a mug with its handle on the right and the other half of its wrap to the camera. Left out, it faces the way it always does, a mug's handle on the left. A setting is listed once each way round; a studio style turns its product by its cameras instead.
+                                 * @enum {boolean}
+                                 */
+                                turned?: true;
                             })[];
                             /** @description How many orders name the blank, past ones included. Answered in a list, never for one blank, and only to a caller with `orders:read`. */
                             orderCount?: number;
@@ -55374,6 +55419,11 @@ export interface operations {
                                 ready: number;
                                 /** @description The setting's id. */
                                 sceneId: string;
+                                /**
+                                 * @description Set where the setting shows the product turned half round, a mug's other side: a setting bound both ways round is listed once each way.
+                                 * @enum {boolean}
+                                 */
+                                turned?: true;
                                 /** @description The rows not drawn in the setting, in the variants' order: their variants do not show it. */
                                 waiting: {
                                     /** @description The rule that refused it, such as `footprint_exceeds_anchor` for a product larger than the room the setting has; null unless `state` is `refused`. */
@@ -56774,6 +56824,15 @@ export interface operations {
                             thumbnailUrl: string | null;
                             /** @description Whether the scene is this workspace's own, composed from a stock scene, rather than Pixonaut's. */
                             workspace: boolean;
+                            /** @description For a scene the workspace made, its photo and mask at the zoom tier, each opening with no key: what an edited copy of the photo is made from, at the size `POST /v1/scenes/{id}/photo` takes. Left out for one of Pixonaut's scenes, and in a picker. */
+                            zoomUrls?: {
+                                heightPx: number;
+                                /** @description The cut-out of the product at that size: white where it is. */
+                                mask: string;
+                                /** @description The photo at its zoom tier. */
+                                photo: string;
+                                widthPx: number;
+                            };
                         }[];
                         stockItems: {
                             areas: {
