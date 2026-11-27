@@ -197,6 +197,16 @@ final class ReadsAheadTest extends WP_UnitTestCase {
 		$this->assertArrayHasKey( ReadsAhead::key( self::TEE ), ReadsAhead::targets( $designer ), 'the opening blank too, for a page that printed none' );
 	}
 
+	public function test_a_side_on_a_value_set_is_left_to_the_browser(): void {
+		$designer = $this->designer(
+			array(
+				11 => array( 'front' => self::HOODIE + array( 'valueSet' => 'vs_3f2e9a1b7c4d5e6f8a9b0c1d' ) ),
+			)
+		);
+
+		$this->assertArrayNotHasKey( ReadsAhead::key( self::HOODIE ), ReadsAhead::targets( $designer ) );
+	}
+
 	public function test_no_more_than_the_most_targets_are_read_ahead(): void {
 		$variations = array();
 		foreach ( range( 1, ReadsAhead::MAX_TARGETS + 2 ) as $index ) {

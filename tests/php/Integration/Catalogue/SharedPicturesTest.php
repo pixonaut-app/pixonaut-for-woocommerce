@@ -11,7 +11,12 @@ use Pixonaut\WooCommerce\Api\Pictures;
 use Pixonaut\WooCommerce\Api\WcLogger;
 use Pixonaut\WooCommerce\Catalogue\PictureQueue;
 use Pixonaut\WooCommerce\Catalogue\ProductPictures;
+use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\SharedPictures;
+use Pixonaut\WooCommerce\Catalogue\SideValue;
+use Pixonaut\WooCommerce\Catalogue\SideValues;
+use Pixonaut\WooCommerce\Api\ValueSetQuery;
+use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
 use Pixonaut\WooCommerce\Tests\Support\ActionSchedulerRunner;
 use WC_Product;
 use WP_UnitTestCase;
@@ -23,6 +28,8 @@ use WP_UnitTestCase;
 final class SharedPicturesTest extends WP_UnitTestCase {
 
 	use PicturedProducts;
+
+	private const VALUE_SET = 'vs_3f2e9a1b7c4d5e6f8a9b0c1d';
 
 	public function set_up(): void {
 		parent::set_up();
@@ -49,6 +56,28 @@ final class SharedPicturesTest extends WP_UnitTestCase {
 		foreach ( $this->family( $product ) as $member ) {
 			$this->assertSame( $picture, (int) get_post_thumbnail_id( $member ) );
 		}
+	}
+
+	public function test_a_variation_with_values_of_its_own_is_drawn_with_its_value_set_and_shares_no_picture_drawn_without(): void {
+		$product  = $this->sign();
+		$children = array_map( 'intval', $this->reload( $product )->get_children() );
+		$valued   = wc_get_product( end( $children ) );
+		$this->assertInstanceOf( WC_Product::class, $valued );
+		$own = self::config( null );
+		( new ProductConfig( personalise: true, override: true, sides: $own->sides ) )->save_to( $valued );
+		SideValues::replace_on( $valued, array( 'front' => new SideValue( DesignFixture::TEMPLATE_BASE_ID, self::VALUE_SET, array( 'title' => array( 'content' => 'farmor' ) ) ) ), null );
+		( new PictureQueue( $this->plugin->settings() ) )->queue_variations_now( $product->get_id() );
+		$this->recorder->raw( 200, self::png(), 'image/png' );
+
+		$this->draw_all();
+
+		$urls = array_column( $this->recorder->requests, 'url' );
+		$this->assertCount( 2, $urls );
+		$this->assertCount( 1, array_filter( $urls, static fn ( string $url ): bool => str_contains( $url, ValueSetQuery::NAME . '=' . self::VALUE_SET ) ) );
+		$valued_picture = (int) get_post_thumbnail_id( $valued->get_id() );
+		$this->assertNotSame( 0, $valued_picture );
+		$this->assertSame( array( $valued->get_id() ), SharedPictures::owners( $valued_picture ) );
+		$this->assertNotSame( $valued_picture, (int) get_post_thumbnail_id( $children[0] ) );
 	}
 
 	public function test_regenerating_draws_the_shared_picture_once_and_deletes_the_one_it_replaces(): void {

@@ -397,6 +397,7 @@ final class CatalogueProductLinkTest extends ProductPanelTestCase {
 			'catalogueTotal'   => 2,
 			'searchComplete'   => true,
 			'searchedProducts' => null,
+			'unreadCategories' => array(),
 			'products'         => array(
 				array(
 					'productId'        => self::PRODUCT_ID,

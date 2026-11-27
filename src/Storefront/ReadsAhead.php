@@ -239,7 +239,8 @@ final class ReadsAhead {
 		foreach ( $designer->variations as $variation ) {
 			$sides = isset( $variation['sides'] ) && is_object( $variation['sides'] ) ? (array) $variation['sides'] : array();
 			foreach ( $sides as $side => $target ) {
-				if ( ! is_array( $target ) || ! is_string( $target['templateId'] ?? null ) ) {
+				// A side on a value set reads in the browser, with the set: the reads ahead are keyed by template, blank and placement alone.
+				if ( ! is_array( $target ) || ! is_string( $target['templateId'] ?? null ) || isset( $target['valueSet'] ) ) {
 					continue;
 				}
 				$key = self::key( $target );

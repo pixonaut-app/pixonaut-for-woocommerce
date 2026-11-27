@@ -454,6 +454,38 @@ export const SCENARIOS: Scenario[] = [
 		},
 	},
 	{
+		name: 'give a store product values of its own for its template',
+		async run(session, found) {
+			const templateId = need(found.templateId, 'a template');
+			const read = (
+				await session.call('GET /v1/templates/{id}', {
+					params: { id: templateId },
+				})
+			).body;
+			const layers = ((read.template ?? read).layers ?? []) as {
+				id: string;
+				props?: Record<string, unknown>;
+			}[];
+			// The store makes a set of a text layer's words, as set-product-values does.
+			const text = need(
+				layers.find((layer) => layer.props?.content !== undefined)?.id,
+				'a text layer',
+			);
+			const made = (
+				await session.call('POST /v1/templates/{id}/value-sets', {
+					params: { id: templateId },
+					json: { values: { [text]: { content: 'Scenario values' } } },
+				})
+			).body;
+			// The product page reads the template with it, as the SDK's `valueSets` does.
+			await session.call('GET /v1/templates/{id}', {
+				params: { id: templateId },
+				query: { valueSet: need(made.valueSetId, 'a value set') },
+				key: 'publishableKey',
+			});
+		},
+	},
+	{
 		name: 'personalise on the product page',
 		async run(session, found) {
 			const templateId = need(found.templateId, 'a template');

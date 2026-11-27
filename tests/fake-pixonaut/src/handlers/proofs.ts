@@ -1,6 +1,7 @@
 // `POST /v1/proofs`: the proof a customer approves, minted as `mintProof`
 // mints every proof so a store's `POST /v1/designs` can commit its token, and
 // `GET /p/{token}`, the image its `proofUrl` opens.
+
 import { reaches } from '../auth';
 import { mintProof, PROOFS, type Proof } from '../proofs';
 import { allOwned, type PrintedPages, type TemplateVersion } from '../state';
@@ -8,6 +9,7 @@ import { WHITE_JPEG } from './images';
 import { type Box, resolvePlacement } from './placements';
 import { sessionOf } from './session';
 import { callerOf, type Handler, refusal } from './types';
+import { heldSet } from './value-sets';
 
 /** As Pixonaut sends a proof image: the browser that opened it may keep it
  *  for an hour. */
@@ -142,6 +144,10 @@ export const createProof: Handler = (context) => {
 	if (tenant === undefined) {
 		throw new Error(`The caller names no tenant ${caller.tenantId}.`);
 	}
+	const set = context.query.get('valueSet');
+	if (set !== null && heldSet(state, template, set) === undefined) {
+		return refusal(422, 'value_set_not_found');
+	}
 	const violations = unchanged(template, request.values);
 	if (violations.length > 0) {
 		return {
@@ -182,6 +188,7 @@ export const createProof: Handler = (context) => {
 		values: request.values,
 		sessionId: sessionOf(context.headers),
 		language: context.query.get('lang'),
+		valueSetId: set,
 		...(request.page === undefined || request.pageCount === undefined
 			? {}
 			: { page: { page: request.page, pageCount: request.pageCount } }),

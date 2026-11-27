@@ -58,4 +58,16 @@ final class ProductMount {
 		}
 		return $options;
 	}
+
+	/**
+	 * The value set a side's mount options open its template on; null for none.
+	 *
+	 * @param array<string, mixed> $options The side's mount options.
+	 */
+	public static function value_set( array $options ): ?string {
+		$sets     = is_array( $options['valueSets'] ?? null ) ? $options['valueSets'] : array();
+		$template = is_string( $options['templateId'] ?? null ) ? explode( '@', $options['templateId'] )[0] : '';
+		$set      = $sets[ $template ] ?? null;
+		return is_string( $set ) && '' !== $set ? $set : null;
+	}
 }

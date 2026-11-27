@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-27T14:45:17+00:00\n"
+"POT-Creation-Date: 2026-11-27T16:05:51+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -833,6 +833,7 @@ msgstr ""
 "interrogé). Se modifie avec `set-product-form`."
 
 #: src/Abilities/GetProductForm.php:59 src/Abilities/SetProductForm.php:71
+#: src/Abilities/SetProductValues.php:69
 msgid "A simple or variable product."
 msgstr "Un produit simple ou variable."
 
@@ -2344,34 +2345,34 @@ msgstr ""
 msgid "How many prices the product has, on every page."
 msgstr "Le nombre de prix du produit, toutes pages confondues."
 
-#: src/Abilities/ProductSetup.php:135
+#: src/Abilities/ProductSetup.php:136
 msgid "Whether it is linked to a template, personalised or not."
 msgstr "Indique s'il est lié à un modèle, personnalisé ou non."
 
-#: src/Abilities/ProductSetup.php:139
+#: src/Abilities/ProductSetup.php:140
 msgid "Whether customers personalise it."
 msgstr "Indique si les clients le personnalisent."
 
-#: src/Abilities/ProductSetup.php:143 src/Abilities/ProductSetup.php:322
+#: src/Abilities/ProductSetup.php:144 src/Abilities/ProductSetup.php:323
 msgid ""
 "False when Pixonaut found a problem: it cannot be bought until it is fixed."
 msgstr ""
 "Vaut false lorsque Pixonaut a détecté un problème : il ne peut pas être "
 "acheté tant que celui-ci n'est pas corrigé."
 
-#: src/Abilities/ProductSetup.php:147
+#: src/Abilities/ProductSetup.php:148
 msgid "Why it cannot be bought, in words; null when it can."
 msgstr ""
 "Pourquoi il ne peut pas être acheté, sous forme de texte ; null s'il peut "
 "l'être."
 
-#: src/Abilities/ProductSetup.php:151
+#: src/Abilities/ProductSetup.php:152
 msgid "The blank it is printed on; null for a template-only product."
 msgstr ""
 "Le produit vierge sur lequel il est imprimé ; null pour un produit avec un "
 "modèle seul."
 
-#: src/Abilities/ProductSetup.php:154
+#: src/Abilities/ProductSetup.php:155
 msgid ""
 "The blank's variant it sells: `ref` null and `problem` `unmapped` when none "
 "matches, `retired` when the blank no longer sells it. Null without a blank, "
@@ -2382,20 +2383,20 @@ msgstr ""
 "vend plus. Null sans produit vierge, et pour un produit variable, dont "
 "chaque variation donne la sienne."
 
-#: src/Abilities/ProductSetup.php:157
+#: src/Abilities/ProductSetup.php:158
 msgid ""
 "The product page layout it overrides the store's with; null for the store's."
 msgstr ""
 "La mise en page de la page produit qui remplace celle de la boutique ; null "
 "pour celle de la boutique."
 
-#: src/Abilities/ProductSetup.php:161
+#: src/Abilities/ProductSetup.php:162
 msgid "The form layout it overrides the store's with; null for the store's."
 msgstr ""
 "La mise en page du formulaire qui remplace celle de la boutique ; null pour "
 "celle de la boutique."
 
-#: src/Abilities/ProductSetup.php:165
+#: src/Abilities/ProductSetup.php:166
 msgid ""
 "Where it overrides the store on its options in the form: `on_top`, `first` "
 "or `last`; null for the store's."
@@ -2403,7 +2404,7 @@ msgstr ""
 "La place de ses options dans le formulaire qui remplace celle de la "
 "boutique : `on_top`, `first` ou `last` ; null pour celle de la boutique."
 
-#: src/Abilities/ProductSetup.php:169
+#: src/Abilities/ProductSetup.php:170
 msgid ""
 "Whether it overrides the store on numbering the form's groups: `on` or "
 "`off`; null for the store's."
@@ -2411,25 +2412,25 @@ msgstr ""
 "La numérotation des groupes du formulaire qui remplace celle de la "
 "boutique : `on` ou `off` ; null pour celle de la boutique."
 
-#: src/Abilities/ProductSetup.php:173
+#: src/Abilities/ProductSetup.php:174
 msgid "The proof approval it overrides the store's with; null for the store's."
 msgstr ""
 "Le mode de validation de l'épreuve qui remplace celui de la boutique ; null "
 "pour celui de la boutique."
 
-#: src/Abilities/ProductSetup.php:177 src/Abilities/SetProductSetup.php:89
+#: src/Abilities/ProductSetup.php:178 src/Abilities/SetProductSetup.php:89
 msgid "The blank's views the designer shows, by id; empty for all."
 msgstr ""
 "Les vues du produit vierge que montre l'outil de personnalisation, par "
 "identifiant ; vide pour toutes."
 
-#: src/Abilities/ProductSetup.php:182
+#: src/Abilities/ProductSetup.php:183
 msgid "The view the designer starts on; null for the first."
 msgstr ""
 "La vue sur laquelle s'ouvre l'outil de personnalisation ; null pour la "
 "première."
 
-#: src/Abilities/ProductSetup.php:186
+#: src/Abilities/ProductSetup.php:187
 msgid ""
 "The printshop a product without a blank sends its orders to; null for the "
 "workspace's default."
@@ -2437,11 +2438,11 @@ msgstr ""
 "L'imprimeur auquel un produit sans produit vierge envoie ses commandes ; "
 "null pour l'imprimeur par défaut de l'espace de travail."
 
-#: src/Abilities/ProductSetup.php:188 src/Abilities/SetProductSetup.php:86
+#: src/Abilities/ProductSetup.php:189 src/Abilities/SetProductSetup.php:86
 msgid "empty for the template's own setting"
 msgstr "vide pour le réglage propre au modèle"
 
-#: src/Abilities/ProductSetup.php:191
+#: src/Abilities/ProductSetup.php:192
 msgid ""
 "The template's showcase sets its product images are drawn with, set with "
 "`set-product-showcase`; a variation gives its product's."
@@ -2450,7 +2451,7 @@ msgstr ""
 "générées, définis avec `set-product-showcase` ; une variation donne ceux de "
 "son produit."
 
-#: src/Abilities/ProductSetup.php:203
+#: src/Abilities/ProductSetup.php:204
 msgid ""
 "The view of the blank it is drawn on, set with `set-product-picture-view`; "
 "absent for the one the product page starts on."
@@ -2459,14 +2460,14 @@ msgstr ""
 "`set-product-picture-view` ; absente pour celle sur laquelle s'ouvre la page "
 "produit."
 
-#: src/Abilities/ProductSetup.php:207
+#: src/Abilities/ProductSetup.php:208
 msgid ""
 "The view's photo it is drawn on; absent for its photo of the variant sold."
 msgstr ""
 "La photo de la vue sur laquelle son image est générée ; absente pour sa "
 "photo de la variante vendue."
 
-#: src/Abilities/ProductSetup.php:219
+#: src/Abilities/ProductSetup.php:220
 msgid ""
 "The template version it is linked to, e.g. `mini-tee@2`; null without a "
 "template."
@@ -2474,7 +2475,7 @@ msgstr ""
 "La version du modèle à laquelle il est lié, par ex. `mini-tee@2` ; null sans "
 "modèle."
 
-#: src/Abilities/ProductSetup.php:223
+#: src/Abilities/ProductSetup.php:224
 msgid ""
 "True when the side stays on its template version; false when it follows the "
 "template's latest published version."
@@ -2482,12 +2483,12 @@ msgstr ""
 "True lorsque la face reste sur sa version du modèle ; false lorsqu'elle suit "
 "la dernière version publiée du modèle."
 
-#: src/Abilities/ProductSetup.php:227
+#: src/Abilities/ProductSetup.php:228
 msgid "Where on the blank it is printed; null without a blank."
 msgstr ""
 "L'endroit du produit vierge où il est imprimé ; null sans produit vierge."
 
-#: src/Abilities/ProductSetup.php:233
+#: src/Abilities/ProductSetup.php:234
 msgid ""
 "A standing side on a blank whose print areas change with an option: the "
 "design each option is printed from, and whether its layout was adjusted by "
@@ -2498,11 +2499,11 @@ msgstr ""
 "est imprimée, et si sa mise en page a été ajustée à la main, ce que `reset-"
 "standing-layout` annule. Vide pour toute autre face."
 
-#: src/Abilities/ProductSetup.php:240
+#: src/Abilities/ProductSetup.php:241
 msgid "The option's values, e.g. \"XL\"."
 msgstr "Les valeurs de l'option, par ex. « XL »."
 
-#: src/Abilities/ProductSetup.php:252
+#: src/Abilities/ProductSetup.php:253
 msgid ""
 "Where its Pixonaut picture, shown as its image, stands: `drawn`, `pending` "
 "to be drawn, `failed` and to be tried again, `own_image` when the store "
@@ -2515,7 +2516,7 @@ msgstr ""
 "boutique est conservée, `none` s'il n'y a rien pour la générer, ou `off` si "
 "la boutique n'utilise pas les images ou s'il n'est pas personnalisé."
 
-#: src/Abilities/ProductSetup.php:257
+#: src/Abilities/ProductSetup.php:258
 msgid ""
 "What the Pixonaut picture it has now shows: `showcase` for a showcase set's "
 "example values, `template_defaults` for the template's own placeholders (no "
@@ -2529,7 +2530,7 @@ msgstr ""
 "que `picture` vaut `pending`, c'est l'image sur le point d'être remplacée. "
 "Null si son image n'est pas une image Pixonaut."
 
-#: src/Abilities/ProductSetup.php:279
+#: src/Abilities/ProductSetup.php:280
 msgid ""
 "Whether the store manager picked it rather than it being matched on the "
 "product's attributes."
@@ -2537,7 +2538,7 @@ msgstr ""
 "Indique si le gestionnaire de boutique l'a choisie lui-même au lieu qu'elle "
 "soit déduite des attributs du produit."
 
-#: src/Abilities/ProductSetup.php:325
+#: src/Abilities/ProductSetup.php:326
 msgid ""
 "Why not, as a code such as `too_large` or `template_not_live`; null when "
 "valid."
@@ -2545,11 +2546,23 @@ msgstr ""
 "Pourquoi pas, sous forme de code, par exemple `too_large` ou "
 "`template_not_live` ; null s'il est valide."
 
-#: src/Abilities/ProductSetup.php:328
+#: src/Abilities/ProductSetup.php:329
 msgid "Why not, in words, as the product screen says it; null when valid."
 msgstr ""
 "Pourquoi pas, sous forme de texte, tel que l'écran de modification du "
 "produit l'indique ; null s'il est valide."
+
+#: src/Abilities/ProductSetup.php:407
+msgid ""
+"The value set Pixonaut made of the side's own values, which its designer, "
+"pictures and cart name; null without values."
+msgstr "Le jeu de valeurs que Pixonaut a constitué à partir des valeurs propres à la face, que nomment son outil de personnalisation, ses images et le panier ; null sans valeurs."
+
+#: src/Abilities/ProductSetup.php:411
+msgid ""
+"The side's own values for its template's layers, by layer id and prop, set "
+"with `set-product-values`; null for none."
+msgstr "Les valeurs propres à la face pour les calques de son modèle, par identifiant de calque et propriété, définies avec `set-product-values` ; null si elle n'en a pas."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/ReadPluginSettings.php:39
@@ -3030,7 +3043,7 @@ msgstr ""
 "et la réponse les indique un par un. La réponse est le formulaire actuel du "
 "produit, tel que le donne `get-product-form`."
 
-#: src/Abilities/SetProductForm.php:82
+#: src/Abilities/SetProductForm.php:82 src/Abilities/SetProductValues.php:86
 msgid "One of the product's sides, by its key."
 msgstr "L'une des faces du produit, par sa clé."
 
@@ -3082,19 +3095,19 @@ msgstr ""
 "form`, puis modifiez-la."
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductForm.php:165
+#: src/Abilities/SetProductForm.php:165 src/Abilities/SetProductValues.php:221
 #, php-format
 msgid "the product has no side `%s`"
 msgstr "le produit n'a pas de face `%s`"
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductForm.php:170
+#: src/Abilities/SetProductForm.php:170 src/Abilities/SetProductValues.php:226
 #, php-format
 msgid "side `%s` is given twice"
 msgstr "la face `%s` est indiquée deux fois"
 
 #. translators: %s: every problem found, joined by semicolons. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductForm.php:187
+#: src/Abilities/SetProductForm.php:187 src/Abilities/SetProductValues.php:323
 #, php-format
 msgid "Nothing was saved: %s."
 msgstr "Rien n'a été enregistré : %s."
@@ -3482,13 +3495,13 @@ msgstr ""
 "la photo du produit vierge (`mockup`) ou en création à plat (`preview`) ; un "
 "produit sans produit vierge n'a que la création à plat. Sur la photo, `view` "
 "et `photo` désignent une vue du produit vierge et l'une de ses photos, y "
-"compris celle d'une scène, telles que les liste `get-product-picture-views` "
-"; `view` à null est la photo sur laquelle la page produit démarre, et si les "
-"deux sont omis, le jeu garde ce sur quoi il était généré auparavant. Un jeu "
-"peut être nommé plusieurs fois, chaque fois sur une autre vue ou une autre "
-"photo, pour qu'une galerie puisse montrer le même jeu sur plusieurs vues. "
-"Les images sont générées de nouveau. La réponse liste les jeux que propose "
-"le modèle."
+"compris celle d'une scène, telles que les liste `get-product-picture-"
+"views` ; `view` à null est la photo sur laquelle la page produit démarre, et "
+"si les deux sont omis, le jeu garde ce sur quoi il était généré auparavant. "
+"Un jeu peut être nommé plusieurs fois, chaque fois sur une autre vue ou une "
+"autre photo, pour qu'une galerie puisse montrer le même jeu sur plusieurs "
+"vues. Les images sont générées de nouveau. La réponse liste les jeux que "
+"propose le modèle."
 
 #: src/Abilities/SetProductShowcase.php:70
 msgid "One of the template's showcase sets, by id."
@@ -3697,6 +3710,130 @@ msgstr "La médiathèque ne contient aucune image d'identifiant %d."
 #, php-format
 msgid "The image of card %s is not a public URL."
 msgstr "L'image de la carte %s n'est pas une URL publique."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/SetProductValues.php:62
+msgid "Set a product's own values for its template"
+msgstr "Définir les valeurs propres d'un produit pour son modèle"
+
+#: src/Abilities/SetProductValues.php:63
+msgid ""
+"Sets the values a simple or variable product, or a variation with a setup of "
+"its own (`variation_id`), gives its sides' template layers, by layer id and "
+"prop, e.g. `{\"title\": {\"content\": \"farmor\"}}`: one template then sells "
+"as many products, each in its own theme or for its own recipient. A value on "
+"a prop the customer may change is where the designer starts; one on a fixed "
+"prop is printed as given. Each side named by its `key` takes its `values`, "
+"or null (or an empty object) to take them off; a side left out keeps its "
+"own. Pixonaut judges the values against the side's template version: a layer "
+"or prop the template does not have, or a value its rules refuse, refuses the "
+"whole call, and the answer names each by side, layer and prop. So does a "
+"side the product does not have, a side without a template, a product without "
+"a Pixonaut setup, and a variation that follows its product. The answer is "
+"every side with its `template_id`, the `value_set_id` Pixonaut made of its "
+"values, and its `values`, null where it has none."
+msgstr "Définit les valeurs qu'un produit simple ou variable, ou une variation avec une configuration propre (`variation_id`), donne aux calques du modèle de ses faces, par identifiant de calque et propriété, p. ex. `{\"title\": {\"content\": \"farmor\"}}` : un même modèle vend alors autant de produits, chacun avec son propre thème ou pour son propre destinataire. Une valeur sur une propriété que le client peut modifier est le point de départ de l'outil de personnalisation ; une valeur sur une propriété fixe est imprimée telle quelle. Chaque face désignée par sa `key` reçoit ses `values`, ou null (ou un objet vide) pour les retirer ; une face omise garde les siennes. Pixonaut juge les valeurs d'après la version du modèle de la face : un calque ou une propriété que le modèle n'a pas, ou une valeur que ses règles refusent, fait refuser tout l'appel, et la réponse nomme chacun par face, calque et propriété. Il en va de même pour une face que le produit n'a pas, une face sans modèle, un produit sans configuration Pixonaut et une variation qui suit son produit. La réponse donne chaque face avec son `template_id`, le `value_set_id` que Pixonaut a constitué à partir de ses valeurs, et ses `values`, null lorsqu'elle n'en a pas."
+
+#: src/Abilities/SetProductValues.php:74
+msgid ""
+"One of the product's variations with a setup of its own; left out for the "
+"product."
+msgstr "L'une des variations du produit avec une configuration propre ; omise pour le produit."
+
+#: src/Abilities/SetProductValues.php:90
+msgid ""
+"The values by layer id, each an object of props; null to take the side's off."
+msgstr "Les valeurs par identifiant de calque, chacune un objet de propriétés ; null pour retirer celles de la face."
+
+#: src/Abilities/SetProductValues.php:132
+msgid ""
+"The template version the side is on, e.g. `mini-mug@3`; null without a "
+"template."
+msgstr "La version du modèle sur laquelle se trouve la face, p. ex. `mini-mug@3` ; null sans modèle."
+
+#: src/Abilities/SetProductValues.php:157
+msgid ""
+"The product has no Pixonaut setup, so it has no sides to give values. Link "
+"it to a template first."
+msgstr "Le produit n'a pas de configuration Pixonaut, il n'a donc pas de faces auxquelles donner des valeurs. Liez-le d'abord à un modèle."
+
+#: src/Abilities/SetProductValues.php:161
+msgid ""
+"The product's values come from a newer version of the plugin, so they are "
+"not changed. Update the plugin."
+msgstr "Les valeurs du produit proviennent d'une version plus récente de l'extension, elles ne sont donc pas modifiées. Mettez l'extension à jour."
+
+#: src/Abilities/SetProductValues.php:175
+msgid ""
+"The product's values or its Pixonaut setup were changed while these were "
+"saved, so nothing was changed. Read the product again, then set them."
+msgstr "Les valeurs du produit ou sa configuration Pixonaut ont été modifiées pendant leur enregistrement, rien n'a donc été modifié. Relisez le produit, puis définissez les valeurs."
+
+#: src/Abilities/SetProductValues.php:194
+msgid "The product has no variation with this id."
+msgstr "Le produit n'a aucune variation avec cet identifiant."
+
+#: src/Abilities/SetProductValues.php:197
+msgid ""
+"The variation follows its product's Pixonaut setup, so it is sold with its "
+"product's values: set them on the product, or give the variation a setup of "
+"its own first."
+msgstr "La variation suit la configuration Pixonaut de son produit, elle est donc vendue avec les valeurs de son produit : définissez-les sur le produit, ou donnez d'abord à la variation une configuration propre."
+
+#. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetProductValues.php:233
+#, php-format
+msgid ""
+"the values of side `%s` are not an object of layers, each an object of props"
+msgstr "les valeurs de la face `%s` ne sont pas un objet de calques, chacun un objet de propriétés"
+
+#. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetProductValues.php:238
+#, php-format
+msgid "side `%s` has no template to give values"
+msgstr "la face `%s` n'a pas de modèle auquel donner des valeurs"
+
+#. translators: 1: a side's key; 2: a template version, e.g. `mini-mug@3`. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetProductValues.php:275
+#, php-format
+msgid "Pixonaut has no template `%2$s` for side `%1$s`"
+msgstr "Pixonaut n'a pas de modèle `%2$s` pour la face `%1$s`"
+
+#: src/Abilities/SetProductValues.php:280
+msgid ""
+"The Pixonaut this store is connected to does not keep a product's own values "
+"yet, so nothing was saved. Try again once Pixonaut is updated."
+msgstr "Le Pixonaut auquel cette boutique est connectée ne conserve pas encore les valeurs propres d'un produit, rien n'a donc été enregistré. Réessayez une fois Pixonaut mis à jour."
+
+#: src/Abilities/SetProductValues.php:282
+msgid ""
+"Pixonaut could not be asked to judge the values, so nothing was saved. Try "
+"again."
+msgstr "Pixonaut n'a pas pu être sollicité pour juger les valeurs, rien n'a donc été enregistré. Réessayez."
+
+#. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetProductValues.php:300
+#, php-format
+msgid "the template of side `%s` does not take its values"
+msgstr "le modèle de la face `%s` n'accepte pas ses valeurs"
+
+#. translators: 1: a side's key; 2: why, e.g. `unknown_prop`. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetProductValues.php:305
+#, php-format
+msgid "the template of side `%1$s` does not take its values (`%2$s`)"
+msgstr "le modèle de la face `%1$s` n'accepte pas ses valeurs (`%2$s`)"
+
+#. translators: 1: a side's key; 2: a layer's id; 3: why, e.g. `unknown_layer`. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetProductValues.php:308
+#, php-format
+msgid "side `%1$s`, layer `%2$s`: `%3$s`"
+msgstr "face `%1$s`, calque `%2$s` : `%3$s`"
+
+#. translators: 1: a side's key; 2: a layer's id; 3: a prop, e.g. `content`; 4: why, e.g. `unknown_prop`. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetProductValues.php:310
+#, php-format
+msgid "side `%1$s`, layer `%2$s`, prop `%3$s`: `%4$s`"
+msgstr "face `%1$s`, calque `%2$s`, propriété `%3$s` : `%4$s`"
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetShippingMethod.php:80
@@ -4373,6 +4510,14 @@ msgstr ""
 "La boutique télécharge le fichier depuis `fields.source_url`, une URL "
 "publique."
 
+#: src/Abilities/Store/ResourceAbility.php:287
+msgid ""
+"Each also gives `pixonaut_setup`: the `blank_id` and `sides` (`key`, "
+"`template_id`, `template_pinned`, `placement_id`, `label`, `mode`, and the "
+"side's own `value_set_id` and `values`, null for none) it is set up with. "
+"Change it with `set-product-setup`, and the values with `set-product-values`."
+msgstr "Chacun donne aussi `pixonaut_setup` : le `blank_id` et les `sides` (`key`, `template_id`, `template_pinned`, `placement_id`, `label`, `mode`, ainsi que les `value_set_id` et `values` propres à la face, null s'il n'y en a pas) avec lesquels il est configuré. Modifiez-le avec `set-product-setup`, et les valeurs avec `set-product-values`."
+
 #: src/Abilities/Store/ResourceAbility.php:290
 msgid ""
 "Each variation also gives `pixonaut_variant`, the variant of its blank it is "
@@ -4392,15 +4537,11 @@ msgstr ""
 msgid ""
 "And `pixonaut_setup`: `own_setup` true when the variation has a Pixonaut "
 "setup of its own, false when it follows its product; `blank_id` and `sides` "
-"(`template_id`, `template_pinned`, `placement_id`, `label`, `mode`) are "
-"those it is sold under, its product's when it follows it. Change it with "
-"`set-product-setup`."
-msgstr ""
-"Ainsi que `pixonaut_setup` : `own_setup` true quand la variation a sa propre "
-"configuration Pixonaut, false quand elle suit son produit ; `blank_id` et "
-"`sides` (`template_id`, `template_pinned`, `placement_id`, `label`, `mode`) "
-"sont ceux sous lesquels elle est vendue, ceux de son produit quand elle le "
-"suit. Elle se modifie avec `set-product-setup`."
+"(`key`, `template_id`, `template_pinned`, `placement_id`, `label`, `mode`, "
+"and the side's own `value_set_id` and `values`, null for none) are those it "
+"is sold under, its product's when it follows it. Change it with `set-product-"
+"setup`, and the values with `set-product-values`."
+msgstr "Et `pixonaut_setup` : `own_setup` true lorsque la variation a une configuration Pixonaut propre, false lorsqu'elle suit son produit ; `blank_id` et `sides` (`key`, `template_id`, `template_pinned`, `placement_id`, `label`, `mode`, ainsi que les `value_set_id` et `values` propres à la face, null s'il n'y en a pas) sont ceux sous lesquels elle est vendue, ceux de son produit lorsqu'elle le suit. Modifiez-le avec `set-product-setup`, et les valeurs avec `set-product-values`."
 
 #: src/Abilities/Store/ResourceAbility.php:308
 msgid "The route's query parameters, e.g. search, page and per_page."
@@ -4434,7 +4575,7 @@ msgstr ""
 msgid "What the REST route %1$s answers, without its links. %2$s"
 msgstr "Ce que renvoie la route REST %1$s, sans ses liens. %2$s"
 
-#: src/Abilities/Store/ResourceAbility.php:441
+#: src/Abilities/Store/ResourceAbility.php:443
 msgid ""
 "Each also gives `pixonaut_validity`: `valid` false when its Pixonaut setup "
 "has a problem and it cannot be bought until it is fixed, with the `reason` "
@@ -4447,16 +4588,16 @@ msgstr ""
 "le texte qu'affiche l'écran de modification du produit dans `message`, tous "
 "deux null s'il est valide."
 
-#: src/Abilities/Store/ResourceAbility.php:475
+#: src/Abilities/Store/ResourceAbility.php:477
 msgid "The store refused it."
 msgstr "La boutique l'a refusé."
 
-#: src/Abilities/Store/ResourceAbility.php:491
+#: src/Abilities/Store/ResourceAbility.php:493
 msgid "Give the file's public URL as fields.source_url."
 msgstr "Indiquez l'URL publique du fichier dans fields.source_url."
 
 #. translators: %s: the largest file the store takes, e.g. "64 MB".
-#: src/Abilities/Store/ResourceAbility.php:502
+#: src/Abilities/Store/ResourceAbility.php:504
 #: src/Catalogue/SplitCardImageCopies.php:271
 #, php-format
 msgid "The file is larger than the store takes, at most %s."
@@ -4464,7 +4605,7 @@ msgstr ""
 "Le fichier est plus volumineux que ce que la boutique accepte, %s au maximum."
 
 #. translators: %d: the HTTP status the file's URL answered with.
-#: src/Abilities/Store/ResourceAbility.php:538
+#: src/Abilities/Store/ResourceAbility.php:540
 #, php-format
 msgid "The file could not be downloaded: its URL answered %d."
 msgstr "Le fichier n'a pas pu être téléchargé : son URL a répondu %d."
@@ -6625,7 +6766,7 @@ msgid "Proof by email after payment"
 msgstr "Épreuve par e-mail après paiement"
 
 #. translators: 1: product name, 2: Pixonaut's refusal code
-#: src/Cart/AddToCart.php:850
+#: src/Cart/AddToCart.php:851
 #, php-format
 msgid ""
 "Customers cannot add \"%1$s\" to the cart: Pixonaut will not route its "
@@ -7141,7 +7282,7 @@ msgstr ""
 "imprimé dans ces tailles. Choisissez un modèle qui convient à toutes les "
 "tailles, ou cessez de vendre ces tailles."
 
-#: src/Catalogue/PixonautRefusal.php:107
+#: src/Catalogue/PixonautRefusal.php:110
 msgid ""
 "The store is not connected to Pixonaut. Connect it on the Pixonaut settings "
 "page, then update the product."
@@ -7150,7 +7291,7 @@ msgstr ""
 "réglages de Pixonaut, puis mettez à jour le produit."
 
 #
-#: src/Catalogue/PixonautRefusal.php:109
+#: src/Catalogue/PixonautRefusal.php:112
 msgid ""
 "Pixonaut could not be reached to check the configuration. It is checked "
 "again in a while; if this stays, check the connection on the Pixonaut "
@@ -7161,7 +7302,7 @@ msgstr ""
 "connexion sur la page des réglages de Pixonaut, puis mettez à jour le "
 "produit."
 
-#: src/Catalogue/PixonautRefusal.php:111
+#: src/Catalogue/PixonautRefusal.php:114
 msgid ""
 "Pixonaut answered in a way this version of Pixonaut for WooCommerce does not "
 "understand. Update the plugin, then update the product."
@@ -7170,7 +7311,7 @@ msgstr ""
 "WooCommerce ne comprend pas. Mettez à jour l'extension, puis mettez à jour "
 "le produit."
 
-#: src/Catalogue/PixonautRefusal.php:113
+#: src/Catalogue/PixonautRefusal.php:116
 msgid ""
 "Pixonaut no longer accepts the store’s connection. Connect the store again "
 "on the Pixonaut settings page, then update the product."
@@ -7178,7 +7319,7 @@ msgstr ""
 "Pixonaut n'accepte plus la connexion de la boutique. Connectez à nouveau la "
 "boutique sur la page des réglages de Pixonaut, puis mettez à jour le produit."
 
-#: src/Catalogue/PixonautRefusal.php:115
+#: src/Catalogue/PixonautRefusal.php:118
 msgid ""
 "The store’s connection may not do this in Pixonaut. Check the connection’s "
 "permissions in the Pixonaut studio, then update the product."
@@ -7187,7 +7328,7 @@ msgstr ""
 "Vérifiez les autorisations de la connexion dans le studio Pixonaut, puis "
 "mettez à jour le produit."
 
-#: src/Catalogue/PixonautRefusal.php:117
+#: src/Catalogue/PixonautRefusal.php:120
 msgid ""
 "Pixonaut refused the store’s web address. If the store moved to another "
 "address, connect it again on the Pixonaut settings page, then update the "
@@ -7197,7 +7338,7 @@ msgstr ""
 "d'adresse, connectez-la à nouveau sur la page des réglages de Pixonaut, puis "
 "mettez à jour le produit."
 
-#: src/Catalogue/PixonautRefusal.php:119
+#: src/Catalogue/PixonautRefusal.php:122
 msgid ""
 "The Pixonaut workspace does not include the API. Check its plan in the "
 "Pixonaut studio, then update the product."
@@ -7205,7 +7346,7 @@ msgstr ""
 "L'espace de travail Pixonaut n'inclut pas l'API. Vérifiez son offre dans le "
 "studio Pixonaut, puis mettez à jour le produit."
 
-#: src/Catalogue/PixonautRefusal.php:121
+#: src/Catalogue/PixonautRefusal.php:124
 msgid ""
 "The Pixonaut workspace is suspended. Contact Pixonaut to lift it, then "
 "update the product."
@@ -7213,14 +7354,14 @@ msgstr ""
 "L'espace de travail Pixonaut est suspendu. Contactez Pixonaut pour lever la "
 "suspension, puis mettez à jour le produit."
 
-#: src/Catalogue/PixonautRefusal.php:125
+#: src/Catalogue/PixonautRefusal.php:128
 msgid "Pixonaut had a problem of its own. Update the product again in a while."
 msgstr ""
 "Pixonaut a rencontré un problème de son côté. Mettez à jour le produit à "
 "nouveau dans quelques instants."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/PixonautRefusal.php:129
+#: src/Catalogue/PixonautRefusal.php:132
 #, php-format
 msgid ""
 "The template, blank or print position no longer exists in Pixonaut. Choose "
@@ -7229,7 +7370,7 @@ msgstr ""
 "Le modèle, le produit vierge ou l'emplacement d'impression n'existe plus "
 "dans Pixonaut. Choisissez-en un autre dans %s."
 
-#: src/Catalogue/PixonautRefusal.php:133
+#: src/Catalogue/PixonautRefusal.php:136
 msgid ""
 "Pixonaut could not read what the store sent. Update Pixonaut for "
 "WooCommerce, then update the product."
@@ -7238,7 +7379,7 @@ msgstr ""
 "for WooCommerce, puis mettez à jour le produit."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/PixonautRefusal.php:137
+#: src/Catalogue/PixonautRefusal.php:140
 #, php-format
 msgid ""
 "The template’s own design breaks one of its rules at this print size. Fix "
@@ -7250,7 +7391,7 @@ msgstr ""
 "autre taille ou un autre modèle dans %s."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/PixonautRefusal.php:143
+#: src/Catalogue/PixonautRefusal.php:146
 #, php-format
 msgid ""
 "The template cannot be made with the blank’s print technique, such as "
@@ -7260,7 +7401,7 @@ msgstr ""
 "vierge, comme la broderie ou les tons directs. Choisissez un modèle conçu "
 "pour celle-ci dans %s."
 
-#: src/Catalogue/PixonautRefusal.php:147
+#: src/Catalogue/PixonautRefusal.php:150
 msgid ""
 "Pixonaut could not read the template’s design. Publish the template again in "
 "the Pixonaut studio, then update the product."
@@ -7268,7 +7409,7 @@ msgstr ""
 "Pixonaut n'a pas pu lire le contenu du modèle. Publiez à nouveau le modèle "
 "dans le studio Pixonaut, puis mettez à jour le produit."
 
-#: src/Catalogue/PixonautRefusal.php:149
+#: src/Catalogue/PixonautRefusal.php:152
 msgid ""
 "Pixonaut could not use an earlier proof of the design. Update the product "
 "again."
@@ -7276,7 +7417,7 @@ msgstr ""
 "Pixonaut n'a pas pu utiliser une épreuve antérieure de la création. Mettez à "
 "jour le produit à nouveau."
 
-#: src/Catalogue/PixonautRefusal.php:153
+#: src/Catalogue/PixonautRefusal.php:156
 msgid ""
 "The blank needs a variant for this print position, or the variant chosen is "
 "not one of the blank’s. Pick the variant in the variation’s Pixonaut fields."
@@ -7286,7 +7427,7 @@ msgstr ""
 "variante dans les champs Pixonaut de la variation."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/PixonautRefusal.php:157
+#: src/Catalogue/PixonautRefusal.php:160
 #, php-format
 msgid ""
 "The printshop is unknown, disconnected, unavailable, or not the one the "
@@ -7297,7 +7438,13 @@ msgstr ""
 "qui le produit vierge est imprimé. Choisissez un autre imprimeur dans %s, ou "
 "connectez-le à nouveau dans le studio Pixonaut."
 
-#: src/Catalogue/PixonautRefusal.php:174
+#: src/Catalogue/PixonautRefusal.php:164
+msgid ""
+"Pixonaut does not hold the value set of the product’s own values for its "
+"template. Set the product’s values again, then update the product."
+msgstr "Pixonaut ne conserve plus le jeu de valeurs des valeurs propres du produit pour son modèle. Définissez de nouveau les valeurs du produit, puis mettez le produit à jour."
+
+#: src/Catalogue/PixonautRefusal.php:179
 msgid ""
 "Pixonaut got more requests from the store than it takes at once. The "
 "configuration is checked again by itself in a moment; there is nothing to do."
@@ -7307,7 +7454,7 @@ msgstr ""
 "instant ; vous n'avez rien à faire."
 
 #. translators: %s: a time of day in the site's time format, e.g. "14:05".
-#: src/Catalogue/PixonautRefusal.php:178
+#: src/Catalogue/PixonautRefusal.php:183
 #, php-format
 msgid ""
 "Pixonaut got more requests from the store than it takes at once. The "
@@ -14408,6 +14555,19 @@ msgid "%s view"
 msgid_plural "%s views"
 msgstr[0] "%s vue"
 msgstr[1] "%s vues"
+
+#~ msgid ""
+#~ "And `pixonaut_setup`: `own_setup` true when the variation has a Pixonaut "
+#~ "setup of its own, false when it follows its product; `blank_id` and "
+#~ "`sides` (`template_id`, `template_pinned`, `placement_id`, `label`, "
+#~ "`mode`) are those it is sold under, its product's when it follows it. "
+#~ "Change it with `set-product-setup`."
+#~ msgstr ""
+#~ "Ainsi que `pixonaut_setup` : `own_setup` true quand la variation a sa "
+#~ "propre configuration Pixonaut, false quand elle suit son produit ; "
+#~ "`blank_id` et `sides` (`template_id`, `template_pinned`, `placement_id`, "
+#~ "`label`, `mode`) sont ceux sous lesquels elle est vendue, ceux de son "
+#~ "produit quand elle le suit. Elle se modifie avec `set-product-setup`."
 
 #~ msgid ""
 #~ "The blank option the attribute stands for, as Pixonaut writes it; null "

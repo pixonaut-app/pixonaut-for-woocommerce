@@ -36,16 +36,6 @@ final class SplitCardLooks {
 	private const LOCK_PREFIX = 'pixonaut_split_card_looks_';
 
 	/**
-	 * How long a change waits for another one of the same product's cards.
-	 */
-	private const LOCK_WAIT_SECONDS = 5;
-
-	/**
-	 * What MySQL's `GET_LOCK()` answers once the lock is taken.
-	 */
-	private const LOCK_TAKEN = '1';
-
-	/**
 	 * Runs a change to a product's cards' titles, images or waiting image
 	 * copies alone: each is kept as one meta value for all the product's
 	 * cards, read and written whole, so two changes at once, as two cards'
@@ -60,19 +50,7 @@ final class SplitCardLooks {
 	 * @return T What the change returned.
 	 */
 	public static function alone( int $product_id, callable $change ): mixed {
-		global $wpdb;
-		$lock = self::LOCK_PREFIX . md5( $wpdb->prefix . $product_id );
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- a lock, never cached.
-		$taken = self::LOCK_TAKEN === $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK( %s, %d )', $lock, self::LOCK_WAIT_SECONDS ) );
-		try {
-			wp_cache_delete( (string) $product_id, 'post_meta' );
-			return $change();
-		} finally {
-			if ( $taken ) {
-				$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK( %s )', $lock ) );
-			}
-		}
-		// phpcs:enable
+		return PostLock::alone( self::LOCK_PREFIX, $product_id, $change );
 	}
 
 	/**

@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Catalogue;
 
+use WC_Cache_Helper;
 use WC_Data;
 
 /**
@@ -81,5 +82,20 @@ final class ProductMeta {
 		foreach ( $wp_meta as $id => $meta ) {
 			wp_cache_add( (string) $id, $meta, self::WP_CACHE_GROUP );
 		}
+	}
+
+	/**
+	 * Drops what WordPress and WooCommerce keep of a product's or
+	 * variation's meta, after a write straight to the database that
+	 * bypassed the meta API and its hooks: WordPress's post caches,
+	 * WooCommerce's meta rows of the object, kept apart from the post's,
+	 * and its product transients.
+	 *
+	 * @param int $product_id A product or variation.
+	 */
+	public static function written_directly( int $product_id ): void {
+		clean_post_cache( $product_id );
+		WC_Cache_Helper::invalidate_cache_group( 'object_' . $product_id );
+		wc_delete_product_transients( $product_id );
 	}
 }

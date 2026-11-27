@@ -80,6 +80,8 @@ export const listCatalogueProducts: Handler = (context) => {
 			catalogueTotal: all.length,
 			searchComplete: true,
 			searchedProducts: null,
+			// The fake's printshop reads every category.
+			unreadCategories: [],
 			products: matching.slice(offset, offset + limit).map((product) => {
 				const imported = importedBlank(context.state, tenantId, product);
 				return {

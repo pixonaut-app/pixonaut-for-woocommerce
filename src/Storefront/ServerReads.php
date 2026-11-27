@@ -12,13 +12,16 @@ namespace Pixonaut\WooCommerce\Storefront;
 use Closure;
 use Pixonaut\WooCommerce\Api\Answers\Design;
 use Pixonaut\WooCommerce\Api\Catalogue;
+use Pixonaut\WooCommerce\Api\ValueSetQuery;
 use Pixonaut\WooCommerce\Catalogue\CatalogueCache;
 use Pixonaut\WooCommerce\Catalogue\TemplateForm;
 use Pixonaut\WooCommerce\Connection\WorkspaceSettings;
 use Pixonaut\WooCommerce\DesignerLanguage;
 use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 
 /**
  * Reads what each side's designer opens with — its template, the placement's
@@ -77,12 +80,14 @@ final class ServerReads {
 	 * @param CatalogueCache         $cache     Keeps the answers for a few minutes.
 	 * @param Sdk                    $pixonaut  Reads the designs a correction opens.
 	 * @param ServerReadsWarmUp|null $warm_up   Notes each read, to read it again before its kept copy runs out; null notes none.
+	 * @param LoggerInterface|null   $logger    Logs a side whose value set its template does not hold; null logs nothing.
 	 */
 	public function __construct(
 		private readonly Catalogue $catalogue,
 		private readonly CatalogueCache $cache,
 		private readonly Sdk $pixonaut,
 		private readonly ?ServerReadsWarmUp $warm_up = null,
+		private readonly ?LoggerInterface $logger = null,
 	) {
 	}
 
@@ -126,9 +131,21 @@ final class ServerReads {
 			if ( ! is_string( $template_id ) || isset( $options['design'] ) ) {
 				continue;
 			}
+			$value_set = ProductMount::value_set( $options );
 			try {
-				$reads[ (string) $side ] = $this->side( $template_id, $options['blankId'] ?? null, $options['placementId'] ?? null, $options['locale'] ?? null );
-			} catch ( ApiException ) {
+				$reads[ (string) $side ] = $this->side( $template_id, $options['blankId'] ?? null, $options['placementId'] ?? null, $options['locale'] ?? null, $value_set );
+			} catch ( ApiException $error ) {
+				if ( ErrorCode::VALUE_SET_NOT_FOUND === $error->errorCode ) {
+					// Read without the set, the template would print the side's fixed values wrong: the side gets no read, as one Pixonaut could not give, and the other sides' reads go on.
+					$this->logger?->warning(
+						sprintf( 'Pixonaut holds no value set %s for template %s, so its side "%s" was not read for the product page.', (string) $value_set, $template_id, (string) $side ),
+						array(
+							'template_id'  => $template_id,
+							'value_set_id' => $value_set,
+						)
+					);
+					continue;
+				}
 				set_transient( self::PAUSE_TRANSIENT, 1, self::PAUSE_SECONDS );
 			}
 		}
@@ -200,26 +217,29 @@ final class ServerReads {
 	 *
 	 * @param string      $template_id `<baseId>@<version>`.
 	 * @param string|null $language    The language to read it in; null for the workspace's default.
+	 * @param string|null $value_set   The value set to read it with, the side's own values written in; null for the template's own.
 	 *
 	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
-	private function template( string $template_id, ?string $language ): string {
-		return $this->json( self::TEMPLATE_READ, array( 'id' => $template_id ) + ( null === $language ? array() : array( 'lang' => $language ) ) );
+	private function template( string $template_id, ?string $language, ?string $value_set = null ): string {
+		return $this->json( self::TEMPLATE_READ, array( 'id' => $template_id ) + ( null === $language ? array() : array( 'lang' => $language ) ) + ( null === $value_set ? array() : array( ValueSetQuery::NAME => $value_set ) ) );
 	}
 
 	/**
-	 * @param string $template_id  `<baseId>@<version>`.
-	 * @param mixed  $blank_id     The blank, when the side has one.
-	 * @param mixed  $placement_id Its placement.
-	 * @param mixed  $locale       The mount's `locale`, when it names one.
+	 * @param string      $template_id  `<baseId>@<version>`.
+	 * @param mixed       $blank_id     The blank, when the side has one.
+	 * @param mixed       $placement_id Its placement.
+	 * @param mixed       $locale       The mount's `locale`, when it names one.
+	 * @param string|null $value_set    The mount's value set for the template (`valueSets`); null for none.
 	 * @return array<string, mixed>
 	 *
 	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
-	private function side( string $template_id, mixed $blank_id, mixed $placement_id, mixed $locale ): array {
+	private function side( string $template_id, mixed $blank_id, mixed $placement_id, mixed $locale, ?string $value_set = null ): array {
 		// Without a `locale` the designer speaks the workspace's default language, which the template is read in without `lang`.
 		$mount_language = self::supported( $locale );
-		$reads          = array( 'template' => $this->template( $template_id, $mount_language ) );
+		// The designer starts from the read: without the side's set it would start from the template's own values.
+		$reads = array( 'template' => $this->template( $template_id, $mount_language, $value_set ) );
 		if ( ! is_string( $blank_id ) || ! is_string( $placement_id ) ) {
 			return $reads;
 		}
@@ -441,7 +461,7 @@ final class ServerReads {
 		$id       = $args['id'] ?? '';
 		$language = $args['lang'] ?? null;
 		return match ( $what ) {
-			self::TEMPLATE_READ         => fn (): array => array( 'json' => $this->catalogue->template_answer( $id, $language ) ),
+			self::TEMPLATE_READ         => fn (): array => array( 'json' => $this->catalogue->template_answer( $id, $language, $args[ ValueSetQuery::NAME ] ?? null ) ),
 			self::CONSTRAINTS_READ      => fn (): array => array( 'json' => $this->catalogue->constraints_answer( $id, $args['blankId'] ?? '', $args['placementId'] ?? '' ) ),
 			self::BLANK_VIEWS_READ      => fn (): array => $this->catalogue->blank_views_answers( $id, $language ),
 			self::WRITTEN_VARIANTS_READ => fn (): array => array( 'json' => $this->catalogue->blank_variants_answer( $id ) ),

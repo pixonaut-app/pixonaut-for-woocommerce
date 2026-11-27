@@ -17,6 +17,7 @@ use Pixonaut\WooCommerce\Api\Designs;
 use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Catalogue\BlankOptionLinks;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Catalogue\SideValues;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Fulfilment\LineState;
 use Pixonaut\WooCommerce\Labels;
@@ -168,7 +169,7 @@ final class OrderAgain {
 				$copy            = $this->copy( $product, $source );
 				$copies[ $slot ] = $copy;
 				$design          = Design::get( $this->pixonaut, $copy );
-				$mismatch        = DesignCheck::mismatch( $design, $side, $config->blank_id )
+				$mismatch        = DesignCheck::mismatch( $design, $side, $config->blank_id, SideValues::set_of( $product, $side ) )
 					?? ( DesignCheck::pages_match( $design, $page, $held[ $side->key ], $book ) ? null : DesignCheck::PAGES );
 				if ( null !== $mismatch ) {
 					$this->logger->warning(

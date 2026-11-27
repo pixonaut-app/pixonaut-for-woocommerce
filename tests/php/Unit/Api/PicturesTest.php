@@ -102,6 +102,20 @@ final class PicturesTest extends TestCase {
 		$this->assertSame( ApiException::UNEXPECTED_RESPONSE, $pngs[3]->errorCode );
 	}
 
+	public function test_a_value_set_is_named_on_the_photo_and_alone_and_none_is_left_out(): void {
+		$this->transport->respond( new Response( 200, array( 'content-type' => 'image/png' ), self::PNG ) );
+		$this->transport->respond( new Response( 200, array( 'content-type' => 'image/png' ), self::PNG ) );
+		$this->transport->respond( new Response( 200, array( 'content-type' => 'image/png' ), self::PNG ) );
+
+		$this->pictures->mockup( 'mini-mug@3', 'blk_1', 'front', 'flat', null, 1200, null, null, 'vs_3f2e9a1b7c4d5e6f8a9b0c1d' );
+		$this->pictures->preview( 'mini-mug@3', 1200, 'showcase-anna', 'vs_3f2e9a1b7c4d5e6f8a9b0c1d' );
+		$this->pictures->preview( 'mini-mug@3', 1200 );
+
+		$this->assertSame( self::BASE_URL . '/t/mini-mug%403/mockup.png?blankId=blk_1&placementId=front&viewId=flat&size=1200&valueSet=vs_3f2e9a1b7c4d5e6f8a9b0c1d', $this->transport->sent[0]['url'] );
+		$this->assertSame( self::BASE_URL . '/t/mini-mug%403/preview.png?size=1200&showcase=showcase-anna&valueSet=vs_3f2e9a1b7c4d5e6f8a9b0c1d', $this->transport->sent[1]['url'] );
+		$this->assertStringNotContainsString( 'valueSet', $this->transport->sent[2]['url'] );
+	}
+
 	public function test_mockup_without_a_variant_leaves_it_out(): void {
 		$this->transport->respond( new Response( 200, array( 'content-type' => 'image/png' ), self::PNG ) );
 

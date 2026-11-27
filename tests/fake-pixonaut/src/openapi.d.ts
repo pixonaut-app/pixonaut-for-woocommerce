@@ -2936,6 +2936,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/templates/{id}/value-sets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Make a value set
+         * @description Makes a set of values a store product sells the template with, judged against the version `id` names (`baseId@version`): each value is written into the template as its layer's own value, and the template must still pass every rule a publish holds it to. A layer or prop the template does not have, a value of another kind than the prop holds, a value a layer's rules refuse, or a picture the workspace may not publish is refused with `value_set_invalid`, naming each. The same values for the same template answer the same set (200); new ones are 201. A read of any version of the template names the set as `valueSet`: an offered prop starts at its value, which the customer may change, and a fixed one holds it. An integration key needs `designs:update`, the grant committing a design asks.
+         */
+        post: operations["templates.valueSets.create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/templates/{id}/value-sets/{valueSetId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read a value set
+         * @description A value set of the template, with its values as they were made. `id` is the template's id, with or without its version. One the template holds no set by is `value_set_not_found`.
+         */
+        get: operations["templates.valueSets.get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/upscales/{id}": {
         parameters: {
             query?: never;
@@ -22785,7 +22825,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description The token does not verify or has expired, or the image it names is gone (plain text), or `showcase_not_found`: the template holds no showcase with the id `showcase` names */
+            /** @description The token does not verify or has expired, or the image it names is gone (plain text), or `showcase_not_found`: the template holds no showcase with the id `showcase` names, or `value_set_not_found`: it holds no value set by the id `valueSet` names */
             404: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -22915,7 +22955,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description The token does not verify or has expired, or the image it names is gone (plain text), or `showcase_not_found`: the template holds no showcase with the id `showcase` names */
+            /** @description The token does not verify or has expired, or the image it names is gone (plain text), or `showcase_not_found`: the template holds no showcase with the id `showcase` names, or `value_set_not_found`: it holds no value set by the id `valueSet` names */
             404: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -23422,6 +23462,8 @@ export interface operations {
                 bleed?: string;
                 /** @description The id of one of the template's showcases, as its read lists them: the template is drawn with that set's values in place of its defaults. */
                 showcase?: string;
+                /** @description A value set of the template, by the id `POST /v1/templates/{id}/value-sets` answered: the template is read with its values written in as its layers' own, so an offered layer starts at the set's value and a fixed one holds it. A store product names its own. One the template holds no set by is `value_set_not_found`. */
+                valueSet?: string;
             };
             header?: never;
             path: {
@@ -23488,7 +23530,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description No published template, blank, placement or mockup answers to these ids, or `showcase_not_found`: the template holds no showcase with the id `showcase` names */
+            /** @description No published template, blank, placement or mockup answers to these ids, or `showcase_not_found`: the template holds no showcase with the id `showcase` names, or `value_set_not_found`: it holds no value set by the id `valueSet` names */
             404: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -23595,6 +23637,8 @@ export interface operations {
                 compact?: "1";
                 /** @description The id of one of the template's showcases, as its read lists them: the image is drawn with that set's values in place of the defaults. */
                 showcase?: string;
+                /** @description A value set of the template, by the id `POST /v1/templates/{id}/value-sets` answered: the template is read with its values written in as its layers' own, so an offered layer starts at the set's value and a fixed one holds it. A store product names its own. One the template holds no set by is `value_set_not_found`. */
+                valueSet?: string;
             };
             header?: never;
             path: {
@@ -23650,7 +23694,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description No published template has this id, or `showcase_not_found`: the template holds no showcase with the id `showcase` names */
+            /** @description No published template has this id, or `showcase_not_found`: the template holds no showcase with the id `showcase` names, or `value_set_not_found`: it holds no value set by the id `valueSet` names */
             404: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -32251,7 +32295,9 @@ export interface operations {
                                 label: string;
                                 /** @description The rows the scene does not show, in the variants' order: their variants have no photo on it. */
                                 refused: {
-                                    /** @description The rule that refuses it: `shape_outside_grip` for a product of another kind or a size the grip does not close round, `no_product_model` for a row with no product model. */
+                                    /** @description The part a `part_colour_not_shown` row is refused by, such as `inside` or `handle`. */
+                                    part?: string;
+                                    /** @description The rule that refuses it: `part_colour_not_shown` for a product with a part of a colour of its own, such as a black inside, which the scene's photo, dyed whole, cannot show. */
                                     refusal: string;
                                     /** @description The row: its values of the options the blank's product changes with (`modelVariesBy`). Empty for a blank with one product. */
                                     row: {
@@ -32370,6 +32416,11 @@ export interface operations {
                                 sceneId: string;
                                 /** @description A scene from the library. */
                                 source: string;
+                                /**
+                                 * @description For a setting, true where the product is shown turned half round on its axis: a mug with its handle on the right and the other half of its wrap to the camera. Left out, it faces the way it always does, a mug's handle on the left. A setting is listed once each way round; a studio style turns its product by its cameras instead.
+                                 * @enum {boolean}
+                                 */
+                                turned?: true;
                             })[];
                             /** @description How many orders name the blank, past ones included. Answered in a list, never for one blank, and only to a caller with `orders:read`. */
                             orderCount?: number;
@@ -33005,6 +33056,11 @@ export interface operations {
                                 ready: number;
                                 /** @description The setting's id. */
                                 sceneId: string;
+                                /**
+                                 * @description Set where the setting shows the product turned half round, a mug's other side: a setting bound both ways round is listed once each way.
+                                 * @enum {boolean}
+                                 */
+                                turned?: true;
                                 /** @description The rows not drawn in the setting, in the variants' order: their variants do not show it. */
                                 waiting: {
                                     /** @description The rule that refused it, such as `footprint_exceeds_anchor` for a product larger than the room the setting has; null unless `state` is `refused`. */
@@ -33200,7 +33256,9 @@ export interface operations {
                             label: string;
                             /** @description The rows the scene does not show, in the variants' order: their variants have no photo on it. */
                             refused: {
-                                /** @description The rule that refuses it: `shape_outside_grip` for a product of another kind or a size the grip does not close round, `no_product_model` for a row with no product model. */
+                                /** @description The part a `part_colour_not_shown` row is refused by, such as `inside` or `handle`. */
+                                part?: string;
+                                /** @description The rule that refuses it: `part_colour_not_shown` for a product with a part of a colour of its own, such as a black inside, which the scene's photo, dyed whole, cannot show. */
                                 refusal: string;
                                 /** @description The row: its values of the options the blank's product changes with (`modelVariesBy`). Empty for a blank with one product. */
                                 row: {
@@ -33319,6 +33377,11 @@ export interface operations {
                             sceneId: string;
                             /** @description A scene from the library. */
                             source: string;
+                            /**
+                             * @description For a setting, true where the product is shown turned half round on its axis: a mug with its handle on the right and the other half of its wrap to the camera. Left out, it faces the way it always does, a mug's handle on the left. A setting is listed once each way round; a studio style turns its product by its cameras instead.
+                             * @enum {boolean}
+                             */
+                            turned?: true;
                         })[];
                         /** @description How many orders name the blank, past ones included. Answered in a list, never for one blank, and only to a caller with `orders:read`. */
                         orderCount?: number;
@@ -33954,6 +34017,11 @@ export interface operations {
                             ready: number;
                             /** @description The setting's id. */
                             sceneId: string;
+                            /**
+                             * @description Set where the setting shows the product turned half round, a mug's other side: a setting bound both ways round is listed once each way.
+                             * @enum {boolean}
+                             */
+                            turned?: true;
                             /** @description The rows not drawn in the setting, in the variants' order: their variants do not show it. */
                             waiting: {
                                 /** @description The rule that refused it, such as `footprint_exceeds_anchor` for a product larger than the room the setting has; null unless `state` is `refused`. */
@@ -34367,6 +34435,11 @@ export interface operations {
                                 };
                                 /** @description On a scene's view, whether a variant's colour recolours it. One that takes none shows only the variants of its colour. */
                                 takesDye?: boolean;
+                                /**
+                                 * @description On a setting's view, true where it shows the product turned half round on its axis: a mug with its handle on the right and the other half of its wrap to the camera. A blank shows a setting once each way round.
+                                 * @enum {boolean}
+                                 */
+                                turned?: true;
                                 /** @description The maps the view was rendered with from a 3D model of the product, each the view's photo size, opened with no key: a region naming a `piece` is read through them. Absent on a view of photos. Valid as long as a photo's `url`. */
                                 uvPassUrls?: {
                                     /** @description The multiply pass: the product's shadows and folds. */
@@ -34612,6 +34685,11 @@ export interface operations {
                             source?: string;
                             /** @description On a scene's view, whether a variant's colour recolours it. One that takes none shows only the variants of its colour. */
                             takesDye?: boolean;
+                            /**
+                             * @description On a setting's view, true where it shows the product turned half round on its axis: a mug with its handle on the right and the other half of its wrap to the camera. A blank shows a setting once each way round.
+                             * @enum {boolean}
+                             */
+                            turned?: true;
                             /** @description The maps the view was rendered with from a 3D model of the product, each the view's photo size, opened with no key: a region naming a `piece` is read through them. Absent on a view of photos. Valid as long as a photo's `url`. */
                             uvPassUrls?: {
                                 /** @description The multiply pass: the product's shadows and folds. */
@@ -36699,6 +36777,8 @@ export interface operations {
     "designs.commit": {
         parameters: {
             query?: {
+                /** @description A value set of the template, by the id `POST /v1/templates/{id}/value-sets` answered: the template is read with its values written in as its layers' own, so an offered layer starts at the set's value and a fixed one holds it. A store product names its own. One the template holds no set by is `value_set_not_found`. */
+                valueSet?: string;
                 /** @description The IANA timezone the template's dynamic values are resolved in, such as `Europe/Stockholm`: today's date there. Absent, the workspace's timezone. */
                 tz?: string;
                 /** @description The language the template's dynamic values are written in when their name names none, one of `en`, `sv`, `de`, `fr`, `es`, `nl`, `da`, `nb`, `fi`. Absent, the workspace's default language. A value whose name carries a language, `{date.long:sv}`, keeps it. */
@@ -36925,7 +37005,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: idempotency_key_reused, invalid_idempotency_key, invalid_doc, invalid_fulfilment_payload, payload_too_large, missing_fulfilment_keys, spot_plate_required, design_not_stitchable, design_unreadable, unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, constraint_violation, unknown_placement, variant_not_of_blank, variant_row_invalid, variant_required, page_on_unpaged_placement, page_required, page_count_out_of_range, asset_map_too_large */
+            /** @description Refused: idempotency_key_reused, invalid_idempotency_key, invalid_doc, invalid_fulfilment_payload, payload_too_large, missing_fulfilment_keys, spot_plate_required, design_not_stitchable, design_unreadable, unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, constraint_violation, unknown_placement, value_set_not_found, variant_not_of_blank, variant_row_invalid, variant_required, page_on_unpaged_placement, page_required, page_count_out_of_range, asset_map_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -37830,6 +37910,8 @@ export interface operations {
                         /** @description The version of the template the design was made from: `templateId` after its `@`. A design committed from a proof token was made from the proof's version, whatever the template's latest is now. */
                         templateVersion: number | null;
                         tenantId: string;
+                        /** @description The value set the design's template was read with, as the proof or commit named it in `valueSet`: the store product's values, written into its document and print file. Null when it named none. A store checks it is its product's before taking the design. */
+                        valueSetId: string | null;
                         /** @description The size the design was made for, on a blank whose print areas change with its size: the blank's option values it was sized at, such as `{"Size": "XL"}`. An order of a variant of another size is refused with `variant_not_of_design_row`. Null on a blank whose print areas change with nothing, or on no blank. */
                         variantRow: {
                             [key: string]: string;
@@ -39288,6 +39370,8 @@ export interface operations {
                         }[];
                         status: string;
                         template: components["schemas"]["ResolvedTemplate"];
+                        /** @description The value set `template` was read with, as `valueSet` named it: its values are written into the document as its layers' own. Absent when the read named none. */
+                        valueSetId?: string;
                         /** @description The variant of `blankId` the design's proof was drawn in, by ref, as `GET /v1/designs/{id}` answers `proofVariant`, which a designer opened on it shows unless told another; null when it named none. */
                         variant: string | null;
                         /** @description The template's workspace's default language, one of `en`, `sv`, `de`, `fr`, `es`, `nl`, `da`, `nb`, `fi`: what the SDK designer is shown in when its mount names no `locale`. */
@@ -39625,6 +39709,8 @@ export interface operations {
                         /** @description The version of the template the design was made from: `templateId` after its `@`. A design committed from a proof token was made from the proof's version, whatever the template's latest is now. */
                         templateVersion: number | null;
                         tenantId: string;
+                        /** @description The value set the design's template was read with, as the proof or commit named it in `valueSet`: the store product's values, written into its document and print file. Null when it named none. A store checks it is its product's before taking the design. */
+                        valueSetId: string | null;
                         /** @description The size the design was made for, on a blank whose print areas change with its size: the blank's option values it was sized at, such as `{"Size": "XL"}`. An order of a variant of another size is refused with `variant_not_of_design_row`. Null on a blank whose print areas change with nothing, or on no blank. */
                         variantRow: {
                             [key: string]: string;
@@ -53468,6 +53554,13 @@ export interface operations {
                         searchedProducts: number | null;
                         /** @description How many products answer the query (the category and the search), across every page; null when the partner did not say. */
                         total: number | null;
+                        /** @description The printshop's categories that could not be read this time, so none of their products is listed or counted; empty when every one was. */
+                        unreadCategories: {
+                            categoryId: string;
+                            name: string;
+                            /** @description True when asking again may read it, as after the printshop did not answer in time. */
+                            retryable: boolean;
+                        }[];
                     };
                 };
             };
@@ -53703,7 +53796,9 @@ export interface operations {
                                 label: string;
                                 /** @description The rows the scene does not show, in the variants' order: their variants have no photo on it. */
                                 refused: {
-                                    /** @description The rule that refuses it: `shape_outside_grip` for a product of another kind or a size the grip does not close round, `no_product_model` for a row with no product model. */
+                                    /** @description The part a `part_colour_not_shown` row is refused by, such as `inside` or `handle`. */
+                                    part?: string;
+                                    /** @description The rule that refuses it: `part_colour_not_shown` for a product with a part of a colour of its own, such as a black inside, which the scene's photo, dyed whole, cannot show. */
                                     refusal: string;
                                     /** @description The row: its values of the options the blank's product changes with (`modelVariesBy`). Empty for a blank with one product. */
                                     row: {
@@ -53822,6 +53917,11 @@ export interface operations {
                                 sceneId: string;
                                 /** @description A scene from the library. */
                                 source: string;
+                                /**
+                                 * @description For a setting, true where the product is shown turned half round on its axis: a mug with its handle on the right and the other half of its wrap to the camera. Left out, it faces the way it always does, a mug's handle on the left. A setting is listed once each way round; a studio style turns its product by its cameras instead.
+                                 * @enum {boolean}
+                                 */
+                                turned?: true;
                             })[];
                             /** @description How many orders name the blank, past ones included. Answered in a list, never for one blank, and only to a caller with `orders:read`. */
                             orderCount?: number;
@@ -54457,6 +54557,11 @@ export interface operations {
                                 ready: number;
                                 /** @description The setting's id. */
                                 sceneId: string;
+                                /**
+                                 * @description Set where the setting shows the product turned half round, a mug's other side: a setting bound both ways round is listed once each way.
+                                 * @enum {boolean}
+                                 */
+                                turned?: true;
                                 /** @description The rows not drawn in the setting, in the variants' order: their variants do not show it. */
                                 waiting: {
                                     /** @description The rule that refused it, such as `footprint_exceeds_anchor` for a product larger than the room the setting has; null unless `state` is `refused`. */
@@ -54604,7 +54709,9 @@ export interface operations {
                                 label: string;
                                 /** @description The rows the scene does not show, in the variants' order: their variants have no photo on it. */
                                 refused: {
-                                    /** @description The rule that refuses it: `shape_outside_grip` for a product of another kind or a size the grip does not close round, `no_product_model` for a row with no product model. */
+                                    /** @description The part a `part_colour_not_shown` row is refused by, such as `inside` or `handle`. */
+                                    part?: string;
+                                    /** @description The rule that refuses it: `part_colour_not_shown` for a product with a part of a colour of its own, such as a black inside, which the scene's photo, dyed whole, cannot show. */
                                     refusal: string;
                                     /** @description The row: its values of the options the blank's product changes with (`modelVariesBy`). Empty for a blank with one product. */
                                     row: {
@@ -54723,6 +54830,11 @@ export interface operations {
                                 sceneId: string;
                                 /** @description A scene from the library. */
                                 source: string;
+                                /**
+                                 * @description For a setting, true where the product is shown turned half round on its axis: a mug with its handle on the right and the other half of its wrap to the camera. Left out, it faces the way it always does, a mug's handle on the left. A setting is listed once each way round; a studio style turns its product by its cameras instead.
+                                 * @enum {boolean}
+                                 */
+                                turned?: true;
                             })[];
                             /** @description How many orders name the blank, past ones included. Answered in a list, never for one blank, and only to a caller with `orders:read`. */
                             orderCount?: number;
@@ -55358,6 +55470,11 @@ export interface operations {
                                 ready: number;
                                 /** @description The setting's id. */
                                 sceneId: string;
+                                /**
+                                 * @description Set where the setting shows the product turned half round, a mug's other side: a setting bound both ways round is listed once each way.
+                                 * @enum {boolean}
+                                 */
+                                turned?: true;
                                 /** @description The rows not drawn in the setting, in the variants' order: their variants do not show it. */
                                 waiting: {
                                     /** @description The rule that refused it, such as `footprint_exceeds_anchor` for a product larger than the room the setting has; null unless `state` is `refused`. */
@@ -55990,6 +56107,8 @@ export interface operations {
     "proofs.create": {
         parameters: {
             query?: {
+                /** @description A value set of the template, by the id `POST /v1/templates/{id}/value-sets` answered: the template is read with its values written in as its layers' own, so an offered layer starts at the set's value and a fixed one holds it. A store product names its own. One the template holds no set by is `value_set_not_found`. */
+                valueSet?: string;
                 /** @description The IANA timezone the template's dynamic values are resolved in, such as `Europe/Stockholm`: today's date there. Absent, the workspace's timezone. */
                 tz?: string;
                 /** @description The language the template's dynamic values are written in when their name names none, one of `en`, `sv`, `de`, `fr`, `es`, `nl`, `da`, `nb`, `fi`. Absent, the workspace's default language. A value whose name carries a language, `{date.long:sv}`, keeps it. */
@@ -56151,7 +56270,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: constraint_violation, unknown_placement, variant_not_of_blank, variant_row_invalid, asset_map_too_large, page_on_unpaged_placement, page_required, page_count_out_of_range, payload_too_large */
+            /** @description Refused: constraint_violation, unknown_placement, variant_not_of_blank, variant_row_invalid, asset_map_too_large, page_on_unpaged_placement, page_required, page_count_out_of_range, value_set_not_found, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -56250,6 +56369,8 @@ export interface operations {
     "proofs.createThroughLayout": {
         parameters: {
             query?: {
+                /** @description A value set of the template, by the id `POST /v1/templates/{id}/value-sets` answered: the template is read with its values written in as its layers' own, so an offered layer starts at the set's value and a fixed one holds it. A store product names its own. One the template holds no set by is `value_set_not_found`. */
+                valueSet?: string;
                 /** @description The IANA timezone the template's dynamic values are resolved in, such as `Europe/Stockholm`: today's date there. Absent, the workspace's timezone. */
                 tz?: string;
                 /** @description The language the template's dynamic values are written in when their name names none, one of `en`, `sv`, `de`, `fr`, `es`, `nl`, `da`, `nb`, `fi`. Absent, the workspace's default language. A value whose name carries a language, `{date.long:sv}`, keeps it. */
@@ -56404,7 +56525,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: empty_layout, constraint_violation, unknown_placement, variant_not_of_blank, variant_row_invalid, asset_map_too_large, unknown_layout, payload_too_large */
+            /** @description Refused: empty_layout, constraint_violation, unknown_placement, variant_not_of_blank, variant_row_invalid, asset_map_too_large, unknown_layout, value_set_not_found, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -56709,7 +56830,7 @@ export interface operations {
                                 rows: {
                                     /** @description The refusal as one plain sentence, to say as it is; null when the row is shown, and with `view=picker`, whose reader words the refusal itself. */
                                     reason: string | null;
-                                    /** @description Why the scene does not show the row, or null when it does: `no_product_model`, the row says no product; `kind_not_accepted`, the scene takes no product of that kind; `footprint_exceeds_anchor`, the product is larger than the anchor's room; `size_outside_reviewed_range`, no product of that size was looked at there; `angle_unsupported`, the camera looks too far up or down; `no_drawer`, nothing draws the kind yet; `shape_outside_grip`, the scene's photo holds a product of another kind or size in a hand. */
+                                    /** @description Why the scene does not show the row, or null when it does: `no_product_model`, the row says no product; `kind_not_accepted`, the scene takes no product of that kind; `footprint_exceeds_anchor`, the product is larger than the anchor's room; `size_outside_reviewed_range`, no product of that size was looked at there; `angle_unsupported`, the camera looks too far up or down; `no_drawer`, nothing draws the kind yet; `shape_outside_grip`, the scene's photo holds a product of another kind or size in a hand; `part_colour_not_shown`, the scene's photo, dyed whole, cannot show a part of a colour of its own. */
                                     refusal: string | null;
                                     /** @description A row of the blank's product: its values of the options its product changes with. Empty for a product that changes with none. */
                                     row: {
@@ -56758,6 +56879,15 @@ export interface operations {
                             thumbnailUrl: string | null;
                             /** @description Whether the scene is this workspace's own, composed from a stock scene, rather than Pixonaut's. */
                             workspace: boolean;
+                            /** @description For a scene the workspace made, its photo and mask at the zoom tier, each opening with no key: what an edited copy of the photo is made from, at the size `POST /v1/scenes/{id}/photo` takes. Left out for one of Pixonaut's scenes, and in a picker. */
+                            zoomUrls?: {
+                                heightPx: number;
+                                /** @description The cut-out of the product at that size: white where it is. */
+                                mask: string;
+                                /** @description The photo at its zoom tier. */
+                                photo: string;
+                                widthPx: number;
+                            };
                         }[];
                         stockItems: {
                             areas: {
@@ -59532,6 +59662,8 @@ export interface operations {
     "templates.get": {
         parameters: {
             query?: {
+                /** @description A value set of the template, by the id `POST /v1/templates/{id}/value-sets` answered: the template is read with its values written in as its layers' own, so an offered layer starts at the set's value and a fixed one holds it. A store product names its own. One the template holds no set by is `value_set_not_found`. */
+                valueSet?: string;
                 /** @description The IANA timezone the template's dynamic values are resolved in, such as `Europe/Stockholm`: today's date there. Absent, the workspace's timezone. */
                 tz?: string;
                 /** @description The language the template's dynamic values are written in when their name names none, one of `en`, `sv`, `de`, `fr`, `es`, `nl`, `da`, `nb`, `fi`. Absent, the workspace's default language. A value whose name carries a language, `{date.long:sv}`, keeps it. */
@@ -59637,6 +59769,8 @@ export interface operations {
                         }[];
                         status: string;
                         template: components["schemas"]["ResolvedTemplate"];
+                        /** @description The value set `template` was read with, as `valueSet` named it: its values are written into the document as its layers' own. Absent when the read named none. */
+                        valueSetId?: string;
                         /** @description The template's workspace's default language, one of `en`, `sv`, `de`, `fr`, `es`, `nl`, `da`, `nb`, `fi`: what the SDK designer is shown in when its mount names no `locale`. */
                         workspaceLanguage: string;
                     };
@@ -59704,6 +59838,18 @@ export interface operations {
                          * @example 0.15.0
                          */
                         minimumSdkVersion?: string | null;
+                    };
+                };
+            };
+            /** @description Refused: value_set_not_found */
+            422: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
                     };
                 };
             };
@@ -60878,6 +61024,261 @@ export interface operations {
             };
         };
     };
+    "templates.valueSets.create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A template id, `baseId@version`. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Values for the template's layers, by layer id and then prop, as a design's values are: a text's `content`, an image's `src` (an asset id), a colour, a layer's `opacity`, or the artwork's own under its reserved key. Any prop the layer has, offered or not. */
+                    values: {
+                        [key: string]: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description The set the same values already make */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description The template version the values were judged against. */
+                        templateId: string;
+                        /** @description The set's id, which a template read, a validation, a proof, a commit and the preview and mockup pictures name as `valueSet`. */
+                        valueSetId: string;
+                        /** @description The set's values, as they were made. */
+                        values: {
+                            [key: string]: {
+                                [key: string]: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+            /** @description The set */
+            201: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description The template version the values were judged against. */
+                        templateId: string;
+                        /** @description The set's id, which a template read, a validation, a proof, a commit and the preview and mockup pictures name as `valueSet`. */
+                        valueSetId: string;
+                        /** @description The set's values, as they were made. */
+                        values: {
+                            [key: string]: {
+                                [key: string]: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+            /** @description Refused: bad_json, bad_request */
+            400: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: unauthorized */
+            401: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: origin_forbidden, secret_key_required, feature_disabled, forbidden */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
+                        feature?: string;
+                    };
+                };
+            };
+            /** @description Refused: template_not_found */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: value_set_invalid, payload_too_large */
+            422: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Sent with `payload_too_large`. */
+                        bytes?: number;
+                        error: string;
+                        /** @description Every value the version does not take. Always sent with `value_set_invalid`. */
+                        issues?: {
+                            /** @description The layer, or empty for the document as a whole. */
+                            layerId: string;
+                            /** @description The prop, or empty for the whole layer. */
+                            prop: string;
+                            /** @description Why: `unknown_layer`, `unknown_prop`, `value_kind` (another kind of value than the prop holds), or the rule a publish holds the layer to. */
+                            rule: string;
+                        }[];
+                        /** @description Always sent with `payload_too_large`. */
+                        maxBytes?: number;
+                    };
+                };
+            };
+            /** @description Refused: publish_gate_failed, template_renderer_failed, db_error. A request that failed unexpectedly answers as text instead. */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                    "text/plain": "Internal Server Error";
+                };
+            };
+            /** @description Refused: print_box_unavailable, publish_references_unavailable */
+            503: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+        };
+    };
+    "templates.valueSets.get": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A template id, `baseId@version`. */
+                id: string;
+                /** @description The value set's id. */
+                valueSetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The set */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description The template version the values were judged against. */
+                        templateId: string;
+                        /** @description The set's id, which a template read, a validation, a proof, a commit and the preview and mockup pictures name as `valueSet`. */
+                        valueSetId: string;
+                        /** @description The set's values, as they were made. */
+                        values: {
+                            [key: string]: {
+                                [key: string]: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+            /** @description Refused: unauthorized */
+            401: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: origin_forbidden, secret_key_required, feature_disabled, forbidden */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
+                        feature?: string;
+                    };
+                };
+            };
+            /** @description Refused: value_set_not_found */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: db_error. A request that failed unexpectedly answers as text instead. */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                    "text/plain": "Internal Server Error";
+                };
+            };
+        };
+    };
     "upscales.get": {
         parameters: {
             query?: never;
@@ -61048,6 +61449,8 @@ export interface operations {
     "payloads.validate": {
         parameters: {
             query?: {
+                /** @description A value set of the template, by the id `POST /v1/templates/{id}/value-sets` answered: the template is read with its values written in as its layers' own, so an offered layer starts at the set's value and a fixed one holds it. A store product names its own. One the template holds no set by is `value_set_not_found`. */
+                valueSet?: string;
                 /** @description The IANA timezone the template's dynamic values are resolved in, such as `Europe/Stockholm`: today's date there. Absent, the workspace's timezone. */
                 tz?: string;
                 /** @description The language the template's dynamic values are written in when their name names none, one of `en`, `sv`, `de`, `fr`, `es`, `nl`, `da`, `nb`, `fi`. Absent, the workspace's default language. A value whose name carries a language, `{date.long:sv}`, keeps it. */
@@ -61196,7 +61599,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: constraint_violation, unknown_placement, variant_not_of_blank, variant_row_invalid, payload_too_large */
+            /** @description Refused: constraint_violation, unknown_placement, variant_not_of_blank, variant_row_invalid, value_set_not_found, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];

@@ -32,6 +32,7 @@ final class Design {
 	 * @param string|null          $proof_id                `proofId`, naming the proof's bytes.
 	 * @param string|null          $external_ref            `externalRef`, the store's reference for it.
 	 * @param float|null           $personal_data_erased_at `personalDataErasedAt`, epoch milliseconds; null while not erased.
+	 * @param string|null          $value_set_id            `valueSetId`, the template's value set it was made with; null for none, and when the answer leaves it out.
 	 */
 	public function __construct(
 		public readonly string $id,
@@ -47,6 +48,7 @@ final class Design {
 		public readonly ?string $proof_id,
 		public readonly ?string $external_ref,
 		public readonly ?float $personal_data_erased_at,
+		public readonly ?string $value_set_id,
 	) {
 	}
 
@@ -83,6 +85,8 @@ final class Design {
 			proof_id: Read::nullable_string( $data, 'proofId', $path ),
 			external_ref: Read::nullable_string( $data, 'externalRef', $path ),
 			personal_data_erased_at: Read::nullable_float( $data, 'personalDataErasedAt', $path ),
+			// Absent from a Pixonaut from before value sets, and from a design read before them: none.
+			value_set_id: array_key_exists( 'valueSetId', $data ) ? Read::nullable_string( $data, 'valueSetId', $path ) : null,
 		);
 	}
 }

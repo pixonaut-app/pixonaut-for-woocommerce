@@ -83,11 +83,27 @@ function verifies(
 
 /** The reference's first example body for a webhook, the overlay's for
  *  one it stands in for. */
+/** The pinned reference with the overlay, read once: parsing the spec for
+ *  each event outlasts the test's time. */
+let reference: unknown;
+
 function example(type: string): { type: string; payload: unknown } {
-	const spec = withOverlay(
+	reference ??= withOverlay(
 		JSON.parse(readFileSync(join(CONTRACTS_DIR, 'openapi.json'), 'utf8')),
 		readOverlay(),
 	);
+	const spec = reference as {
+		webhooks: Record<
+			string,
+			{
+				post: {
+					requestBody: {
+						content: { 'application/json': { examples: object } };
+					};
+				};
+			}
+		>;
+	};
 	const examples =
 		spec.webhooks[type].post.requestBody.content['application/json'].examples;
 	const { value } = Object.values(examples)[0] as {

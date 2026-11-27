@@ -80,6 +80,7 @@ import { findOrCreateStandingDesign } from './standing-designs';
 import { readTemplateMockup, readTemplatePreview } from './template-images';
 import { readTemplate, readTemplateConstraints } from './templates';
 import type { Handler } from './types';
+import { createValueSet } from './value-sets';
 import { listVariantCosts } from './variant-costs';
 import {
 	listWebhooks,
@@ -124,6 +125,7 @@ export const HANDLERS: Partial<Record<OperationKey, Handler>> = {
 	'GET /v1/templates/{id}/constraints': readTemplateConstraints,
 	'POST /v1/templates/{id}/print-size': judgePrintSize,
 	'POST /v1/templates/{id}/designer-links': createDesignerLink,
+	'POST /v1/templates/{id}/value-sets': createValueSet,
 	'GET /v1/printshop-connections': listPrintshopConnections,
 	'GET /v1/printshop-catalogue-products': listCatalogueProducts,
 	'POST /v1/printshop-catalogue-products/{productId}/blank':

@@ -197,11 +197,14 @@ final class VariationSetupShopToolsTest extends WP_UnitTestCase {
 			'blank_id'  => self::BLANK_ID,
 			'sides'     => array(
 				array(
+					'key'             => 'front',
 					'label'           => 'Front',
 					'mode'            => Side::STANDING,
 					'template_id'     => 'mini-tee@2',
 					'template_pinned' => true,
 					'placement_id'    => 'front',
+					'value_set_id'    => null,
+					'values'          => null,
 				),
 			),
 		);
@@ -210,11 +213,14 @@ final class VariationSetupShopToolsTest extends WP_UnitTestCase {
 			'blank_id'  => null,
 			'sides'     => array(
 				array(
+					'key'             => 'front',
 					'label'           => 'Front',
 					'mode'            => Side::PERSONALISED,
 					'template_id'     => self::PRODUCT_TEMPLATE_BASE_ID . '@' . self::PRODUCT_TEMPLATE_VERSION,
 					'template_pinned' => false,
 					'placement_id'    => null,
+					'value_set_id'    => null,
+					'values'          => null,
 				),
 			),
 		);
@@ -222,7 +228,14 @@ final class VariationSetupShopToolsTest extends WP_UnitTestCase {
 		$by_id = array_column( $listed['items'], ResourceAbility::SETUP_FIELD, 'id' );
 		$this->assertSame( $own_setup, $by_id[ $own->get_id() ] );
 		$this->assertSame( $following_setup, $by_id[ $following->get_id() ] );
-		$this->assertArrayNotHasKey( ResourceAbility::SETUP_FIELD, $this->succeed( array( 'id' => $product->get_id() ), 'get-product' ), 'a product gives none' );
+		$this->assertSame(
+			array(
+				'blank_id' => null,
+				'sides'    => $following_setup['sides'],
+			),
+			$this->succeed( array( 'id' => $product->get_id() ), 'get-product' )[ ResourceAbility::SETUP_FIELD ],
+			'a product gives its own'
+		);
 		$this->assertSame( array(), $this->recorder->requests, 'no call to Pixonaut' );
 	}
 

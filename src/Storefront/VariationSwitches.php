@@ -158,6 +158,11 @@ final class VariationSwitches {
 			if ( is_bool( $options['drawAtTemplateRatio'] ?? null ) ) {
 				$side['drawAtTemplateRatio'] = $options['drawAtTemplateRatio'];
 			}
+			$value_set = ProductMount::value_set( $options );
+			if ( null !== $value_set ) {
+				// A variation on another set mounts the side again on it.
+				$side['valueSet'] = $value_set;
+			}
 			$sides[ $key ]       = $side;
 			$this->sized[ $key ] = ( $this->sized[ $key ] ?? true ) && count( $sizes ) <= 1;
 		}

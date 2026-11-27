@@ -13,6 +13,7 @@ import {
 	type HandlerResult,
 	refusal,
 } from './types';
+import { formWithValues, namedSet, withValues } from './value-sets';
 
 /** The caller's tenant's template `id`, or undefined when another tenant
  *  owns it, there is none, or a share link does not reach it. */
@@ -139,7 +140,23 @@ export const readTemplate: Handler = (context) => {
 	if (template === undefined) {
 		return NOT_FOUND;
 	}
-	return { status: 200, body: templateRead(context, template) };
+	const set = namedSet(context, template);
+	if (set === 'unknown') {
+		return refusal(422, 'value_set_not_found');
+	}
+	const read = templateRead(context, template);
+	return {
+		status: 200,
+		body:
+			set === 'none'
+				? read
+				: {
+						...read,
+						template: withValues(template.template, set),
+						formSchema: formWithValues(read.formSchema, set),
+						valueSetId: set.id,
+					},
+	};
 };
 
 export const readTemplateConstraints: Handler = (context) => {

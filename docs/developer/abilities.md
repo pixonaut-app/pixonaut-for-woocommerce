@@ -30,6 +30,7 @@ client signs in as, and checks that user's capability itself.
 | `pixonaut-for-woocommerce/set-product-picture-view` | Sets the view and photo one image of a product or variation is drawn on, or flat | `edit_product` on that product (and on a variation's product) |
 | `pixonaut-for-woocommerce/get-product-form` | How a simple or variable product's designer form is arranged: each side's groups, where its options stand, group numbers and layouts, with the options and template fields an arrangement may name | `edit_product` on that product |
 | `pixonaut-for-woocommerce/set-product-form` | Arranges a product's designer form: the groups of the sides named, where its options stand, group numbers and layouts, keeping its sides, print sizes and variations' setups | `edit_product` on that product |
+| `pixonaut-for-woocommerce/set-product-values` | Sets a product's or own-setup variation's values for its sides' template layers, made into a value set its designer, pictures and cart name | `edit_product` on that product |
 | `pixonaut-for-woocommerce/get-product-split-listing` | Whether each global attribute of a product lists its values as their own products, each value's card's own title and image, and the cards it is listed as now, combinations included | `edit_product` on that product |
 | `pixonaut-for-woocommerce/set-product-split-listing` | Sets a product's "Cards in the shop" choice per global attribute, and each value's or combination's card's own title and image | `edit_product` on that product |
 | `pixonaut-for-woocommerce/set-attribute-split-listing` | Sets a global attribute's "Cards in the shop" setting, which the products on Auto follow | `manage_product_terms` |
@@ -132,7 +133,11 @@ variation is not personalised on a blank. They also add `pixonaut_setup`,
 the setup the variation is sold under: `{own_setup, blank_id, sides}`,
 `own_setup` false when it follows its product, whose `blank_id` and `sides`
 it then gives; each side as `set-product-setup` takes it, with only
-`template_id`, `template_pinned`, `placement_id`, `label` and `mode`. Dates in an answer are RFC 3339 with their offset: a field
+`key`, `template_id`, `template_pinned`, `placement_id`, `label` and `mode`,
+and the side's own `value_set_id` and `values` (null for none) as
+`set-product-values` sets them. `get-product` and `list-products` add
+`pixonaut_setup` to each product too, `{blank_id, sides}`, its sides in the
+same terms. Dates in an answer are RFC 3339 with their offset: a field
 ending in `_gmt` in UTC, any other in the site's timezone, where the route
 answers them without one.
 
@@ -452,6 +457,30 @@ without an `id` or `items`, an item naming both or neither of `field` and
 (`wc-options`, `wc-template-groups`). A product without a Pixonaut setup has
 no form to arrange and is refused. When Pixonaut cannot be asked for the template's fields, nothing
 is saved. The answer is the read's.
+
+`set-product-values` gives a simple or variable product's sides, or those
+of one of its variations with a setup of its own (`variation_id`), values of
+their own for their template's layers: `sides`, each by `key` with its
+`values` by layer id and prop (`{"title": {"content": "farmor"}}`), or null
+(or `{}`) to take the side's off; a side left out keeps its own. One template
+then sells as many products as there are themes and recipients. The store
+asks Pixonaut to make a value set of each side's values against the side's
+template version (`POST /v1/templates/{id}/value-sets`), which judges them as
+a publish judges a showcase, and keeps the set's id beside them in
+`_pixonaut_side_values`, apart from the side, so the Pixonaut tab,
+`set-product-setup` and variation generation keep them. The designer opens
+on the set, so an offered prop starts at its value and a fixed one prints
+it; the product's pictures are drawn with it, and the cart refuses a design
+made without it. Values are kept while the side stays on that template; a
+side moved to another template has none. A variation that follows its
+product is sold with its product's values, and a call naming one is
+refused. So is a product without a Pixonaut setup, a side it does not have,
+a side given twice, a side without a template, values in another shape,
+and any value Pixonaut refuses, named by side, layer and prop: the call
+says every problem and saves nothing. When Pixonaut cannot be asked,
+nothing is saved either. The
+answer is every side of the product or variation, with its `template_id`,
+`value_set_id` and `values`, null where it has none.
 
 `get-product-split-listing` reads what the product's Attributes tab shows
 for [listing each value as its own product](../../merchant/split-listings/):

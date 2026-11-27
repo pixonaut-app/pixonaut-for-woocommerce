@@ -108,7 +108,7 @@ final class StagePosters {
 	/**
 	 * The pictures to draw once the page is sent, by key.
 	 *
-	 * @var array<string, array{template: string, blank: string, placement: string, view: string, variant: string|null, connection: string}>
+	 * @var array<string, array{template: string, blank: string, placement: string, view: string, variant: string|null, connection: string, value_set?: string}>
 	 */
 	private array $queued = array();
 
@@ -122,7 +122,7 @@ final class StagePosters {
 	/**
 	 * How many arguments a job passes: what the picture is drawn from.
 	 */
-	private const JOB_ARGS = 6;
+	private const JOB_ARGS = 7;
 
 	/**
 	 * Characters of a drawing's content hash in its file name.
@@ -175,7 +175,7 @@ final class StagePosters {
 			'view'       => $view,
 			'variant'    => $variant,
 			'connection' => $this->connection(),
-		);
+		) + self::value_set_of( $options );
 		$key    = self::key( $source );
 		$kept   = $this->kept( $key );
 		if ( null === $kept || time() - $kept['drawn_at'] >= self::FRESH_SECONDS ) {
@@ -194,6 +194,19 @@ final class StagePosters {
 			'view'      => $view,
 			'variant'   => $variant ?? '',
 		);
+	}
+
+	/**
+	 * The value set a side's mount options open its template on
+	 * (`valueSets`), as a source names it: only with one, so a side without
+	 * one keeps the picture it has.
+	 *
+	 * @param array<string, mixed> $options The side's mount options.
+	 * @return array{value_set?: string}
+	 */
+	private static function value_set_of( array $options ): array {
+		$set = ProductMount::value_set( $options );
+		return null === $set ? array() : array( 'value_set' => $set );
 	}
 
 	/**
@@ -223,8 +236,9 @@ final class StagePosters {
 	 * @param mixed $view      The view.
 	 * @param mixed $variant   The variant ref; null for the view's default photo.
 	 * @param mixed $connection The connection the page asked for it under; a job of another is dropped.
+	 * @param mixed $value_set  The template's value set the side opens on; null for none.
 	 */
-	public function draw_scheduled( mixed $template, mixed $blank, mixed $placement, mixed $view, mixed $variant = null, mixed $connection = '' ): void {
+	public function draw_scheduled( mixed $template, mixed $blank, mixed $placement, mixed $view, mixed $variant = null, mixed $connection = '', mixed $value_set = null ): void {
 		if ( ! is_string( $template ) || ! is_string( $blank ) || ! is_string( $placement ) || ! is_string( $view ) || $connection !== $this->connection() ) {
 			return;
 		}
@@ -235,7 +249,7 @@ final class StagePosters {
 			'view'       => $view,
 			'variant'    => is_string( $variant ) ? $variant : null,
 			'connection' => $connection,
-		);
+		) + ( is_string( $value_set ) ? array( 'value_set' => $value_set ) : array() );
 		$key    = self::key( $source );
 		if ( $this->draw( $key, $source ) ) {
 			delete_option( self::HOLD_OPTION_PREFIX . $key );
@@ -247,8 +261,8 @@ final class StagePosters {
 	 * when Pixonaut refused or could not be reached, or the file could not
 	 * be written.
 	 *
-	 * @param string                                                                                                            $key    The picture's key.
-	 * @param array{template: string, blank: string, placement: string, view: string, variant: string|null, connection: string} $source What it is drawn from.
+	 * @param string                                                                                                                                $key    The picture's key.
+	 * @param array{template: string, blank: string, placement: string, view: string, variant: string|null, connection: string, value_set?: string} $source What it is drawn from.
 	 */
 	private function draw( string $key, array $source ): bool {
 		$context = array(
@@ -259,7 +273,7 @@ final class StagePosters {
 			'variant'   => $source['variant'],
 		);
 		try {
-			$png = $this->pictures->mockup( $source['template'], $source['blank'], $source['placement'], $source['view'], $source['variant'], self::SIZE );
+			$png = $this->pictures->mockup( $source['template'], $source['blank'], $source['placement'], $source['view'], $source['variant'], self::SIZE, null, null, $source['value_set'] ?? null );
 		} catch ( ApiException $error ) {
 			$this->logger->warning( 'The picture a product page shows until the designer has drawn could not be drawn.', $context + array( 'error' => $error->getMessage() ) );
 			return false;
@@ -400,8 +414,8 @@ final class StagePosters {
 	 * another page view is drawing it, or a drawing of it failed less than a
 	 * minute ago.
 	 *
-	 * @param string                                                                                                            $key    The picture's key.
-	 * @param array{template: string, blank: string, placement: string, view: string, variant: string|null, connection: string} $source What it is drawn from.
+	 * @param string                                                                                                                                $key    The picture's key.
+	 * @param array{template: string, blank: string, placement: string, view: string, variant: string|null, connection: string, value_set?: string} $source What it is drawn from.
 	 */
 	private function queue( string $key, array $source ): void {
 		if ( isset( $this->queued[ $key ] ) || ( null === $this->finish_response && ! did_action( 'action_scheduler_init' ) ) ) {
@@ -446,7 +460,7 @@ final class StagePosters {
 	/**
 	 * A picture's key: a hash of what it is drawn from and its size.
 	 *
-	 * @param array{template: string, blank: string, placement: string, view: string, variant: string|null, connection: string} $source What it is drawn from.
+	 * @param array{template: string, blank: string, placement: string, view: string, variant: string|null, connection: string, value_set?: string} $source What it is drawn from.
 	 */
 	private static function key( array $source ): string {
 		return md5( (string) wp_json_encode( array( $source, self::SIZE ) ) );

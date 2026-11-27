@@ -10,6 +10,7 @@ import type {
 	TemplateAnswer,
 } from '../types/sdk';
 import type { PixonautSdk } from './sdk-loader';
+import { sameValueSets } from './value-sets';
 
 /** What the server read from Pixonaut for one side's designer. */
 export type SideReads = {
@@ -45,7 +46,8 @@ export const MS_PER_S = 1000;
 const LAST_SINGLE_TARGET_RELEASE = [0, 5] as const;
 
 /** The mount options the reads were made for; a side whose options a
- *  filter or a variation changed reads again in the browser. */
+ *  filter or a variation changed reads again in the browser. The value set
+ *  they were read with is one of them too (`valueSets`). */
 const READ_KEYS = ['templateId', 'blankId', 'placementId'] as const;
 
 /** The reads the server printed in the form, by side key; empty for none,
@@ -86,13 +88,15 @@ export function mountSide(
 	options: SplitMountOptions,
 	reads: SideReads | undefined,
 	readFor:
-		| Partial<Pick<SplitMountOptions, (typeof READ_KEYS)[number]>>
+		| Partial<Pick<SplitMountOptions, (typeof READ_KEYS)[number] | 'valueSets'>>
 		| undefined,
 ): Promise<PixonautDesigner> {
 	if (
 		reads?.template === undefined ||
 		readFor === undefined ||
 		!READ_KEYS.every((key) => options[key] === readFor[key]) ||
+		// Read with another set, the template holds another product's values.
+		!sameValueSets(options.valueSets, readFor.valueSets) ||
 		sdk.createDesigner === undefined ||
 		sdk.designerUi === undefined ||
 		!drawsSplitMounts(sdk.version)

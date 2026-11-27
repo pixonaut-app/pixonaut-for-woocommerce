@@ -186,6 +186,7 @@ if ( ! function_exists( 'pixonaut_wc_uninstall_site' ) ) {
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRODUCT_PICTURE_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRODUCT_PICTURE_GENERATION_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRODUCT_SHOWCASE_IMAGES_META );
+		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRODUCT_SIDE_VALUES_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PICTURE_VIEW_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::VARIATION_CARD_PHOTO_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRODUCT_KEEPS_IMAGE_META );

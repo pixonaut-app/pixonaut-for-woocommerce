@@ -18,6 +18,7 @@ use Pixonaut\WooCommerce\Catalogue\ProductVariant;
 use Pixonaut\WooCommerce\Catalogue\SharedPictures;
 use Pixonaut\WooCommerce\Catalogue\ShowcaseImages;
 use Pixonaut\WooCommerce\Catalogue\Side;
+use Pixonaut\WooCommerce\Catalogue\SideValues;
 use Pixonaut\WooCommerce\Catalogue\StandingRow;
 use Pixonaut\WooCommerce\Settings\Settings;
 use WC_Product;
@@ -80,7 +81,7 @@ final class ProductSetup {
 	/**
 	 * What `variation_setup()` gives of each side, in the terms `set-product-setup` takes.
 	 */
-	private const VARIATION_SIDE_FIELDS = array( 'template_id', 'template_pinned', 'placement_id', 'label', 'mode' );
+	private const VARIATION_SIDE_FIELDS = array( 'key', 'template_id', 'template_pinned', 'placement_id', 'label', 'mode' );
 
 	/**
 	 * @param Settings $settings Says whether pictures are product images.
@@ -359,10 +360,72 @@ final class ProductSetup {
 		return array(
 			'own_setup' => $own->override,
 			'blank_id'  => $config->blank_id,
-			'sides'     => array_map(
-				static fn ( Side $side ): array => array_intersect_key( SetupFields::side_of( $side ), array_flip( self::VARIATION_SIDE_FIELDS ) ),
-				$config->sides
+			'sides'     => self::sold_sides( $variation, $config ),
+		);
+	}
+
+	/**
+	 * The blank and sides a simple or variable product is set up with, each
+	 * side with its own values. Read from what is stored, without asking
+	 * Pixonaut.
+	 *
+	 * @param WC_Product $product A simple or variable product.
+	 * @return array{blank_id: string|null, sides: list<array<string, mixed>>}
+	 */
+	public static function product_setup( WC_Product $product ): array {
+		$config = ProductConfig::stored_on( $product );
+		return array(
+			'blank_id' => $config->blank_id,
+			'sides'    => self::sold_sides( $product, $config ),
+		);
+	}
+
+	/**
+	 * Each side a product or variation is sold with, in the terms
+	 * `set-product-setup` takes, with its own values.
+	 *
+	 * @param WC_Product    $product A product or variation.
+	 * @param ProductConfig $config  The configuration it is sold under.
+	 * @return list<array<string, mixed>>
+	 */
+	private static function sold_sides( WC_Product $product, ProductConfig $config ): array {
+		return array_map(
+			static fn ( Side $side ): array => array_intersect_key( SetupFields::side_of( $side ), array_flip( self::VARIATION_SIDE_FIELDS ) ) + self::side_values( $product, $side ),
+			$config->sides
+		);
+	}
+
+	/**
+	 * The schema of `side_values()`.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public static function side_values_schema(): array {
+		return array(
+			'value_set_id' => array(
+				'type'        => array( 'string', 'null' ),
+				'description' => __( 'The value set Pixonaut made of the side\'s own values, which its designer, pictures and cart name; null without values.', 'pixonaut-for-woocommerce' ),
 			),
+			'values'       => array(
+				'type'        => array( 'object', 'null' ),
+				'description' => __( 'The side\'s own values for its template\'s layers, by layer id and prop, set with `set-product-values`; null for none.', 'pixonaut-for-woocommerce' ),
+			),
+		);
+	}
+
+	/**
+	 * A side's own values as a read gives them: none while the side is on
+	 * another template than they were made for.
+	 *
+	 * @param WC_Product $product The product or variation sold with the side.
+	 * @param Side       $side    The side.
+	 * @return array{value_set_id: string|null, values: array<string, array<string, mixed>>|null}
+	 */
+	public static function side_values( WC_Product $product, Side $side ): array {
+		$value = SideValues::of( $product, $side );
+		return array(
+			'value_set_id' => $value?->value_set_id,
+			'values'       => $value?->values,
 		);
 	}
 

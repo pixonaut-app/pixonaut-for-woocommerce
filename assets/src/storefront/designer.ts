@@ -106,6 +106,12 @@ import { SubmitHold } from './submit-hold';
 import { SideTabs } from './tabs';
 import { carryUnkeyedValues } from './template-carry';
 import type { ThemeMountOptions } from './theme-look';
+import {
+	sameValueSets,
+	type ValueSets,
+	valueSetOf,
+	valueSetsFor,
+} from './value-sets';
 import { showVariant, startingVariant, variantRef } from './variant';
 import {
 	followChoices,
@@ -261,6 +267,7 @@ type Placed = {
 	variants?: readonly string[];
 	selectedPrintSizeIndex?: number;
 	drawAtTemplateRatio?: boolean;
+	valueSets?: ValueSets;
 };
 
 /**
@@ -634,7 +641,8 @@ export class ProductDesigner {
 		// now reads afresh: the SDK would take them as the customer's.
 		if (
 			reads === undefined ||
-			this.readFor[side]?.templateId !== options.templateId
+			this.readFor[side]?.templateId !== options.templateId ||
+			!sameValueSets(this.readFor[side]?.valueSets, own?.valueSets)
 		) {
 			dropUntouchedInputs(this.formTarget(side));
 		}
@@ -1377,8 +1385,8 @@ export class ProductDesigner {
 
 	/**
 	 * Switches one side to the variation's: another blank, placement, form
-	 * layout, canvas, or set of placements or views mounts the side again on
-	 * the customer's values; another template or print size is switched in
+	 * layout, canvas, value set, or set of placements or views mounts the
+	 * side again on the customer's values; another template or print size is switched in
 	 * the mounted designer, so the page keeps its layout while the new one
 	 * draws, the template first. A template the designer cannot switch to
 	 * in place mounts the side again instead. Any change drops the side's
@@ -1402,7 +1410,10 @@ export class ProductDesigner {
 				? size
 				: (starting ?? size);
 		const otherTemplate = previous.templateId !== target.templateId;
+		// The SDK reads a set at its mount: another set mounts the side again.
+		const otherValueSet = valueSetOf(previous) !== target.valueSet;
 		const remounted =
+			otherValueSet ||
 			previous.blankId !== target.blankId ||
 			previous.placementId !== target.placementId ||
 			!sameList(previous.placements, target.placements) ||
@@ -1435,6 +1446,7 @@ export class ProductDesigner {
 			layout: _layout,
 			formGroups: _formGroups,
 			drawAtTemplateRatio: _drawAtTemplateRatio,
+			valueSets: _valueSets,
 			...rest
 		} = previous;
 		this.mounts[side] = {
@@ -1464,6 +1476,7 @@ export class ProductDesigner {
 			...(target.drawAtTemplateRatio === undefined
 				? {}
 				: { drawAtTemplateRatio: target.drawAtTemplateRatio }),
+			...valueSetsFor(target.templateId, target.valueSet),
 			selectedPrintSizeIndex: nextSize,
 		} as SideOptions;
 		const inPlace = !remounted && designer !== undefined && this.sdk !== null;

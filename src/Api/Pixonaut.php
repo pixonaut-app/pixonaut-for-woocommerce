@@ -65,6 +65,8 @@ final class Pixonaut {
 		'templates.mockup.get',
 		'templates.preview.get',
 		'templates.designerLinks.create',
+		// The same values for the same template answer the same set, so it takes no key.
+		'templates.valueSets.create',
 		'blanks.list',
 		'blanks.get',
 		'blanks.mockups.list',
