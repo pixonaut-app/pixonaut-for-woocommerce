@@ -824,6 +824,16 @@ final class ProductPictures {
 				$parts[] = array( 'card_photo' => true );
 			}
 		}
+		$values = array_filter(
+			array(
+				'own'    => SideValues::document_on( $product ),
+				'parent' => $parent instanceof WC_Product ? SideValues::document_on( $parent ) : null,
+			)
+		);
+		if ( array() !== $values ) {
+			// Only once given, so a product without values keeps the pictures it has.
+			$parts[] = array( 'side_values' => $values );
+		}
 		$drawn_as = PicturedVariation::document_on( $product );
 		if ( null !== $drawn_as ) {
 			// A variable product's picture is the one of a variation it sells.

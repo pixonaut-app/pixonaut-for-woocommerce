@@ -212,6 +212,9 @@ export const NO_SPEC = [
 	'src/Emails/MarginFloorEmail.php',
 	'templates/emails/margin-floor.php',
 	'templates/emails/plain/margin-floor.php',
+	// A side's own values and the value set they make: the PHP suites, until the fake makes sets.
+	'src/Catalogue/SideValue.php',
+	'src/Catalogue/SideValues.php',
 ];
 
 /**

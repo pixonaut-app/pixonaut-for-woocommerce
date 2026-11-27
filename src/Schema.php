@@ -221,6 +221,13 @@ final class Schema {
 	const PRODUCT_SHOWCASE_IMAGES_META = '_pixonaut_showcase_images';
 
 	/**
+	 * Product and variation meta holding each side's own values for its
+	 * template's layers and the value set Pixonaut made of them: JSON,
+	 * `{v, sides: {<key>: {template, valueSet, values}}}` (`SideValues`).
+	 */
+	const PRODUCT_SIDE_VALUES_META = '_pixonaut_side_values';
+
+	/**
 	 * Product and variation meta choosing what a picture is drawn on: on a
 	 * product, the picture drawn without a showcase set; on a variation, its
 	 * picture in place of its product's choice. JSON, `{kind, view?, photo?}`.
