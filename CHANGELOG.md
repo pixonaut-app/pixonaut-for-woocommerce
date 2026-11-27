@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.34.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.33.5...v1.34.0) (2026-11-27)
+
+
+### Features
+
+* **shop-tools:** a showcase set can be drawn on several views, each named by set-product-showcase ([#418](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/418)) ([aa589aa](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/aa589aad46596f61d9cd762b56e64ea99bc9dac7))
+
 ## [1.33.5](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.33.4...v1.33.5) (2026-11-27)
 
 
