@@ -1081,6 +1081,7 @@ final class Plugin {
 		if ( null === $this->picture_runner && did_action( 'action_scheduler_init' ) ) {
 			$this->picture_runner = new PictureRunner( null, $this->settings() );
 			add_action( 'shutdown', array( $this->picture_runner, 'started' ) );
+			add_filter( 'action_scheduler_queue_runner_concurrent_batches', array( $this->picture_runner, 'concurrent_batches' ) );
 		}
 		return $this->picture_runner;
 	}

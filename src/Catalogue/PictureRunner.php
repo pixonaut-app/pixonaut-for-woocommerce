@@ -180,6 +180,19 @@ final class PictureRunner extends WP_Async_Request {
 	}
 
 	/**
+	 * Action Scheduler's own runners, by WP-Cron, WP-CLI or its async
+	 * request, start no batch while as many claims as it allows are held,
+	 * and each of these runners holds one while it runs a job: they are
+	 * added to what it allows, so drawing pictures side by side never holds
+	 * back the store's other jobs, its orders and webhooks among them.
+	 *
+	 * @param mixed $batches The batches Action Scheduler allows at once.
+	 */
+	public function concurrent_batches( mixed $batches ): int {
+		return max( 0, (int) $batches ) + $this->runners();
+	}
+
+	/**
 	 * How many runners run in the store at once: its setting.
 	 */
 	public function runners(): int {
