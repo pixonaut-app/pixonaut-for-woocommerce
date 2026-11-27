@@ -156,7 +156,7 @@ final class CorrectionMount {
 			return array();
 		}
 		$size = DesignCheck::size_index( $design->print_size, $side->print_sizes );
-		if ( null === $size || null !== DesignCheck::mismatch( $design, $side, $config->blank_id ) ) {
+		if ( null === $size || null !== DesignCheck::mismatch( $design, $side, $config->blank_id, $design->value_set_id ) ) {
 			return array();
 		}
 		$variant = null === $config->blank_id ? null : ProductVariant::sold_by( $bought, $config );

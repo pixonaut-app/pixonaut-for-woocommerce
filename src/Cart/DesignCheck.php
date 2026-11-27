@@ -51,15 +51,22 @@ final class DesignCheck {
 	public const PAGES = 'pages';
 
 	/**
+	 * The design was made with other values than the side's own: without
+	 * the side's value set, with another, or with one where the side has none.
+	 */
+	public const VALUES = 'values';
+
+	/**
 	 * What does not match, or null when the design is what the side sells.
 	 *
-	 * @param Design      $design   The design, as Pixonaut answered it.
-	 * @param Side        $side     The side the design was made for.
-	 * @param string|null $blank_id The product's blank; null for a template-only product.
+	 * @param Design      $design       The design, as Pixonaut answered it.
+	 * @param Side        $side         The side the design was made for.
+	 * @param string|null $blank_id     The product's blank; null for a template-only product.
+	 * @param string|null $value_set_id The side's own value set (`SideValues::set_of()`); null when it has none.
 	 *
 	 * @return string|null One of the class constants, or null.
 	 */
-	public static function mismatch( Design $design, Side $side, ?string $blank_id ): ?string {
+	public static function mismatch( Design $design, Side $side, ?string $blank_id, ?string $value_set_id ): ?string {
 		// Pixonaut moves a design to its template's new id; the side may hold the old one until `template.renamed` is handled.
 		if ( ! TemplateRenames::same( $design->template_base_id, $side->template_base_id ) ) {
 			return self::TEMPLATE;
@@ -75,6 +82,10 @@ final class DesignCheck {
 		}
 		if ( ! self::size_on_menu( $design->print_size, $side->print_sizes ) ) {
 			return self::PRINT_SIZE;
+		}
+		// A fixed value the product sells is printed from the set the design was read with.
+		if ( $design->value_set_id !== $value_set_id ) {
+			return self::VALUES;
 		}
 		return null;
 	}

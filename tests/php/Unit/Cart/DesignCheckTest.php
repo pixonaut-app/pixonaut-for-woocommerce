@@ -44,12 +44,36 @@ final class DesignCheckTest extends TestCase {
 		);
 	}
 
+	private const VALUE_SET = 'vs_3f2e9a1b7c4d5e6f8a9b0c1d';
+
+	private const OTHER_VALUE_SET = 'vs_0a1b2c3d4e5f6a7b8c9d0e1f';
+
 	/**
-	 * @param array<string, mixed> $overrides Design fields.
-	 * @param Side|null            $side      The side; the default one when null.
+	 * @param array<string, mixed> $overrides    Design fields.
+	 * @param Side|null            $side         The side; the default one when null.
+	 * @param string|null          $value_set_id The side's own value set; null for none.
 	 */
-	private static function mismatch( array $overrides, ?Side $side = null ): ?string {
-		return DesignCheck::mismatch( Design::from_answer( DesignFixture::design( $overrides ) ), $side ?? self::side(), DesignFixture::BLANK_ID );
+	private static function mismatch( array $overrides, ?Side $side = null, ?string $value_set_id = null ): ?string {
+		return DesignCheck::mismatch( Design::from_answer( DesignFixture::design( $overrides ) ), $side ?? self::side(), DesignFixture::BLANK_ID, $value_set_id );
+	}
+
+	public function test_accepts_a_design_made_with_the_sides_value_set(): void {
+		$this->assertNull( self::mismatch( array( 'valueSetId' => self::VALUE_SET ), null, self::VALUE_SET ) );
+		$this->assertNull( self::mismatch( array( 'valueSetId' => null ) ) );
+	}
+
+	public function test_refuses_a_design_made_without_the_sides_value_set(): void {
+		$this->assertSame( DesignCheck::VALUES, self::mismatch( array( 'valueSetId' => null ), null, self::VALUE_SET ) );
+		// A Pixonaut that predates value sets sends none.
+		$this->assertSame( DesignCheck::VALUES, self::mismatch( array(), null, self::VALUE_SET ) );
+	}
+
+	public function test_refuses_a_design_made_with_another_value_set(): void {
+		$this->assertSame( DesignCheck::VALUES, self::mismatch( array( 'valueSetId' => self::OTHER_VALUE_SET ), null, self::VALUE_SET ) );
+	}
+
+	public function test_refuses_a_design_made_with_a_value_set_where_the_side_has_none(): void {
+		$this->assertSame( DesignCheck::VALUES, self::mismatch( array( 'valueSetId' => self::VALUE_SET ) ) );
 	}
 
 	public function test_accepts_a_design_made_for_the_side(): void {
@@ -211,7 +235,7 @@ final class DesignCheckTest extends TestCase {
 			)
 		);
 
-		$this->assertNull( DesignCheck::mismatch( $design, $side, null ) );
-		$this->assertSame( DesignCheck::BLANK, DesignCheck::mismatch( Design::from_answer( DesignFixture::design() ), $side, null ) );
+		$this->assertNull( DesignCheck::mismatch( $design, $side, null, null ) );
+		$this->assertSame( DesignCheck::BLANK, DesignCheck::mismatch( Design::from_answer( DesignFixture::design() ), $side, null, null ) );
 	}
 }
