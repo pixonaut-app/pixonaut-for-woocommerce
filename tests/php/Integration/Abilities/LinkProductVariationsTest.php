@@ -131,6 +131,41 @@ final class LinkProductVariationsTest extends WP_UnitTestCase {
 		$this->assertCount( 1, ActionSchedulerRunner::pending( ProductRecheck::ACTION ) );
 	}
 
+	public function test_a_variation_pixonaut_did_not_answer_is_queued_with_the_ones_after_a_refusal(): void {
+		$product = $this->variable_product();
+		$first   = $this->variation( $product, self::own_setup( false ) );
+		$second  = $this->variation( $product, self::own_setup( false ) );
+		$this->script_link();
+		$this->live_list( self::NEW_VERSION );
+		$this->recorder->fail();
+		$this->recorder->json( self::TOO_MANY_REQUESTS, array( 'error' => 'rate_limited' ), array( 'Retry-After' => (string) self::RETRY_AFTER_SECONDS ) );
+
+		$answer = $this->link( $product );
+
+		$this->assertIsArray( $answer );
+		$this->assertSame( array( 0, 2 ), array( $answer['variations_moved'], $answer['variations_moved_later'] ) );
+		$queued = array();
+		foreach ( ActionSchedulerRunner::pending( ProductRecheck::ACTION ) as $action_id ) {
+			$queued = array_merge( $queued, \ActionScheduler::store()->fetch_action( $action_id )->get_args()['product_ids'] );
+		}
+		sort( $queued );
+		$this->assertSame( array( $first, $second ), $queued );
+	}
+
+	public function test_a_template_no_longer_live_moves_nothing(): void {
+		$product = $this->variable_product();
+		$own     = $this->variation( $product, self::own_setup( false ) );
+		$this->script_link();
+		$this->live_list( self::NEW_VERSION, 'other-tee' );
+
+		$answer = $this->link( $product );
+
+		$this->assertIsArray( $answer );
+		$this->assertSame( array( 0, 0 ), array( $answer['variations_moved'], $answer['variations_moved_later'] ) );
+		$this->assertSame( self::OLD_VERSION, $this->stored( $own )->sides[0]->template_version );
+		$this->assertCount( 3, $this->recorder->requests, 'No variation is checked.' );
+	}
+
 	public function test_linking_asks_nothing_more_when_no_variation_has_a_setup_of_its_own_on_another_version(): void {
 		$product = $this->variable_product();
 		$this->variation( $product, null );
@@ -181,16 +216,17 @@ final class LinkProductVariationsTest extends WP_UnitTestCase {
 	/**
 	 * Scripts `GET /v1/templates?status=live`: the template, live at `$version`.
 	 *
-	 * @param int $version The live version.
+	 * @param int    $version The live version.
+	 * @param string $base_id The template live; the product's unless another is named.
 	 */
-	private function live_list( int $version ): void {
+	private function live_list( int $version, string $base_id = self::BASE_ID ): void {
 		$this->recorder->json(
 			200,
 			array(
 				'items'    => array(
 					array(
-						'id'                   => self::BASE_ID . '@' . $version,
-						'baseId'               => self::BASE_ID,
+						'id'                   => $base_id . '@' . $version,
+						'baseId'               => $base_id,
 						'name'                 => 'Kids tee',
 						'latestVersion'        => $version,
 						'ratio'                => array(

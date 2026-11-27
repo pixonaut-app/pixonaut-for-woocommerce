@@ -119,6 +119,14 @@ final class ProductRecheck {
 	public const MAX_ATTEMPTS = 5;
 
 	/**
+	 * Seconds a link spends moving its variations with a setup of their
+	 * own before it leaves the rest to a re-check: Pixonaut waits 30
+	 * seconds for the store's answer to a link, the product's own check
+	 * included.
+	 */
+	public const FOLLOW_BUDGET_SECONDS = 15;
+
+	/**
 	 * Wait before the second attempt; it doubles with every attempt after.
 	 */
 	public const RETRY_BASE_SECONDS = 60;
@@ -364,86 +372,102 @@ final class ProductRecheck {
 	 * versions. Without it such a variation waits for the re-check the
 	 * version's publishing queued, which a busy store can run long after,
 	 * and its customers design on the version it left until then. A
-	 * variation Pixonaut could not check now is re-checked later.
+	 * variation Pixonaut could not check now, or one left once the link has
+	 * spent `FOLLOW_BUDGET_SECONDS`, is re-checked later, against the live
+	 * versions then. A template that is not live moves nothing: the
+	 * re-check its event queued stops those variations' sales.
 	 *
 	 * @param WC_Product $product  The product linked.
 	 * @param TemplateId $template The template version it is linked to.
-	 * @return array{moved: int, later: int} How many variations moved, and how many are re-checked later instead.
+	 * @return array{moved: int, later: int} How many variations moved, and how many were queued to be re-checked later instead.
 	 */
 	public function follow_link( WC_Product $product, TemplateId $template ): array {
-		$moved = 0;
-		$ids   = self::following_own_setups( $product, $template );
+		$started = microtime( true );
+		$ids     = self::following_own_setups( $product, $template );
+		$none    = array(
+			'moved' => 0,
+			'later' => 0,
+		);
 		if ( array() === $ids ) {
-			return array(
-				'moved' => 0,
-				'later' => 0,
-			);
+			return $none;
 		}
 		if ( null !== CheckSlowdown::until() ) {
 			// Pixonaut would refuse every check until then.
-			$this->queue_later( $ids, self::slowed_delay( null ) );
 			return array(
 				'moved' => 0,
-				'later' => count( $ids ),
+				'later' => $this->queue_later( $ids, self::slowed_delay( null ) ),
 			);
 		}
 		try {
 			$live = $this->catalogue->live_versions();
 		} catch ( ApiException $e ) {
 			$this->logger->error( 'Variations not moved onto the version linked: ' . $e->getMessage(), array( 'products' => $ids ) );
-			$this->queue_later( $ids, self::RETRY_BASE_SECONDS );
 			return array(
 				'moved' => 0,
-				'later' => count( $ids ),
+				'later' => $this->queue_later( $ids, self::RETRY_BASE_SECONDS ),
 			);
+		}
+		if ( ! isset( $live[ $template->base_id ] ) ) {
+			return $none;
 		}
 		$live[ $template->base_id ] = $template->version;
 
-		$again = array();
+		$moved   = 0;
+		$again   = array();
+		$slowed  = array();
+		$waiting = null;
 		foreach ( $ids as $i => $id ) {
+			if ( microtime( true ) - $started >= self::FOLLOW_BUDGET_SECONDS ) {
+				// The store's caller waits only so long for the link's answer.
+				$again = array_merge( $again, array_slice( $ids, $i ) );
+				break;
+			}
 			$this->retry_after = null;
 			$checked           = $this->recheck_one( $id, $live );
 			if ( self::SLOWED_DOWN === $checked ) {
-				// The variations after it would be refused too. One not queued is logged; the next publish re-checks it.
-				$rest = array_slice( $ids, $i );
-				$this->queue_later( $rest, self::slowed_delay( $this->retry_after ) );
-				return array(
-					'moved' => $moved,
-					'later' => count( $again ) + count( $rest ),
-				);
-			}
-			if ( self::NOT_ASKED === $checked ) {
-				$again[] = $id;
-				continue;
+				// The variations after it would be refused too.
+				$slowed  = array_slice( $ids, $i );
+				$waiting = $this->retry_after;
+				break;
 			}
 			$variation = wc_get_product( $id );
-			if ( $variation instanceof WC_Product && array() === self::following_own_setups_of( array( $variation ), $template ) ) {
+			if ( self::CHECKED === $checked && $variation instanceof WC_Product && array() === self::following_own_setups_of( array( $variation ), $template ) ) {
 				++$moved;
+				continue;
 			}
+			// Not asked, or saved meanwhile on the version it had.
+			$again[] = $id;
 		}
+		$later = 0;
 		if ( array() !== $again ) {
-			$this->logger->error( 'Variations not moved onto the version linked: Pixonaut could not check the configuration.', array( 'products' => $again ) );
-			$this->queue_later( $again, self::RETRY_BASE_SECONDS );
+			$this->logger->warning( 'Variations not moved onto the version linked yet: they are checked again later.', array( 'products' => $again ) );
+			$later += $this->queue_later( $again, self::RETRY_BASE_SECONDS );
+		}
+		if ( array() !== $slowed ) {
+			$later += $this->queue_later( $slowed, self::slowed_delay( $waiting ) );
 		}
 		return array(
 			'moved' => $moved,
-			'later' => count( $again ),
+			'later' => $later,
 		);
 	}
 
 	/**
 	 * Queues the re-check of variations not moved now, in batches, as
-	 * their first attempt. One that could not be queued is logged; the
-	 * template's next publish re-checks it.
+	 * their first attempt. One that could not be queued is logged, and not
+	 * counted; the template's next event re-checks it.
 	 *
 	 * @param int[] $ids   Variations.
 	 * @param int   $delay Seconds to wait.
 	 * @phpstan-param list<int> $ids
+	 * @return int How many were queued, or were waiting in a re-check already.
 	 */
-	private function queue_later( array $ids, int $delay ): void {
+	private function queue_later( array $ids, int $delay ): int {
+		$queued = 0;
 		foreach ( array_chunk( $ids, self::BATCH ) as $batch ) {
-			$this->queue_batch( $batch, 1, $delay );
+			$queued += $this->queue_batch( $batch, 1, $delay ) ? count( $batch ) : 0;
 		}
+		return $queued;
 	}
 
 	/**
