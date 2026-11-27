@@ -10,7 +10,6 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Catalogue;
 
 use Pixonaut\WooCommerce\Schema;
-use WC_Cache_Helper;
 use WC_Product;
 
 /**
@@ -357,10 +356,7 @@ final class ProductVariant {
 				return false;
 			}
 		}
-		clean_post_cache( $product_id );
-		// WooCommerce caches a product's meta apart from the post's.
-		WC_Cache_Helper::invalidate_cache_group( 'object_' . $product_id );
-		wc_delete_product_transients( $product_id );
+		ProductMeta::written_directly( $product_id );
 		return true;
 	}
 

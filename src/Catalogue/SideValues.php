@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Catalogue;
 
 use Pixonaut\WooCommerce\Schema;
+use WC_Meta_Data;
 use WC_Product;
 
 /**
@@ -34,6 +35,11 @@ final class SideValues {
 	 * The document's version: a newer one is not read, nor overwritten.
 	 */
 	public const VERSION = 1;
+
+	/**
+	 * Prefix of the lock a product's values are written under (`PostLock`).
+	 */
+	private const LOCK_PREFIX = 'pixonaut_side_values_';
 
 	/**
 	 * The values a side is sold with, under the configuration it is sold
@@ -90,7 +96,10 @@ final class SideValues {
 	 * @param WC_Product $product A product or variation.
 	 */
 	public static function document_on( WC_Product $product ): ?string {
-		$raw = $product->get_meta( self::META_KEY, true );
+		// The newest row, should a write from before the lock have left two.
+		$rows = $product->get_meta( self::META_KEY, false );
+		$last = is_array( $rows ) && array() !== $rows ? end( $rows ) : null;
+		$raw  = $last instanceof WC_Meta_Data ? $last->value : $last;
 		return is_string( $raw ) && '' !== $raw ? $raw : null;
 	}
 
@@ -150,49 +159,86 @@ final class SideValues {
 
 	/**
 	 * Stores the values on a product or variation, in place of all it holds,
-	 * only while its document is still `$expected`; none takes them all off.
-	 * Writes the database directly; `$product` itself is left as it was read.
+	 * only while its document is still `$expected` and `$still` holds; none
+	 * takes them all off. The stored document is read again and written
+	 * under a lock of the product's own (`PostLock`), so two first writers
+	 * never both add a row, and a write of the document it read still finds
+	 * whether another was stored meanwhile. Rows a write from before the
+	 * lock left beside the newest are dropped. Writes the database directly;
+	 * `$product` itself is left as it was read.
 	 *
 	 * @param WC_Product               $product  A product or variation.
 	 * @param array<string, SideValue> $sides    Every side's values, by side key.
 	 * @param string|null              $expected The document they were made from, as `document_on()` read it; null when none was stored.
-	 * @return bool False when another document was stored meanwhile, or the stored one is a newer plugin version's.
+	 * @param (callable(): bool)|null  $still    Whether what the values were made for still stands, asked under the lock before writing; null for always.
+	 * @return bool False when another document was stored meanwhile, `$still` no longer holds, the stored one is a newer plugin version's, or another write held the lock too long.
 	 */
-	public static function replace_on( WC_Product $product, array $sides, ?string $expected ): bool {
+	public static function replace_on( WC_Product $product, array $sides, ?string $expected, ?callable $still = null ): bool {
 		if ( ! self::writable( $expected ) ) {
 			return false;
 		}
-		$document = self::encoded( $sides );
-		if ( $document === $expected ) {
-			return true;
-		}
 		$product_id = $product->get_id();
-		if ( null === $expected ) {
-			// Added only while the product has none, as `$expected` says.
-			$written = false !== add_post_meta( $product_id, self::META_KEY, wp_slash( (string) $document ), true );
-		} elseif ( null === $document ) {
-			$written = delete_post_meta( $product_id, self::META_KEY, wp_slash( $expected ) );
-		} else {
-			global $wpdb;
-			// One conditional UPDATE: no row matches once another document is stored, or none is.
-			// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- update_post_meta() writes whatever is stored; its caches are cleared below.
-			$updated = $wpdb->update(
-				$wpdb->postmeta,
-				array( 'meta_value' => $document ),
-				array(
-					'post_id'    => $product_id,
-					'meta_key'   => self::META_KEY,
-					'meta_value' => $expected,
-				)
-			);
-			// phpcs:enable
-			$written = is_int( $updated ) && $updated > 0;
+		return PostLock::alone(
+			self::LOCK_PREFIX,
+			$product_id,
+			static function () use ( $product_id, $sides, $expected, $still ): bool {
+				$rows = self::rows( $product_id );
+				$now  = array() === $rows ? null : $rows[0]['value'];
+				if ( $now !== $expected || ( null !== $still && ! $still() ) ) {
+					return false;
+				}
+				$document = self::encoded( $sides );
+				$extra    = array_slice( $rows, 1 );
+				if ( $document === $now && array() === $extra ) {
+					return true;
+				}
+				global $wpdb;
+				// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- under the product's lock; the caches are dropped below.
+				if ( null === $document ) {
+					$extra = $rows;
+				} elseif ( null === $now ) {
+					$wpdb->insert(
+						$wpdb->postmeta,
+						array(
+							'post_id'    => $product_id,
+							'meta_key'   => self::META_KEY,
+							'meta_value' => $document,
+						)
+					);
+				} elseif ( $document !== $now ) {
+					$wpdb->update( $wpdb->postmeta, array( 'meta_value' => $document ), array( 'meta_id' => $rows[0]['id'] ) );
+				}
+				foreach ( $extra as $row ) {
+					$wpdb->delete( $wpdb->postmeta, array( 'meta_id' => $row['id'] ) );
+				}
+				// phpcs:enable
+				ProductMeta::written_directly( $product_id );
+				return true;
+			},
+			static fn (): bool => false
+		);
+	}
+
+	/**
+	 * The product's rows of the document, the newest first, read from the
+	 * database: a write from before the lock may have left more than one.
+	 *
+	 * @param int $product_id A product or variation.
+	 * @return list<array{id: int, value: string}>
+	 */
+	private static function rows( int $product_id ): array {
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- read under the product's lock, past every cache.
+		$found = $wpdb->get_results( $wpdb->prepare( "SELECT meta_id, meta_value FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key = %s ORDER BY meta_id DESC", $product_id, self::META_KEY ), ARRAY_A );
+		$rows  = array();
+		foreach ( is_array( $found ) ? $found : array() as $row ) {
+			if ( is_array( $row ) && is_string( $row['meta_value'] ?? null ) && '' !== $row['meta_value'] ) {
+				$rows[] = array(
+					'id'    => (int) $row['meta_id'],
+					'value' => $row['meta_value'],
+				);
+			}
 		}
-		if ( ! $written ) {
-			return false;
-		}
-		clean_post_cache( $product_id );
-		wc_delete_product_transients( $product_id );
-		return true;
+		return $rows;
 	}
 }

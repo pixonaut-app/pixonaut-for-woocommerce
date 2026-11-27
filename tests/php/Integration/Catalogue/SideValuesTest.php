@@ -94,6 +94,59 @@ final class SideValuesTest extends WP_UnitTestCase {
 		$this->assertNull( SideValues::document_on( $this->reload( $product ) ) );
 	}
 
+	public function test_a_first_write_after_another_writer_added_a_row_is_refused(): void {
+		$product = $this->product( self::TEMPLATE );
+		$read    = SideValues::document_on( $this->reload( $product ) );
+		// Another writer stores its values between this one's read and its write.
+		add_post_meta( $product->get_id(), SideValues::META_KEY, wp_slash( (string) SideValues::encoded( array( 'front' => new SideValue( self::TEMPLATE, self::OTHER_SET, self::VALUES ) ) ) ) );
+
+		$this->assertNull( $read );
+		$this->assertFalse( SideValues::replace_on( $product, array( 'front' => new SideValue( self::TEMPLATE, self::SET, self::VALUES ) ), $read ) );
+		$this->assertCount( 1, get_post_meta( $product->get_id(), SideValues::META_KEY, false ) );
+		$this->assertSame( self::OTHER_SET, SideValues::set_of( $this->reload( $product ), self::side( self::TEMPLATE ) ) );
+	}
+
+	public function test_writing_back_the_document_read_is_refused_once_another_was_stored_meanwhile(): void {
+		$product = $this->product( self::TEMPLATE );
+		$sides   = array( 'front' => new SideValue( self::TEMPLATE, self::SET, self::VALUES ) );
+		SideValues::replace_on( $product, $sides, null );
+		$read = SideValues::document_on( $this->reload( $product ) );
+		SideValues::replace_on( $product, array( 'front' => new SideValue( self::TEMPLATE, self::OTHER_SET, self::VALUES ) ), $read );
+
+		$this->assertFalse( SideValues::replace_on( $product, $sides, $read ) );
+		$this->assertSame( self::OTHER_SET, SideValues::set_of( $this->reload( $product ), self::side( self::TEMPLATE ) ) );
+	}
+
+	public function test_of_two_rows_a_write_left_the_newest_is_read_and_the_next_write_keeps_one(): void {
+		$product = $this->product( self::TEMPLATE );
+		$older   = (string) SideValues::encoded( array( 'front' => new SideValue( self::TEMPLATE, self::SET, self::VALUES ) ) );
+		$newer   = (string) SideValues::encoded( array( 'front' => new SideValue( self::TEMPLATE, self::OTHER_SET, self::VALUES ) ) );
+		add_post_meta( $product->get_id(), SideValues::META_KEY, wp_slash( $older ) );
+		add_post_meta( $product->get_id(), SideValues::META_KEY, wp_slash( $newer ) );
+
+		$this->assertSame( $newer, SideValues::document_on( $this->reload( $product ) ) );
+		$this->assertTrue( SideValues::replace_on( $product, array(), $newer ) );
+		$this->assertSame( array(), get_post_meta( $product->get_id(), SideValues::META_KEY, false ) );
+	}
+
+	public function test_a_product_read_before_a_write_is_read_again_with_the_new_values(): void {
+		$product = $this->product( self::TEMPLATE );
+		SideValues::replace_on( $product, array( 'front' => new SideValue( self::TEMPLATE, self::SET, self::VALUES ) ), null );
+		// WooCommerce keeps the meta it read, apart from WordPress's cache.
+		$this->assertSame( self::SET, SideValues::set_of( $this->reload( $product ), self::side( self::TEMPLATE ) ) );
+
+		SideValues::replace_on( $product, array( 'front' => new SideValue( self::TEMPLATE, self::OTHER_SET, self::VALUES ) ), SideValues::document_on( $this->reload( $product ) ) );
+
+		$this->assertSame( self::OTHER_SET, SideValues::set_of( $this->reload( $product ), self::side( self::TEMPLATE ) ) );
+	}
+
+	public function test_a_write_whose_setup_no_longer_stands_is_refused(): void {
+		$product = $this->product( self::TEMPLATE );
+
+		$this->assertFalse( SideValues::replace_on( $product, array( 'front' => new SideValue( self::TEMPLATE, self::SET, self::VALUES ) ), null, static fn (): bool => false ) );
+		$this->assertNull( SideValues::document_on( $this->reload( $product ) ) );
+	}
+
 	public function test_a_document_from_a_newer_plugin_is_neither_read_nor_overwritten(): void {
 		$product = $this->product( self::TEMPLATE );
 		$newer   = (string) wp_json_encode(

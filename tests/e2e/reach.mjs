@@ -55,6 +55,7 @@ export const NO_SPEC = [
 	'src/Catalogue/CatalogueCache.php',
 	'src/Catalogue/RequestCache.php', // reads kept for the rest of a request; every page passes through it
 	'src/Catalogue/ProductMeta.php', // many products' meta read at once; every product page passes through it
+	'src/Catalogue/PostLock.php', // a post's meta changed alone; the PHP suites run two at once
 	'src/Storefront/CardHydration.php', // what a card loads into the page's product store; tested by the PHP suites
 	'src/Storefront/CardStructuredData.php', // a product page's structured data; tested by the PHP suites
 	'src/Catalogue/Transaction.php',

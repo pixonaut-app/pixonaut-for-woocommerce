@@ -380,8 +380,7 @@ final class ProductConfig {
 		}
 		ProductIndex::rewrite( $product_id, $this );
 		NotLiveProducts::forget_candidates();
-		clean_post_cache( $product_id );
-		wc_delete_product_transients( $product_id );
+		ProductMeta::written_directly( $product_id );
 		return true;
 	}
 
