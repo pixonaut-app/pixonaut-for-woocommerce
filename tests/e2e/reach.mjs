@@ -215,6 +215,10 @@ export const NO_SPEC = [
 	// A side's own values and the value set they make: the PHP suites, until the fake makes sets.
 	'src/Catalogue/SideValue.php',
 	'src/Catalogue/SideValues.php',
+	'src/Api/PixonautValueSets.php',
+	'src/Api/ValueSetRefused.php',
+	'src/Api/ValueSets.php',
+	'src/Api/ValueSetsUnavailable.php',
 ];
 
 /**
