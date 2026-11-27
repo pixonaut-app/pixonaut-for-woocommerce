@@ -13,10 +13,9 @@ namespace Pixonaut\WooCommerce\Api;
  * `valueSet=<id>`, which every template read takes beside `tz` and `lang`:
  * the template read, a validation, a proof, a commit, and the preview and
  * mockup pictures, read with the set's values written in as the layers'
- * own. The one place the plugin names it, so every read it sends with a set
- * names it alike. pixonaut-php 31 sends a query it does not declare as it
- * is given, so it goes out now; once the client declares it, this is where
- * a read switches to the client's own parameter.
+ * own. The parameter pixonaut-php declares for each of them (its
+ * resources' `$valueSet`); the one place the plugin names it, so every
+ * read it sends with a set names it alike.
  */
 final class ValueSetQuery {
 

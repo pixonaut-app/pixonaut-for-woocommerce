@@ -160,7 +160,6 @@ export const NO_SPEC = [
 	'src/Abilities/SetShippingMethod.php',
 	'src/Abilities/ShippingMethods.php',
 	'src/Abilities/SetProductForm.php',
-	'src/Abilities/SetProductValues.php',
 	'src/Abilities/SetProductPictureView.php',
 	'src/Abilities/SetProductPriceChanges.php',
 	'src/Abilities/SetProductSplitListing.php',
@@ -213,14 +212,6 @@ export const NO_SPEC = [
 	'src/Emails/MarginFloorEmail.php',
 	'templates/emails/margin-floor.php',
 	'templates/emails/plain/margin-floor.php',
-	// A side's own values and the value set they make: the PHP suites, until the fake makes sets.
-	'src/Catalogue/SideValue.php',
-	'src/Catalogue/SideValues.php',
-	'src/Api/PixonautValueSets.php',
-	'src/Api/ValueSetRefused.php',
-	'src/Api/ValueSetQuery.php',
-	'src/Api/ValueSets.php',
-	'src/Api/ValueSetsUnavailable.php',
 ];
 
 /**
@@ -754,6 +745,15 @@ export const REACH = {
 		'assets/src/admin/regenerate-now.ts',
 		'assets/src/admin/regenerate-now.css',
 		'assets/src/admin/regenerate-pictures.ts',
+	],
+	'product-values.spec.ts': [
+		'src/Abilities/SetProductValues.php',
+		'src/Api/PixonautValueSets.php',
+		'src/Api/ValueSetQuery.php',
+		'src/Api/ValueSetRefused.php',
+		'src/Api/ValueSets.php',
+		'src/Catalogue/SideValue.php',
+		'src/Catalogue/SideValues.php',
 	],
 	'proof-deadline.spec.ts': [
 		'src/Approval/ProofDeadline.php',

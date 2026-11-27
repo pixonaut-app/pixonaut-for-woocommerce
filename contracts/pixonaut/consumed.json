@@ -64,6 +64,7 @@
 		"POST /v1/share-links",
 		"POST /v1/templates/{id}/designer-links",
 		"POST /v1/templates/{id}/print-size",
+		"POST /v1/templates/{id}/value-sets",
 		"POST /v1/webhooks/{id}/deliveries/redeliver-failed",
 		"POST /v1/webhooks/{id}/ping",
 		"PUT /v1/connect/picture-storage",
@@ -163,13 +164,12 @@
 		"POST /v1/share-links": "integrationKey",
 		"POST /v1/templates/{id}/designer-links": "integrationKey",
 		"POST /v1/templates/{id}/print-size": ["integrationKey", "publishableKey"],
+		"POST /v1/templates/{id}/value-sets": "integrationKey",
 		"POST /v1/webhooks/{id}/deliveries/redeliver-failed": "integrationKey",
 		"POST /v1/webhooks/{id}/ping": "integrationKey",
 		"PUT /v1/connect/picture-storage": "integrationKey",
 		"PUT /v1/connect/store-access": "integrationKey",
 		"PUT /v1/designs/{id}/external-ref": "integrationKey"
 	},
-	"pending": [
-		{ "op": "POST /v1/templates/{id}/value-sets", "requirement": "set-product-values makes a set of a store product's own values per side, once pixonaut-php knows templates.valueSets.create" }
-	]
+	"pending": []
 }

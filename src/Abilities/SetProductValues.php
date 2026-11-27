@@ -11,7 +11,6 @@ namespace Pixonaut\WooCommerce\Abilities;
 
 use Pixonaut\WooCommerce\Api\ValueSetRefused;
 use Pixonaut\WooCommerce\Api\ValueSets;
-use Pixonaut\WooCommerce\Api\ValueSetsUnavailable;
 use Pixonaut\WooCommerce\Catalogue\PostedSides;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\Side;
@@ -265,8 +264,6 @@ final class SetProductValues implements Ability {
 				$sides[ $key ] = new SideValue( $side->template_base_id, $this->value_sets->make( $template, $entry['values'] ), $entry['values'] );
 			} catch ( ValueSetRefused $refused ) {
 				$problems = array_merge( $problems, self::issues( $key, $refused ) );
-			} catch ( ValueSetsUnavailable ) {
-				return new WP_Error( 'pixonaut_wc_ability_values_unavailable', __( 'This version of the plugin cannot ask Pixonaut to keep a product\'s values yet, so nothing was saved. Update the plugin.', 'pixonaut-for-woocommerce' ), array( 'status' => WP_Http::BAD_GATEWAY ) );
 			} catch ( ApiException $error ) {
 				if ( WP_Http::NOT_FOUND === $error->status ) {
 					/* translators: 1: a side's key; 2: a template version, e.g. `mini-mug@3`. Why an AI assistant's change to the store was refused. */

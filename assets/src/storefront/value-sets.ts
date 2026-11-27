@@ -1,7 +1,9 @@
+import type { SplitMountOptions } from '../types/sdk';
+
 /** A template's value set by the template's base id: the side's own values
  *  (`set-product-values`), which the designer opens on and names in every
  *  read and request it makes (the SDK's `valueSets` mount option). */
-export type ValueSets = Readonly<Record<string, string>>;
+export type ValueSets = NonNullable<SplitMountOptions['valueSets']>;
 
 /** What names a side's template and its set. */
 type Named = { templateId?: string; valueSets?: ValueSets };

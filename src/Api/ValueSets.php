@@ -32,7 +32,6 @@ interface ValueSets {
 	 * @return string The set's id, `vs_…`.
 	 *
 	 * @throws ValueSetRefused      When Pixonaut refused the values, saying which.
-	 * @throws ValueSetsUnavailable When the plugin cannot ask Pixonaut for one.
 	 * @throws ApiException         When Pixonaut refused otherwise (`404 template_not_found`), could not be reached, or answered without the set.
 	 */
 	public function make( string $template_id, array $values ): string;

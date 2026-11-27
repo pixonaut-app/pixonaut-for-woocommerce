@@ -64,8 +64,6 @@ final class DesignCheckTest extends TestCase {
 
 	public function test_refuses_a_design_made_without_the_sides_value_set(): void {
 		$this->assertSame( DesignCheck::VALUES, self::mismatch( array( 'valueSetId' => null ), null, self::VALUE_SET ) );
-		// A Pixonaut that predates value sets sends none.
-		$this->assertSame( DesignCheck::VALUES, self::mismatch( array(), null, self::VALUE_SET ) );
 	}
 
 	public function test_refuses_a_design_made_with_another_value_set(): void {

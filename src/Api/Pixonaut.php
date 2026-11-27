@@ -65,6 +65,8 @@ final class Pixonaut {
 		'templates.mockup.get',
 		'templates.preview.get',
 		'templates.designerLinks.create',
+		// The same values for the same template answer the same set, so it takes no key.
+		'templates.valueSets.create',
 		'blanks.list',
 		'blanks.get',
 		'blanks.mockups.list',
@@ -113,17 +115,6 @@ final class Pixonaut {
 		'shareLinks.update',
 		// Revoking a revoked link changes nothing, so it takes no key.
 		'shareLinks.delete',
-	);
-
-	/**
-	 * Operations the plugin calls once the SDK it ships with knows them, and
-	 * does without until then: each is added to the catalogue only when the
-	 * SDK has it (`offers()`). One moves to `OPERATIONS` with the SDK release
-	 * that brings it, and `consumed.json` lists it as pending meanwhile.
-	 */
-	public const AWAITED_OPERATIONS = array(
-		// A store product's own values (`set-product-values`); pixonaut-php 31 predates it.
-		ValueSets::CREATE,
 	);
 
 	/**
@@ -256,29 +247,11 @@ final class Pixonaut {
 			$operations[ $operation->id ] = $operation;
 		}
 		self::$catalogue = new ArrayCatalogue(
-			array_merge(
-				array_map( static fn ( string $id ): Operation => $operations[ $id ] ?? throw new InvalidArgumentException( sprintf( 'The SDK has no operation %s.', $id ) ), self::OPERATIONS ),
-				array_values( array_intersect_key( $operations, array_flip( self::AWAITED_OPERATIONS ) ) )
-			),
+			array_map( static fn ( string $id ): Operation => $operations[ $id ] ?? throw new InvalidArgumentException( sprintf( 'The SDK has no operation %s.', $id ) ), self::OPERATIONS ),
 			array_keys( ErrorCode::STATUSES ),
 			Operations::ERROR_STATUSES
 		);
 		return self::$catalogue;
-	}
-
-	/**
-	 * Whether the SDK the plugin ships with knows an operation the plugin
-	 * waits for (`AWAITED_OPERATIONS`), so it may be sent.
-	 *
-	 * @param string $id An operation id.
-	 */
-	public static function offers( string $id ): bool {
-		foreach ( Operations::all() as $operation ) {
-			if ( $operation->id === $id ) {
-				return in_array( $id, self::OPERATIONS, true ) || in_array( $id, self::AWAITED_OPERATIONS, true );
-			}
-		}
-		return false;
 	}
 
 	/**

@@ -10,7 +10,7 @@ import type {
 	TemplateAnswer,
 } from '../types/sdk';
 import type { PixonautSdk } from './sdk-loader';
-import { sameValueSets, type ValueSets } from './value-sets';
+import { sameValueSets } from './value-sets';
 
 /** What the server read from Pixonaut for one side's designer. */
 export type SideReads = {
@@ -85,12 +85,10 @@ export function readServerReads(
  */
 export function mountSide(
 	sdk: CoreSdk,
-	options: SplitMountOptions & { valueSets?: ValueSets },
+	options: SplitMountOptions,
 	reads: SideReads | undefined,
 	readFor:
-		| (Partial<Pick<SplitMountOptions, (typeof READ_KEYS)[number]>> & {
-				valueSets?: ValueSets;
-		  })
+		| Partial<Pick<SplitMountOptions, (typeof READ_KEYS)[number] | 'valueSets'>>
 		| undefined,
 ): Promise<PixonautDesigner> {
 	if (

@@ -116,8 +116,6 @@ final class AnswerModelsMatchSdkTest extends TestCase {
 		OrderParcel::class  => array( 'item_ids' ),
 		// Its items' `externalRef` by `id`, read from `items`.
 		OrderListRow::class => array( 'item_refs' ),
-		// `valueSetId`, which pixonaut-php 31's design models predate: matched once the client has it.
-		Design::class       => array( 'value_set_id' ),
 	);
 
 	/**

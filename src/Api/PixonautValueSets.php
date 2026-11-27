@@ -14,9 +14,7 @@ use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 /**
  * Asks Pixonaut for a template's value set with the integration key: the
  * only code that sends `templates.valueSets.create`, so the rest of the
- * plugin depends on `ValueSets` alone. Until the client the plugin ships
- * with knows the operation (`Pixonaut::offers()`), every call is refused
- * with `ValueSetsUnavailable` and nothing is sent.
+ * plugin depends on `ValueSets` alone.
  */
 final class PixonautValueSets implements ValueSets {
 
@@ -32,9 +30,6 @@ final class PixonautValueSets implements ValueSets {
 	}
 
 	public function make( string $template_id, array $values ): string {
-		if ( ! Pixonaut::offers( self::CREATE ) ) {
-			throw new ValueSetsUnavailable( 'The Pixonaut client this plugin ships with cannot make value sets yet.' );
-		}
 		$sdk = $this->pixonaut->sdk();
 		try {
 			$result = $sdk->send( $sdk->prepare( self::CREATE, array( 'id' => $template_id ), array(), array( 'values' => $values ) ) );

@@ -477,8 +477,8 @@ product is sold with its product's values, and a call naming one is
 refused. So is a product without a Pixonaut setup, a side it does not have,
 a side given twice, a side without a template, values in another shape,
 and any value Pixonaut refuses, named by side, layer and prop: the call
-says every problem and saves nothing. When Pixonaut cannot be asked, or the
-plugin's Pixonaut client cannot make sets yet, nothing is saved either. The
+says every problem and saves nothing. When Pixonaut cannot be asked,
+nothing is saved either. The
 answer is every side of the product or variation, with its `template_id`,
 `value_set_id` and `values`, null where it has none.
 

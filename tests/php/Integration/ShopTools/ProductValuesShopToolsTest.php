@@ -9,7 +9,6 @@ namespace Pixonaut\WooCommerce\Tests\Integration\ShopTools;
 
 use Pixonaut\WooCommerce\Abilities\SetProductValues;
 use Pixonaut\WooCommerce\Api\Hosts;
-use Pixonaut\WooCommerce\Api\Pixonaut;
 use Pixonaut\WooCommerce\Api\ValueSetRefused;
 use Pixonaut\WooCommerce\Api\ValueSets;
 use Pixonaut\WooCommerce\Catalogue\CatalogueCache;
@@ -47,7 +46,7 @@ final class ProductValuesShopToolsTest extends WP_UnitTestCase {
 
 	private const OK = 200;
 
-	private const STORE_FAILED = 502;
+	private const UNPROCESSABLE = 422;
 
 	/**
 	 * When the fixture's connection was made, as Unix time.
@@ -118,26 +117,50 @@ final class ProductValuesShopToolsTest extends WP_UnitTestCase {
 		parent::tear_down();
 	}
 
-	public function test_it_is_a_shop_tool_and_saves_nothing_while_the_plugin_cannot_ask_for_a_set(): void {
-		if ( Pixonaut::offers( ValueSets::CREATE ) ) {
-			$this->markTestSkipped( 'The client knows templates.valueSets.create: move it to Pixonaut::OPERATIONS.' );
-		}
+	public function test_as_a_shop_tool_it_asks_pixonaut_for_the_set_with_the_stores_key_and_keeps_it(): void {
 		$mug = $this->mug();
-
-		$answer = $this->call(
+		$this->recorder->json(
+			201,
 			array(
-				'product_id' => $mug->get_id(),
-				'sides'      => array(
+				'valueSetId' => self::SET,
+				'templateId' => self::TEMPLATE . '@' . self::VERSION,
+				'values'     => self::FARMOR,
+			)
+		);
+
+		$answer = $this->succeed( self::TOOL, self::front_values( $mug->get_id() ) );
+
+		$this->assertCount( 1, $this->recorder->requests );
+		$sent = $this->recorder->requests[0];
+		$this->assertSame( 'POST', $sent['method'] );
+		$this->assertStringEndsWith( '/v1/templates/' . rawurlencode( self::TEMPLATE . '@' . self::VERSION ) . '/value-sets', $sent['url'] );
+		$this->assertSame( 'Bearer ' . self::connection()->integration_key, $sent['headers']['Authorization'] ?? null );
+		$this->assertSame( array( 'values' => self::FARMOR ), json_decode( (string) $sent['body'], true ) );
+		$this->assertSame( self::SET, $answer['sides'][0]['value_set_id'] );
+		$this->assertSame( self::SET, SideValues::set_of( $this->reload( $mug ), self::side( 'front' ) ) );
+	}
+
+	public function test_as_a_shop_tool_values_pixonaut_refuses_are_invalid_input_naming_the_layer_and_nothing_is_kept(): void {
+		$mug = $this->mug();
+		$this->recorder->json(
+			422,
+			array(
+				'error'  => 'value_set_invalid',
+				'issues' => array(
 					array(
-						'key'    => 'front',
-						'values' => self::FARMOR,
+						'layerId' => 'title',
+						'prop'    => 'colour',
+						'rule'    => 'unknown_prop',
 					),
 				),
 			)
 		);
 
-		$this->assertSame( self::STORE_FAILED, $answer->get_status(), (string) wp_json_encode( $answer->get_data() ) );
-		$this->assertSame( 'store_error', $answer->get_data()['code'] );
+		$answer = $this->call( self::front_values( $mug->get_id() ) );
+
+		$this->assertSame( self::UNPROCESSABLE, $answer->get_status(), (string) wp_json_encode( $answer->get_data() ) );
+		$this->assertSame( 'invalid_input', $answer->get_data()['code'] );
+		$this->assertStringContainsString( 'side `front`, layer `title`, prop `colour`: `unknown_prop`', $answer->get_data()['message'] );
 		$this->assertNull( SideValues::document_on( $this->reload( $mug ) ) );
 	}
 
