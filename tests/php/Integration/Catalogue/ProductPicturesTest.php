@@ -150,9 +150,25 @@ final class ProductPicturesTest extends WP_UnitTestCase {
 		$this->assertSame( array(), ActionSchedulerRunner::pending( ProductPictures::ACTION ) );
 	}
 
+	public function test_a_picture_pixonaut_was_still_drawing_when_the_store_stopped_waiting_is_asked_for_again_and_drawn(): void {
+		$product = $this->product( self::config() );
+		// The first ask times out while Pixonaut draws the cold mockup; it keeps the picture.
+		$this->recorder->fail();
+		$this->recorder->raw( 200, self::png(), 'image/png' );
+
+		ActionSchedulerRunner::run_once( ProductPictures::ACTION );
+
+		$this->assertCount( 2, $this->recorder->requests );
+		$this->assertSame( $this->recorder->requests[0]['url'], $this->recorder->requests[1]['url'], 'the same picture asked for again' );
+		$product = $this->reload( $product );
+		$this->assertTrue( PictureImage::is_picture( (int) $product->get_image_id(), $product ) );
+		$this->assertNull( ProductPictures::stored( $product )['failed_at'], 'not a failure' );
+		$this->assertSame( array(), ActionSchedulerRunner::pending( ProductPictures::RETRY_ACTION ), 'no failure retry' );
+	}
+
 	public function test_when_pixonaut_cannot_draw_it_the_product_keeps_its_image_and_tries_later(): void {
 		$product = $this->product( self::config() );
-		$this->recorder->fail();
+		$this->unanswered();
 
 		ActionSchedulerRunner::run_once( ProductPictures::ACTION );
 
@@ -163,7 +179,7 @@ final class ProductPicturesTest extends WP_UnitTestCase {
 
 		// A change fails again before the retry: still one retry, which queues the drawing.
 		self::config( DesignFixture::BLANK_ID, DesignFixture::LIVE_VERSION + 1 )->save_to( $this->reload( $product ) );
-		$this->recorder->fail();
+		$this->unanswered();
 		ActionSchedulerRunner::run_once( ProductPictures::ACTION );
 		$this->assertCount( 1, ActionSchedulerRunner::pending( ProductPictures::RETRY_ACTION ) );
 		ActionSchedulerRunner::run_once( ProductPictures::RETRY_ACTION );
@@ -389,5 +405,15 @@ final class ProductPicturesTest extends WP_UnitTestCase {
 		$this->assertTrue( self::config( DesignFixture::BLANK_ID, DesignFixture::LIVE_VERSION + 1 )->replace_on( $product, $document ) );
 
 		$this->assertCount( 1, ActionSchedulerRunner::pending( ProductPictures::ACTION ) );
+	}
+
+	/**
+	 * Scripts a picture Pixonaut never answers in time, however many times
+	 * the drawing asks for it.
+	 */
+	private function unanswered(): void {
+		for ( $ask = 0; $ask <= ProductPictures::STILL_DRAWING_ASKS; $ask++ ) {
+			$this->recorder->fail();
+		}
 	}
 }

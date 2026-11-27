@@ -130,7 +130,10 @@ final class RegenerateNowTest extends WP_UnitTestCase {
 		$picture = $this->drawn( $this->product( self::config() ) );
 		$id      = $picture['product']->get_id();
 		$this->start( array( $id ) );
-		$this->recorder->fail();
+		// Unanswered however many times it is asked for while Pixonaut may still be drawing it.
+		for ( $ask = 0; $ask <= ProductPictures::STILL_DRAWING_ASKS; $ask++ ) {
+			$this->recorder->fail();
+		}
 
 		$this->assertSame( array( 'state' => RegeneratePictures::FAILED ), $this->draw( $id )->get_data() );
 		$this->assertSame( $picture['id'], (int) $this->reload( $picture['product'] )->get_image_id() );

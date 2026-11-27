@@ -37,6 +37,11 @@ final class ShowcasePicturesTest extends WP_UnitTestCase {
 		'kind' => ShowcaseImages::PREVIEW,
 	);
 
+	/**
+	 * Seconds Pixonaut asks the store to wait when it slows it down.
+	 */
+	private const RETRY_AFTER = 42;
+
 	public function set_up(): void {
 		parent::set_up();
 		$this->set_up_pictures();
@@ -66,6 +71,69 @@ final class ShowcasePicturesTest extends WP_UnitTestCase {
 		$this->assertTrue( PictureImage::is_picture( (int) $gallery[0], $product ) );
 		$this->assertNotSame( $image, (int) $gallery[0] );
 		$this->assertSame( $own, (int) $gallery[1] );
+	}
+
+	public function test_only_the_set_pixonaut_was_still_drawing_is_asked_for_again(): void {
+		$product = $this->showcased( array( self::ANNA, self::TEAM ) );
+		// Anna's mockup is cold and outlasts the store's wait; the team's preview answers.
+		$this->recorder->fail();
+		$this->recorder->raw( 200, self::png(), 'image/png' );
+		$this->recorder->raw( 200, self::png(), 'image/png' );
+
+		ActionSchedulerRunner::run_once( ProductPictures::ACTION );
+
+		$urls = array_column( $this->recorder->requests, 'url' );
+		$this->assertCount( 3, $urls );
+		$this->assertSame( $urls[0], $urls[2], 'Anna asked for again' );
+		$this->assertStringContainsString( 'showcase=showcase-team', $urls[1] );
+		$product = $this->reload( $product );
+		$this->assertTrue( PictureImage::is_picture( (int) $product->get_image_id(), $product ) );
+		$this->assertCount( 1, $product->get_gallery_image_ids() );
+		$this->assertNull( ProductPictures::stored( $product )['failed_at'] );
+	}
+
+	public function test_a_gallery_pixonaut_draws_one_after_another_beyond_the_timeout_is_drawn_without_a_failure(): void {
+		$sets = array();
+		foreach ( array( 'anna', 'bo', 'cleo', 'dan' ) as $name ) {
+			$sets[] = array(
+				'id'   => 'showcase-' . $name,
+				'name' => ucfirst( $name ),
+				'kind' => ShowcaseImages::MOCKUP,
+			);
+		}
+		$product = $this->showcased( $sets );
+		// Pixonaut draws one at a time: each ask of the four waiting, one more is drawn.
+		for ( $waiting = count( $sets ); $waiting > 0; $waiting-- ) {
+			$this->recorder->raw( 200, self::png(), 'image/png' );
+			for ( $still = 1; $still < $waiting; $still++ ) {
+				$this->recorder->fail();
+			}
+		}
+
+		ActionSchedulerRunner::run_once( ProductPictures::ACTION );
+
+		$urls = array_column( $this->recorder->requests, 'url' );
+		$this->assertCount( 4 + 3 + 2 + 1, $urls, 'only the unanswered ones asked again' );
+		$product = $this->reload( $product );
+		$this->assertTrue( PictureImage::is_picture( (int) $product->get_image_id(), $product ) );
+		$this->assertCount( 3, $product->get_gallery_image_ids() );
+		$this->assertNull( ProductPictures::stored( $product )['failed_at'] );
+	}
+
+	public function test_a_set_slowed_down_beside_one_unanswered_draws_the_picture_again_later_rather_than_failing(): void {
+		$product = $this->showcased( array( self::ANNA, self::TEAM ) );
+		$this->recorder->fail();
+		$this->recorder->json( 429, array( 'error' => 'rate_limited' ), array( 'Retry-After' => (string) self::RETRY_AFTER ) );
+		$before = time();
+
+		ActionSchedulerRunner::run_once( ProductPictures::ACTION );
+
+		$this->assertCount( 2, $this->recorder->requests, 'nothing asked again once Pixonaut slowed the store down' );
+		$this->assertNull( ProductPictures::stored( $this->reload( $product ) )['failed_at'], 'not a failure' );
+		$this->assertSame( array(), ActionSchedulerRunner::pending( ProductPictures::RETRY_ACTION ), 'no failure retry' );
+		$due = ActionSchedulerRunner::due_at( ProductPictures::ACTION );
+		$this->assertCount( 1, $due );
+		$this->assertGreaterThanOrEqual( $before + self::RETRY_AFTER, $due[0] );
 	}
 
 	public function test_without_sets_the_picture_is_drawn_as_before_and_the_gallery_is_left_alone(): void {
