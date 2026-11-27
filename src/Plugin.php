@@ -60,6 +60,7 @@ use Pixonaut\WooCommerce\Abilities\GenerateProductVariations;
 use Pixonaut\WooCommerce\Abilities\VariationGenerator;
 use Pixonaut\WooCommerce\Abilities\SetProductSetup;
 use Pixonaut\WooCommerce\Abilities\SetProductForm;
+use Pixonaut\WooCommerce\Abilities\SetProductValues;
 use Pixonaut\WooCommerce\Abilities\SetProductPictureView;
 use Pixonaut\WooCommerce\Abilities\SetProductPriceChanges;
 use Pixonaut\WooCommerce\Abilities\SetProductShowcase;
@@ -130,6 +131,7 @@ use Pixonaut\WooCommerce\Api\DesignerLinks;
 use Pixonaut\WooCommerce\Api\Designs;
 use Pixonaut\WooCommerce\Api\Pictures;
 use Pixonaut\WooCommerce\Api\Pixonaut;
+use Pixonaut\WooCommerce\Api\PixonautValueSets;
 use Pixonaut\WooCommerce\Api\PrintshopCatalogue;
 use Pixonaut\WooCommerce\Api\RequestLog;
 use Pixonaut\WooCommerce\Api\WcLogger;
@@ -703,13 +705,14 @@ final class Plugin {
 	}
 
 	/**
-	 * The abilities that read and arrange a product's designer form.
+	 * The abilities that read and arrange a product's designer form, and
+	 * set its own values for its templates' layers.
 	 *
 	 * @return list<Ability>
 	 */
 	private function form_abilities(): array {
 		$read = new GetProductForm( $this->catalogue_search() );
-		return array( $read, new SetProductForm( $read ) );
+		return array( $read, new SetProductForm( $read ), new SetProductValues( new PixonautValueSets( $this->pixonaut() ) ) );
 	}
 
 	/**

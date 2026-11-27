@@ -284,10 +284,10 @@ final class ResourceAbility implements Ability {
 			$description .= ' ' . __( 'The store downloads the file from `fields.source_url`, a public URL.', 'pixonaut-for-woocommerce' );
 		}
 		if ( self::PRODUCT === $resource->key && $this->reads() ) {
-			$description .= ' ' . self::validity_description();
+			$description .= ' ' . self::validity_description() . ' ' . __( 'Each also gives `pixonaut_setup`: the `blank_id` and `sides` (`key`, `template_id`, `template_pinned`, `placement_id`, `label`, `mode`, and the side\'s own `value_set_id` and `values`, null for none) it is set up with. Change it with `set-product-setup`, and the values with `set-product-values`.', 'pixonaut-for-woocommerce' );
 		}
 		if ( self::VARIATION === $resource->key && $this->reads() ) {
-			$description .= ' ' . self::validity_description() . ' ' . __( 'Each variation also gives `pixonaut_variant`, the variant of its blank it is printed as: `ref` null and `problem` `unmapped` when it sells none, `retired` when the blank no longer sells it, `picked` when the store manager picked it rather than it being matched on the variation\'s attributes; null when it is not personalised on a blank.', 'pixonaut-for-woocommerce' ) . ' ' . __( 'And `pixonaut_setup`: `own_setup` true when the variation has a Pixonaut setup of its own, false when it follows its product; `blank_id` and `sides` (`template_id`, `template_pinned`, `placement_id`, `label`, `mode`) are those it is sold under, its product\'s when it follows it. Change it with `set-product-setup`.', 'pixonaut-for-woocommerce' );
+			$description .= ' ' . self::validity_description() . ' ' . __( 'Each variation also gives `pixonaut_variant`, the variant of its blank it is printed as: `ref` null and `problem` `unmapped` when it sells none, `retired` when the blank no longer sells it, `picked` when the store manager picked it rather than it being matched on the variation\'s attributes; null when it is not personalised on a blank.', 'pixonaut-for-woocommerce' ) . ' ' . __( 'And `pixonaut_setup`: `own_setup` true when the variation has a Pixonaut setup of its own, false when it follows its product; `blank_id` and `sides` (`key`, `template_id`, `template_pinned`, `placement_id`, `label`, `mode`, and the side\'s own `value_set_id` and `values`, null for none) are those it is sold under, its product\'s when it follows it. Change it with `set-product-setup`, and the values with `set-product-values`.', 'pixonaut-for-woocommerce' );
 		}
 		return $description;
 	}
@@ -430,6 +430,8 @@ final class ResourceAbility implements Ability {
 		if ( $variation ) {
 			$item[ self::VARIANT_FIELD ] = ProductSetup::variation_variant( $product );
 			$item[ self::SETUP_FIELD ]   = ProductSetup::variation_setup( $product );
+		} else {
+			$item[ self::SETUP_FIELD ] = ProductSetup::product_setup( $product );
 		}
 		return $item;
 	}

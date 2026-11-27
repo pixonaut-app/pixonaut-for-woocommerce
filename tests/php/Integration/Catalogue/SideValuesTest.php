@@ -84,7 +84,7 @@ final class SideValuesTest extends WP_UnitTestCase {
 		$product = $this->product( self::TEMPLATE );
 		SideValues::replace_on( $product, array( 'front' => new SideValue( self::TEMPLATE, self::SET, self::VALUES ) ), null );
 		$read = SideValues::document_on( $this->reload( $product ) );
-		$this->assertTrue( SideValues::replace_on( $product, array( 'front' => new SideValue( self::TEMPLATE, self::OTHER_SET, self::VALUES ) ), $read ));
+		$this->assertTrue( SideValues::replace_on( $product, array( 'front' => new SideValue( self::TEMPLATE, self::OTHER_SET, self::VALUES ) ), $read ) );
 
 		$this->assertFalse( SideValues::replace_on( $product, array(), $read ) );
 		$this->assertFalse( SideValues::replace_on( $product, array( 'front' => new SideValue( self::TEMPLATE, self::SET, self::VALUES ) ), null ) );

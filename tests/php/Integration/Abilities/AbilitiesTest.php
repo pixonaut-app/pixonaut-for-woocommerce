@@ -79,6 +79,8 @@ final class AbilitiesTest extends WP_UnitTestCase {
 
 	private const SET_FORM = Abilities::NAMESPACE . '/set-product-form';
 
+	private const SET_VALUES = Abilities::NAMESPACE . '/set-product-values';
+
 	private const SET_ATTRIBUTE_SPLIT_LISTING = Abilities::NAMESPACE . '/set-attribute-split-listing';
 
 	private const GET_QUERY_NAMES = Abilities::NAMESPACE . '/get-attribute-query-names';
@@ -101,9 +103,14 @@ final class AbilitiesTest extends WP_UnitTestCase {
 
 	private const GENERATE_VARIATIONS = Abilities::NAMESPACE . '/generate-product-variations';
 
-	private const ALL = array( self::GET_FORM, self::SET_FORM, self::GET_SPLIT_LISTING, self::SET_SPLIT_LISTING, self::SET_ATTRIBUTE_SPLIT_LISTING, self::GET_QUERY_NAMES, self::SET_QUERY_NAME, self::GET_CHOICE_PRICES, self::SET_CHOICE_PRICE, self::GET_SHIPPING, self::SET_SHIPPING_METHOD, self::GET_BLANK_OPTIONS, self::SET_BLANK_OPTION, self::GET_VARIATION_PLAN, self::GENERATE_VARIATIONS, self::LIST_TEMPLATES, self::LIST_PRODUCTS, self::LINK_PRODUCT, self::UNLINK_PRODUCT, self::LIST_ORDERS, self::ACT_ON_LINE, self::CHANGE_DELIVERY, self::CONNECTION_STATUS, ...ProductSetupAbilitiesTest::WRITES, MoveProductAttributeTest::MOVE, StoreAdminAbilitiesTest::READ_SETTINGS, ...StoreAdminAbilitiesTest::WRITES, PictureViewAbilitiesTest::GET, PictureViewAbilitiesTest::SET, VariationPicturesAbilitiesTest::READ, VariationPicturesAbilitiesTest::SET, SetVariationVariantsTest::ABILITY, VariationPrintSizeTest::ABILITY, ...PricingAbilitiesTest::ABILITIES, ThemeSettingsAbilitiesTest::READ, ThemeSettingsAbilitiesTest::UPDATE );
+	private const ALL = array( self::GET_FORM, self::SET_FORM, self::SET_VALUES, self::GET_SPLIT_LISTING, self::SET_SPLIT_LISTING, self::SET_ATTRIBUTE_SPLIT_LISTING, self::GET_QUERY_NAMES, self::SET_QUERY_NAME, self::GET_CHOICE_PRICES, self::SET_CHOICE_PRICE, self::GET_SHIPPING, self::SET_SHIPPING_METHOD, self::GET_BLANK_OPTIONS, self::SET_BLANK_OPTION, self::GET_VARIATION_PLAN, self::GENERATE_VARIATIONS, self::LIST_TEMPLATES, self::LIST_PRODUCTS, self::LINK_PRODUCT, self::UNLINK_PRODUCT, self::LIST_ORDERS, self::ACT_ON_LINE, self::CHANGE_DELIVERY, self::CONNECTION_STATUS, ...ProductSetupAbilitiesTest::WRITES, MoveProductAttributeTest::MOVE, StoreAdminAbilitiesTest::READ_SETTINGS, ...StoreAdminAbilitiesTest::WRITES, PictureViewAbilitiesTest::GET, PictureViewAbilitiesTest::SET, VariationPicturesAbilitiesTest::READ, VariationPicturesAbilitiesTest::SET, SetVariationVariantsTest::ABILITY, VariationPrintSizeTest::ABILITY, ...PricingAbilitiesTest::ABILITIES, ThemeSettingsAbilitiesTest::READ, ThemeSettingsAbilitiesTest::UPDATE );
 
 	private const TEMPLATE_ID = 'mini-tee@2';
+
+	/**
+	 * The most abilities the REST route lists on a page.
+	 */
+	private const LISTED_PER_PAGE = 100;
 
 	private const BLANK_ID = 'blank_tee';
 
@@ -176,6 +183,8 @@ final class AbilitiesTest extends WP_UnitTestCase {
 
 		$request = new WP_REST_Request( 'GET', '/wp-abilities/v1/abilities' );
 		$request->set_param( 'category', Abilities::CATEGORY );
+		// More than the 50 a page lists by default.
+		$request->set_param( 'per_page', self::LISTED_PER_PAGE );
 		$listed = rest_get_server()->dispatch( $request );
 		$this->assertSame( 200, $listed->get_status() );
 		$names = array_column( (array) $listed->get_data(), 'name' );

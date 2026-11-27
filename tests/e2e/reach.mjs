@@ -160,6 +160,7 @@ export const NO_SPEC = [
 	'src/Abilities/SetShippingMethod.php',
 	'src/Abilities/ShippingMethods.php',
 	'src/Abilities/SetProductForm.php',
+	'src/Abilities/SetProductValues.php',
 	'src/Abilities/SetProductPictureView.php',
 	'src/Abilities/SetProductPriceChanges.php',
 	'src/Abilities/SetProductSplitListing.php',
