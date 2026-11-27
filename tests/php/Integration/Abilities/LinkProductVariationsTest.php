@@ -118,7 +118,8 @@ final class LinkProductVariationsTest extends WP_UnitTestCase {
 	public function test_a_variation_pixonaut_refuses_for_too_many_requests_moves_in_the_recheck_queued_for_it(): void {
 		$product = $this->variable_product();
 		$own     = $this->variation( $product, self::own_setup( false ) );
-		as_unschedule_all_actions( ProductRecheck::ACTION );
+		// A bulk re-check, behind thousands of others, already names it.
+		ProductRecheck::queue_soon( array( $own ) );
 		$this->script_link();
 		$this->live_list( self::NEW_VERSION );
 		$this->recorder->json( self::TOO_MANY_REQUESTS, array( 'error' => 'rate_limited' ), array( 'Retry-After' => (string) self::RETRY_AFTER_SECONDS ) );
@@ -128,7 +129,30 @@ final class LinkProductVariationsTest extends WP_UnitTestCase {
 		$this->assertIsArray( $answer );
 		$this->assertSame( array( 0, 1 ), array( $answer['variations_moved'], $answer['variations_moved_later'] ) );
 		$this->assertSame( self::OLD_VERSION, $this->stored( $own )->sides[0]->template_version );
-		$this->assertCount( 1, ActionSchedulerRunner::pending( ProductRecheck::ACTION ) );
+		$priorities = array_map(
+			static fn ( int $action_id ): int => \ActionScheduler::store()->fetch_action( (string) $action_id )->get_priority(),
+			ActionSchedulerRunner::pending( ProductRecheck::ACTION )
+		);
+		sort( $priorities );
+		$this->assertSame( array( ProductRecheck::LINKED_PRIORITY, ProductRecheck::PRIORITY ), $priorities, 'It is queued again, ahead of the bulk re-checks.' );
+	}
+
+	public function test_a_linked_recheck_held_by_a_slowdown_keeps_its_place_ahead_of_the_bulk_queue(): void {
+		$product = $this->variable_product();
+		$this->variation( $product, self::own_setup( false ) );
+		$this->script_link();
+		$this->live_list( self::NEW_VERSION );
+		$this->recorder->json( self::TOO_MANY_REQUESTS, array( 'error' => 'rate_limited' ), array( 'Retry-After' => (string) self::RETRY_AFTER_SECONDS ) );
+		$this->link( $product );
+		$queued = ActionSchedulerRunner::pending( ProductRecheck::ACTION );
+		$this->assertCount( 1, $queued );
+
+		// Its turn comes while Pixonaut still asks the store to hold its checks.
+		\ActionScheduler::runner()->process_action( (int) $queued[0], 'test' );
+
+		$again = array_values( array_diff( ActionSchedulerRunner::pending( ProductRecheck::ACTION ), $queued ) );
+		$this->assertCount( 1, $again );
+		$this->assertSame( ProductRecheck::LINKED_PRIORITY, \ActionScheduler::store()->fetch_action( (string) $again[0] )->get_priority() );
 	}
 
 	public function test_a_variation_pixonaut_did_not_answer_is_queued_with_the_ones_after_a_refusal(): void {
