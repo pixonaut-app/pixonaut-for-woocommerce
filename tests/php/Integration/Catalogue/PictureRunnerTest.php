@@ -149,13 +149,13 @@ final class PictureRunnerTest extends WP_UnitTestCase {
 		$this->assertSame( 1 + Settings::DEFAULT_PICTURE_RUNNERS, ( new PictureRunner() )->concurrent_batches( 1 ), 'and one more per runner running' );
 	}
 
-	public function test_a_runner_sent_without_cookies_carries_a_visitors_nonce(): void {
+	public function test_a_runner_sent_without_a_login_cookie_carries_a_visitors_nonce(): void {
 		$manager = self::factory()->user->create( array( 'role' => 'shop_manager' ) );
 		$this->assertIsInt( $manager );
-		// As a REST call signed in with an application password: no cookies.
+		// As a REST call signed in with an application password: a cookie, but no login cookie.
 		wp_set_current_user( $manager );
 		$cookies = $_COOKIE;
-		$_COOKIE = array();
+		$_COOKIE = array( 'woocommerce_items_in_cart' => '1' );
 		try {
 			( new PictureRunner() )->start();
 		} finally {
@@ -166,6 +166,24 @@ final class PictureRunnerTest extends WP_UnitTestCase {
 		$nonce = (string) wp_parse_args( (string) wp_parse_url( $this->requests[0], PHP_URL_QUERY ) )['nonce'];
 		wp_set_current_user( 0 );
 		$this->assertNotFalse( wp_verify_nonce( $nonce, 'pixonaut_wc_pictures' ), 'which its cookie-less request passes' );
+	}
+
+	public function test_a_runner_sent_by_a_signed_in_user_carries_their_nonce(): void {
+		$manager = self::factory()->user->create( array( 'role' => 'shop_manager' ) );
+		$this->assertIsInt( $manager );
+		wp_set_current_user( $manager );
+		$cookies = $_COOKIE;
+		$expires = time() + HOUR_IN_SECONDS;
+		$_COOKIE[ (string) constant( 'LOGGED_IN_COOKIE' ) ] = wp_generate_auth_cookie( $manager, $expires, 'logged_in', \WP_Session_Tokens::get_instance( $manager )->create( $expires ) );
+		$this->assertSame( $manager, wp_validate_auth_cookie( '', 'logged_in' ) );
+		try {
+			( new PictureRunner() )->start();
+			$nonce = (string) wp_parse_args( (string) wp_parse_url( $this->requests[0], PHP_URL_QUERY ) )['nonce'];
+			// Checked as the loopback checks it: signed in by the same cookie.
+			$this->assertNotFalse( wp_verify_nonce( $nonce, 'pixonaut_wc_pictures' ), 'the request arrives as them' );
+		} finally {
+			$_COOKIE = $cookies;
+		}
 	}
 
 	public function test_a_runner_short_of_memory_claims_no_job(): void {
