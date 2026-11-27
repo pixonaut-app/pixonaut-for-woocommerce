@@ -53,6 +53,8 @@ final class StagePostersTest extends WP_UnitTestCase {
 		'variants'    => array( 'v_white', 'v_black' ),
 	);
 
+	private const VALUE_SET = 'vs_3f2e9a1b7c4d5e6f8a9b0c1d';
+
 	private HttpRecorder $recorder;
 
 	private ConnectionStore $store;
@@ -140,6 +142,31 @@ final class StagePostersTest extends WP_UnitTestCase {
 		$this->assertStringStartsWith( wp_upload_dir()['baseurl'] . '/' . StagePosters::DIRECTORY . '/', $poster['url'] );
 		$this->assertMatchesRegularExpression( '/-8x8-[0-9a-f]+\.(webp|jpg|png)$/', $poster['url'] );
 		$this->assertCount( 1, $this->recorder->requests, 'a fresh picture is not drawn again' );
+	}
+
+	public function test_a_side_on_a_value_set_has_a_poster_of_its_own_drawn_with_the_set(): void {
+		$this->recorder->raw( 200, PngFixture::white(), 'image/png' );
+		$this->recorder->raw( 200, PngFixture::white(), 'image/png' );
+		$this->posters->for_side( self::OPTIONS, self::layout(), 'v_black' );
+		$this->posters->draw_queued();
+		$valued = self::OPTIONS + array( 'valueSets' => array( 'mini-tee' => self::VALUE_SET ) );
+
+		$this->assertNull( $this->posters->for_side( $valued, self::layout(), 'v_black' ), 'the poster drawn without the set is not this one' );
+		$this->posters->draw_queued();
+
+		$this->assertCount( 2, $this->recorder->requests );
+		$this->assertStringNotContainsString( 'valueSet', $this->recorder->requests[0]['url'] );
+		$this->assertStringContainsString( 'valueSet=' . self::VALUE_SET, $this->recorder->requests[1]['url'] );
+		$this->assertNotNull( $this->posters()->for_side( $valued, self::layout(), 'v_black' ) );
+	}
+
+	public function test_a_job_drawing_a_poster_on_a_value_set_draws_it_with_the_set(): void {
+		$this->recorder->raw( 200, PngFixture::white(), 'image/png' );
+
+		$this->posters_without_finishing()->draw_scheduled( 'mini-tee@2', 'blank_tee', 'front', 'view_front', 'v_black', StorefrontTest::EXCHANGED['connectionId'], self::VALUE_SET );
+
+		$this->assertStringContainsString( 'valueSet=' . self::VALUE_SET, $this->recorder->requests[0]['url'] );
+		$this->assertNotNull( $this->posters()->for_side( self::OPTIONS + array( 'valueSets' => array( 'mini-tee' => self::VALUE_SET ) ), self::layout(), 'v_black' ) );
 	}
 
 	public function test_without_a_variant_the_side_shows_its_first(): void {

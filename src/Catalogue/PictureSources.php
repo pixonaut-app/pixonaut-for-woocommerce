@@ -61,7 +61,7 @@ final class PictureSources {
 	 *
 	 * @param WC_Product $product A product or variation.
 	 *
-	 * @return list<array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, photo?: string, showcase?: string, card_photo?: true}>
+	 * @return list<array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, photo?: string, showcase?: string, card_photo?: true, value_set?: string}>
 	 *
 	 * @throws ApiException When the blank's views or the template's sets cannot be read.
 	 */
@@ -102,7 +102,29 @@ final class PictureSources {
 			// Its image is flat: the picture on its blank's photo a filtered card shows.
 			$sources[] = $photo + ( isset( $sources[0]['showcase'] ) ? array( 'showcase' => $sources[0]['showcase'] ) : array() ) + array( 'card_photo' => true );
 		}
-		return $sources;
+		return self::with_value_set( $product, $sources );
+	}
+
+	/**
+	 * The sources, each with the value set of the side it draws: the
+	 * variation's own when it has a setup of its own, else its product's
+	 * (`SideValues`). Only with one, so a product without values keeps the
+	 * pictures it has; a picture of another set is another picture, and is
+	 * never shared with one of this set.
+	 *
+	 * @param WC_Product $product The product or variation drawn.
+	 * @param array      $sources What each picture is drawn from.
+	 * @phpstan-param list<array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, photo?: string, showcase?: string, card_photo?: true}> $sources
+	 *
+	 * @return list<array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, photo?: string, showcase?: string, card_photo?: true, value_set?: string}>
+	 */
+	private static function with_value_set( WC_Product $product, array $sources ): array {
+		$side = ProductConfig::config_for( $product )->sides[0] ?? null;
+		$set  = null === $side ? null : SideValues::set_of( $product, $side );
+		if ( null === $set ) {
+			return $sources;
+		}
+		return array_map( static fn ( array $source ): array => $source + array( 'value_set' => $set ), $sources );
 	}
 
 	/**

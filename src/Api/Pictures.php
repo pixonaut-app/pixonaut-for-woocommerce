@@ -33,7 +33,7 @@ final class Pictures {
 	}
 
 	/**
-	 * `GET /t/{id}/mockup.png?blankId&placementId&mockupId|viewId&variant&size&showcase`:
+	 * `GET /t/{id}/mockup.png?blankId&placementId&mockupId|viewId&variant&size&showcase&valueSet`:
 	 * the template drawn into the print area of a view's photo: the photo
 	 * named, else the view's of `$variant` when it has one.
 	 *
@@ -45,13 +45,14 @@ final class Pictures {
 	 * @param int         $size         The long edge in pixels.
 	 * @param string|null $showcase     One of the template's showcase sets to draw it with; null for its default values.
 	 * @param string|null $photo        One of the view's photos (`mockupId`), drawn whatever `$variant` is; null for the view's photo of the variant.
+	 * @param string|null $value_set    The template's value set to draw it with, under any showcase set; null for none.
 	 *
 	 * @return string The PNG's bytes.
 	 *
 	 * @throws ApiException When Pixonaut refused (`404` for any unknown id, `showcase_not_found` for an unknown set), could not be reached, or answered with no PNG.
 	 */
-	public function mockup( string $template_id, string $blank_id, string $placement_id, string $view_id, ?string $variant, int $size, ?string $showcase = null, ?string $photo = null ): string {
-		return $this->one( $this->mockup_of( $template_id, $blank_id, $placement_id, $view_id, $variant, $size, $showcase, $photo ) );
+	public function mockup( string $template_id, string $blank_id, string $placement_id, string $view_id, ?string $variant, int $size, ?string $showcase = null, ?string $photo = null, ?string $value_set = null ): string {
+		return $this->one( $this->mockup_of( $template_id, $blank_id, $placement_id, $view_id, $variant, $size, $showcase, $photo, $value_set ) );
 	}
 
 	/**
@@ -65,8 +66,9 @@ final class Pictures {
 	 * @param int         $size         The long edge in pixels.
 	 * @param string|null $showcase     One of the template's showcase sets to draw it with; null for its default values.
 	 * @param string|null $photo        One of the view's photos (`mockupId`), drawn whatever `$variant` is; null for the view's photo of the variant.
+	 * @param string|null $value_set    The template's value set to draw it with, under any showcase set; null for none.
 	 */
-	public function mockup_of( string $template_id, string $blank_id, string $placement_id, string $view_id, ?string $variant, int $size, ?string $showcase = null, ?string $photo = null ): PreparedRequest {
+	public function mockup_of( string $template_id, string $blank_id, string $placement_id, string $view_id, ?string $variant, int $size, ?string $showcase = null, ?string $photo = null, ?string $value_set = null ): PreparedRequest {
 		// Pixonaut takes a photo or a view, not both; a photo shows the variants it shows.
 		return $this->pixonaut->sdk()->prepare(
 			'templates.mockup.get',
@@ -79,24 +81,25 @@ final class Pictures {
 				'variant'     => null === $photo ? $variant : null,
 				'size'        => $size,
 				'showcase'    => $showcase,
-			)
+			) + ValueSetQuery::of( $value_set )
 		);
 	}
 
 	/**
-	 * `GET /t/{id}/preview.png?size&showcase`: the template drawn with its
-	 * own default values, or a showcase set's, clipped to its shape.
+	 * `GET /t/{id}/preview.png?size&showcase&valueSet`: the template drawn
+	 * with its own default values, or a showcase set's, clipped to its shape.
 	 *
 	 * @param string      $template_id `<baseId>@<version>`.
 	 * @param int         $size        The long edge in pixels.
 	 * @param string|null $showcase    One of the template's showcase sets to draw it with; null for its default values.
+	 * @param string|null $value_set   The template's value set to draw it with, under any showcase set; null for none.
 	 *
 	 * @return string The PNG's bytes.
 	 *
 	 * @throws ApiException When Pixonaut refused (`404` for an unknown template, `showcase_not_found` for an unknown set), could not be reached, or answered with no PNG.
 	 */
-	public function preview( string $template_id, int $size, ?string $showcase = null ): string {
-		return $this->one( $this->preview_of( $template_id, $size, $showcase ) );
+	public function preview( string $template_id, int $size, ?string $showcase = null, ?string $value_set = null ): string {
+		return $this->one( $this->preview_of( $template_id, $size, $showcase, $value_set ) );
 	}
 
 	/**
@@ -105,15 +108,16 @@ final class Pictures {
 	 * @param string      $template_id `<baseId>@<version>`.
 	 * @param int         $size        The long edge in pixels.
 	 * @param string|null $showcase    One of the template's showcase sets to draw it with; null for its default values.
+	 * @param string|null $value_set   The template's value set to draw it with, under any showcase set; null for none.
 	 */
-	public function preview_of( string $template_id, int $size, ?string $showcase = null ): PreparedRequest {
+	public function preview_of( string $template_id, int $size, ?string $showcase = null, ?string $value_set = null ): PreparedRequest {
 		return $this->pixonaut->sdk()->prepare(
 			'templates.preview.get',
 			array( 'id' => $template_id ),
 			array(
 				'size'     => $size,
 				'showcase' => $showcase,
-			)
+			) + ValueSetQuery::of( $value_set )
 		);
 	}
 

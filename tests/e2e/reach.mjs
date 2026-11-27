@@ -218,6 +218,7 @@ export const NO_SPEC = [
 	'src/Catalogue/SideValues.php',
 	'src/Api/PixonautValueSets.php',
 	'src/Api/ValueSetRefused.php',
+	'src/Api/ValueSetQuery.php',
 	'src/Api/ValueSets.php',
 	'src/Api/ValueSetsUnavailable.php',
 ];

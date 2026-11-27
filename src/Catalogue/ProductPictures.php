@@ -413,7 +413,7 @@ final class ProductPictures {
 	 * template's defaults instead, and named in `gone`.
 	 *
 	 * @param WC_Product                                                                                                                                                                                        $product A product or variation.
-	 * @param list<array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, photo?: string, showcase?: string, card_photo?: true}>                                     $sources What each is drawn from, its image's first.
+	 * @param list<array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, photo?: string, showcase?: string, card_photo?: true, value_set?: string}>                 $sources What each is drawn from, its image's first.
 	 * @param array{basis: string|null, source: string|null, attachment: int, failed_at: int|null, cut_offs: int, gallery: list<array{source: string|null, attachment: int, photo?: true}>, gone: list<string>} $stored  Its recorded pictures.
 	 * @param bool                                                                                                                                                                                              $own     Whether its image is the store manager's own, which is kept.
 	 *
@@ -538,8 +538,8 @@ final class ProductPictures {
 	 * Pixonaut's PNGs of the sources, drawn at once; each Pixonaut did not
 	 * answer in time asked for again, up to `STILL_DRAWING_ASKS` times.
 	 *
-	 * @param array<int, array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, photo?: string, showcase?: string, card_photo?: true}> $sources       What each is drawn from.
-	 * @param bool                                                                                                                                                                $with_showcase Whether each is drawn with its showcase set; else with the template's defaults.
+	 * @param array<int, array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, photo?: string, showcase?: string, card_photo?: true, value_set?: string}> $sources       What each is drawn from.
+	 * @param bool                                                                                                                                                                                    $with_showcase Whether each is drawn with its showcase set; else with the template's defaults.
 	 *
 	 * @return array<int, string|ApiException> Each source's PNG, or why Pixonaut did not draw it, under the source's key.
 	 */
@@ -551,8 +551,8 @@ final class ProductPictures {
 		foreach ( $sources as $index => $source ) {
 			$showcase        = $with_showcase ? $source['showcase'] ?? null : null;
 			$calls[ $index ] = isset( $source['blank'], $source['placement'], $source['view'] )
-				? $this->pictures->mockup_of( $source['template'], $source['blank'], $source['placement'], $source['view'], $source['variant'] ?? null, self::SIZE, $showcase, $source['photo'] ?? null )
-				: $this->pictures->preview_of( $source['template'], self::SIZE, $showcase );
+				? $this->pictures->mockup_of( $source['template'], $source['blank'], $source['placement'], $source['view'], $source['variant'] ?? null, self::SIZE, $showcase, $source['photo'] ?? null, $source['value_set'] ?? null )
+				: $this->pictures->preview_of( $source['template'], self::SIZE, $showcase, $source['value_set'] ?? null );
 		}
 		$pngs    = array();
 		$waiting = $calls;
