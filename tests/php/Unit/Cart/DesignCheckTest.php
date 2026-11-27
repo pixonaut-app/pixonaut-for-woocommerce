@@ -66,6 +66,16 @@ final class DesignCheckTest extends TestCase {
 		$this->assertSame( DesignCheck::VALUES, self::mismatch( array( 'valueSetId' => null ), null, self::VALUE_SET ) );
 	}
 
+	public function test_a_design_answered_without_a_value_set_reads_none_and_suits_a_side_without_values(): void {
+		$answer = DesignFixture::design();
+		unset( $answer['valueSetId'] );
+		$design = Design::from_answer( $answer );
+
+		$this->assertNull( $design->value_set_id );
+		$this->assertNull( DesignCheck::mismatch( $design, self::side(), DesignFixture::BLANK_ID, null ) );
+		$this->assertSame( DesignCheck::VALUES, DesignCheck::mismatch( $design, self::side(), DesignFixture::BLANK_ID, self::VALUE_SET ) );
+	}
+
 	public function test_refuses_a_design_made_with_another_value_set(): void {
 		$this->assertSame( DesignCheck::VALUES, self::mismatch( array( 'valueSetId' => self::OTHER_VALUE_SET ), null, self::VALUE_SET ) );
 	}
