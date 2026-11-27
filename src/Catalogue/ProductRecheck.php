@@ -88,6 +88,16 @@ final class ProductRecheck {
 	public const PRIORITY = Schema::CATALOGUE_JOB_PRIORITY;
 
 	/**
+	 * Where the re-check of the variations a link could not move at once
+	 * stands: ahead of the catalogue's bulk jobs, which a change in
+	 * Pixonaut can queue by the thousand, and behind orders, webhook
+	 * events and fulfilment, at Action Scheduler's default of 10. Someone
+	 * waits on it: the product page serves the version they left until it
+	 * runs.
+	 */
+	public const LINKED_PRIORITY = 15;
+
+	/**
 	 * Products using a template.
 	 */
 	public const BY_TEMPLATE = 'template';
@@ -414,12 +424,13 @@ final class ProductRecheck {
 
 		$moved   = 0;
 		$again   = array();
+		$left    = array();
 		$slowed  = array();
 		$waiting = null;
 		foreach ( $ids as $i => $id ) {
 			if ( microtime( true ) - $started >= self::FOLLOW_BUDGET_SECONDS ) {
-				// The store's caller waits only so long for the link's answer.
-				$again = array_merge( $again, array_slice( $ids, $i ) );
+				// The store's caller waits only so long for the link's answer; the rest are checked at once, after it.
+				$left = array_slice( $ids, $i );
 				break;
 			}
 			$this->retry_after = null;
@@ -439,6 +450,9 @@ final class ProductRecheck {
 			$again[] = $id;
 		}
 		$later = 0;
+		if ( array() !== $left ) {
+			$later += $this->queue_later( $left, 0 );
+		}
 		if ( array() !== $again ) {
 			$this->logger->warning( 'Variations not moved onto the version linked yet: they are checked again later.', array( 'products' => $again ) );
 			$later += $this->queue_later( $again, self::RETRY_BASE_SECONDS );
@@ -454,18 +468,20 @@ final class ProductRecheck {
 
 	/**
 	 * Queues the re-check of variations not moved now, in batches, as
-	 * their first attempt. One that could not be queued is logged, and not
-	 * counted; the template's next event re-checks it.
+	 * their first attempt, at `LINKED_PRIORITY`: even one already waiting
+	 * in a bulk re-check, which may run long after. One that could not be
+	 * queued is logged, and not counted; the template's next event
+	 * re-checks it.
 	 *
 	 * @param int[] $ids   Variations.
-	 * @param int   $delay Seconds to wait.
+	 * @param int   $delay Seconds to wait; 0 to run as soon as possible.
 	 * @phpstan-param list<int> $ids
-	 * @return int How many were queued, or were waiting in a re-check already.
+	 * @return int How many were queued.
 	 */
 	private function queue_later( array $ids, int $delay ): int {
 		$queued = 0;
 		foreach ( array_chunk( $ids, self::BATCH ) as $batch ) {
-			$queued += $this->queue_batch( $batch, 1, $delay ) ? count( $batch ) : 0;
+			$queued += self::enqueue( $batch, 1, $delay, $this->logger, self::LINKED_PRIORITY ) ? count( $batch ) : 0;
 		}
 		return $queued;
 	}
@@ -686,21 +702,26 @@ final class ProductRecheck {
 	 * @param int             $attempt     Which attempt.
 	 * @param int             $delay       Seconds to wait; 0 to run as soon as possible.
 	 * @param LoggerInterface $logger      Logs a job that could not be queued.
+	 * @param int|null        $priority    Where the job stands in the queue, ahead of any waiting one that names the products; null queues only those not waiting already, at `PRIORITY`.
 	 * @phpstan-param list<int> $product_ids
 	 * @return bool False when the job could not be queued.
 	 */
-	private static function enqueue( array $product_ids, int $attempt, int $delay, LoggerInterface $logger ): bool {
-		$product_ids = PendingRechecks::not_waiting( $product_ids );
+	private static function enqueue( array $product_ids, int $attempt, int $delay, LoggerInterface $logger, ?int $priority = null ): bool {
+		if ( null === $priority ) {
+			$product_ids = PendingRechecks::not_waiting( $product_ids );
+		}
 		if ( array() === $product_ids ) {
 			return true;
 		}
+		$priority ??= self::PRIORITY;
+
 		$args   = array(
 			'product_ids' => $product_ids,
 			'attempt'     => $attempt,
 		);
 		$queued = 0 === $delay
-			? as_enqueue_async_action( self::ACTION, $args, self::GROUP, false, self::PRIORITY )
-			: as_schedule_single_action( time() + $delay, self::ACTION, $args, self::GROUP, false, self::PRIORITY );
+			? as_enqueue_async_action( self::ACTION, $args, self::GROUP, false, $priority )
+			: as_schedule_single_action( time() + $delay, self::ACTION, $args, self::GROUP, false, $priority );
 		if ( 0 === $queued ) {
 			$logger->error( 'The re-check of products could not be queued.', array( 'products' => $product_ids ) );
 			return false;
