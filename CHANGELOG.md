@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.34.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.34.0...v1.34.1) (2026-11-27)
+
+
+### Bug Fixes
+
+* **catalogue:** variations a link could not move at once are re-checked ahead of the bulk queue ([#422](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/422)) ([e949d89](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/e949d897d2ba90031459cfaf63c6d5677314c463))
+
 ## [1.34.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.33.5...v1.34.0) (2026-11-27)
 
 
