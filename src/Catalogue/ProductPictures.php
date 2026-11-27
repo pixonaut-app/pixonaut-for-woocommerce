@@ -76,14 +76,15 @@ final class ProductPictures {
 
 	/**
 	 * How many times a drawing asks again for a picture Pixonaut did not
-	 * answer within the client's timeout. A cold mockup on a bound scene can
-	 * take longer than that, and Pixonaut draws one at a time, so the last of
-	 * a gallery asked for at once waits behind the others. Pixonaut finishes
-	 * and keeps a picture the store stopped waiting for, and an ask made
-	 * while it is still drawing waits for that drawing, so the picture is
-	 * drawn rather than recorded as failed.
+	 * answer within the client's timeout: with the first ask, two minutes of
+	 * waiting for each picture. A cold mockup on a bound scene can take
+	 * longer than one timeout, and Pixonaut draws one at a time, so the last
+	 * of a gallery asked for at once waits behind the others. Pixonaut
+	 * finishes and keeps a picture the store stopped waiting for, and an ask
+	 * made while it is still drawing waits for that drawing, so the picture
+	 * is drawn rather than recorded as failed.
 	 */
-	public const STILL_DRAWING_ASKS = 2;
+	public const STILL_DRAWING_ASKS = 7;
 
 	/**
 	 * Sends one round of a drawing's pictures takes at most: each showcase
@@ -471,7 +472,12 @@ final class ProductPictures {
 		// Every picture to draw at once; a set Pixonaut no longer has, again without it.
 		$pngs  = array();
 		$again = array();
-		foreach ( $this->pngs( $wanted, true ) as $index => $png ) {
+		$first = $this->pngs( $wanted, true );
+		$slow  = self::slowed( $first );
+		if ( null !== $slow ) {
+			throw $slow;
+		}
+		foreach ( $first as $index => $png ) {
 			if ( is_string( $png ) ) {
 				$pngs[ $index ] = $png;
 				continue;
@@ -481,7 +487,12 @@ final class ProductPictures {
 			}
 			$again[ $index ] = $wanted[ $index ];
 		}
-		foreach ( $this->pngs( $again, false ) as $index => $png ) {
+		$defaults = $this->pngs( $again, false );
+		$slow     = self::slowed( $defaults );
+		if ( null !== $slow ) {
+			throw $slow;
+		}
+		foreach ( $defaults as $index => $png ) {
 			if ( ! is_string( $png ) ) {
 				throw $png;
 			}
@@ -546,10 +557,30 @@ final class ProductPictures {
 		$pngs    = array();
 		$waiting = $calls;
 		for ( $ask = 0; $ask <= self::STILL_DRAWING_ASKS && array() !== $waiting; $ask++ ) {
-			$pngs    = array_replace( $pngs, array_combine( array_keys( $waiting ), $this->pictures->all( array_values( $waiting ) ) ) );
+			$pngs = array_replace( $pngs, array_combine( array_keys( $waiting ), $this->pictures->all( array_values( $waiting ) ) ) );
+			if ( null !== self::slowed( $pngs ) ) {
+				// The drawing is slowed down whatever the others answer; asking again would spend the budget again.
+				break;
+			}
 			$waiting = array_intersect_key( $calls, array_filter( $pngs, self::unanswered( ... ) ) );
 		}
 		return $pngs;
+	}
+
+	/**
+	 * The answer of a picture Pixonaut slowed the store down on, if one was:
+	 * it decides how the drawing ends whatever the others answered, so the
+	 * drawing waits as Pixonaut asked rather than failing on another.
+	 *
+	 * @param array<int, string|ApiException> $pngs Each picture, or why Pixonaut did not draw it.
+	 */
+	private static function slowed( array $pngs ): ?ApiException {
+		foreach ( $pngs as $png ) {
+			if ( $png instanceof ApiException && ErrorCode::RATE_LIMITED === $png->errorCode ) {
+				return $png;
+			}
+		}
+		return null;
 	}
 
 	/**
