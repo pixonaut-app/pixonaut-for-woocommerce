@@ -792,7 +792,7 @@ final class Plugin {
 
 	private function product_links(): ProductLinks {
 		$panel = $this->product_panel();
-		return new ProductLinks( $panel, $this->variant_field(), $this->notices(), new ProductSetup( $this->settings() ), new VariationPanel( $panel, $this->templates(), $this->variant_field() ) );
+		return new ProductLinks( $panel, $this->variant_field(), $this->notices(), new ProductSetup( $this->settings() ), new VariationPanel( $panel, $this->templates(), $this->variant_field() ), $this->product_recheck() );
 	}
 
 	public function store_access(): StoreAccess {

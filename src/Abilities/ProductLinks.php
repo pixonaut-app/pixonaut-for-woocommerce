@@ -18,6 +18,7 @@ use Pixonaut\WooCommerce\Admin\VariantNotice;
 use Pixonaut\WooCommerce\Catalogue\PostedSides;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Catalogue\ProductRecheck;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
 use Pixonaut\WooCommerce\Catalogue\TemplateId;
 use Pixonaut\WooCommerce\Catalogue\VariationSize;
@@ -55,6 +56,7 @@ final class ProductLinks {
 	 * @param Notices        $notices    Holds the notice saying which variants cannot be bought.
 	 * @param ProductSetup   $setup      Gives the setup saved.
 	 * @param VariationPanel $variations Checks and saves a variation's own configuration.
+	 * @param ProductRecheck $recheck    Moves the variations with a setup of their own onto the version a product is linked to.
 	 */
 	public function __construct(
 		private readonly ProductPanel $panel,
@@ -62,6 +64,7 @@ final class ProductLinks {
 		private readonly Notices $notices,
 		private readonly ProductSetup $setup,
 		private readonly VariationPanel $variations,
+		private readonly ProductRecheck $recheck,
 	) {
 	}
 
@@ -110,14 +113,15 @@ final class ProductLinks {
 	 * Links the product to one template, on a blank's placement or without a
 	 * blank, in the size given or else the placement's default size. It
 	 * replaces the sides it had. Without a blank and a size the product is
-	 * saved but cannot be bought.
+	 * saved but cannot be bought. Its variations with a setup of their own
+	 * whose side follows the template move onto the version linked.
 	 *
 	 * @param WC_Product     $product      The product.
 	 * @param TemplateId     $template     The template version.
 	 * @param string         $blank_id     The blank; empty for a template-only product.
 	 * @param string         $placement_id The blank's placement; ignored without a blank.
 	 * @param PrintSize|null $size         The print size; null for the placement's default.
-	 * @return array<string, mixed> As `summary()`.
+	 * @return array<string, mixed> As `summary()`, with `variations_moved` and `variations_moved_later`.
 	 */
 	public function link( WC_Product $product, TemplateId $template, string $blank_id, string $placement_id, ?PrintSize $size = null ): array {
 		$size_row = null === $size
@@ -133,13 +137,18 @@ final class ProductLinks {
 			'placement' => '' === $blank_id ? '' : $placement_id,
 			'sizes'     => array( $size_row ),
 		);
-		return $this->save(
+		$this->save(
 			$product,
 			array(
 				PanelFields::PERSONALISE => 'yes',
 				PanelFields::BLANK       => $blank_id,
 				PanelFields::SIDES       => array( $side ),
 			)
+		);
+		$followed = $this->recheck->follow_link( $product, $template );
+		return $this->summary( $product ) + array(
+			'variations_moved'       => $followed['moved'],
+			'variations_moved_later' => $followed['later'],
 		);
 	}
 

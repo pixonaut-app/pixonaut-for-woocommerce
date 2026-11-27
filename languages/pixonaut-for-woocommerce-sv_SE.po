@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-27T00:36:12+00:00\n"
+"POT-Creation-Date: 2026-11-27T12:12:26+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: sv_SE\n"
@@ -1328,7 +1328,21 @@ msgid ""
 "shortens is being worked through, one that stays while none finish is stuck. "
 "The pictures are files in the shop's media library, on the shop's own "
 "server, not in Pixonaut. Change it with %s."
-msgstr "Om en Pixonaut-bild ritas för varje variant, på grundproduktens foto, för hela butiken eller för en variabel produkt (`choice`: `default` följer butiksinställningen). `turning_on` anger hur många nya bilder som ritas när inställningen slås på, ungefär hur många byte de tar, hur stor andel av butikens lediga lagringsutrymme det motsvarar i `percent` (null när det inte går att läsa) och varningen `warning` som måste bekräftas; `turning_off` anger hur många variantbilder som tas bort när den stängs av och hur många byte det frigör. Bilderna är filer i butikens mediabibliotek, på butikens egen server, inte i Pixonaut. Ändra inställningen med %s. `queue` räknar butikens bildjobb för hela butiken: ritningar som väntar eller pågår (`queued`), kontroller av produkter vars ritningar ännu inte köats (`checking`) och ritningar som avslutats den senaste timmen (`finished_recently`), sparade eller att försöka igen; en kö som krymper arbetas igenom, en som står still medan inga avslutas har fastnat."
+msgstr ""
+"Om en Pixonaut-bild ritas för varje variant, på grundproduktens foto, för "
+"hela butiken eller för en variabel produkt (`choice`: `default` följer "
+"butiksinställningen). `turning_on` anger hur många nya bilder som ritas när "
+"inställningen slås på, ungefär hur många byte de tar, hur stor andel av "
+"butikens lediga lagringsutrymme det motsvarar i `percent` (null när det inte "
+"går att läsa) och varningen `warning` som måste bekräftas; `turning_off` "
+"anger hur många variantbilder som tas bort när den stängs av och hur många "
+"byte det frigör. Bilderna är filer i butikens mediabibliotek, på butikens "
+"egen server, inte i Pixonaut. Ändra inställningen med %s. `queue` räknar "
+"butikens bildjobb för hela butiken: ritningar som väntar eller pågår "
+"(`queued`), kontroller av produkter vars ritningar ännu inte köats "
+"(`checking`) och ritningar som avslutats den senaste timmen "
+"(`finished_recently`), sparade eller att försöka igen; en kö som krymper "
+"arbetas igenom, en som står still medan inga avslutas har fastnat."
 
 #: src/Abilities/LineView.php:45
 msgid "Where the line stands."
@@ -1391,14 +1405,17 @@ msgstr "Koppla en produkt till en Pixonaut-mall"
 msgid ""
 "Makes a simple or variable product personalisable with one Pixonaut "
 "template, optionally printed on a placement of a blank, and replaces the "
-"sides it had. Pixonaut checks the link; a product that fails a check is "
-"saved but cannot be bought, and the answer says why."
+"sides it had. Its variations with a setup of their own move onto the version "
+"linked where their side on that template is not pinned. Pixonaut checks the "
+"link; a product that fails a check is saved but cannot be bought, and the "
+"answer says why."
 msgstr ""
 "Gör en enkel eller variabel produkt personaliserbar med en Pixonaut-mall, "
 "eventuellt tryckt på en placering på en grundprodukt, och ersätter "
-"produktens tidigare sidor. Pixonaut kontrollerar kopplingen; en produkt som "
-"inte klarar en kontroll sparas men går inte att köpa, och svaret anger "
-"varför."
+"produktens tidigare sidor. Dess varianter med egna inställningar flyttas "
+"till den länkade versionen där deras sida på mallen inte är låst. Pixonaut "
+"kontrollerar kopplingen; en produkt som inte klarar en kontroll sparas men "
+"går inte att köpa, och svaret anger varför."
 
 #: src/Abilities/LinkProduct.php:54
 msgid ""
@@ -1439,6 +1456,27 @@ msgstr ""
 #: src/Abilities/LinkProduct.php:104
 msgid "The template id is not one the template list gives."
 msgstr "Mall-id:t finns inte i mallistan."
+
+#: src/Abilities/LinkProduct.php:128
+msgid ""
+"How many of the product's variations with a setup of their own moved onto "
+"the template version linked: those with a side on that template that is not "
+"pinned. Each was checked with Pixonaut, as a re-check after a publish does."
+msgstr ""
+"Hur många av produktens varianter med egna inställningar som flyttades till "
+"den länkade mallversionen: de som har en sida på mallen som inte är låst. "
+"Var och en kontrollerades med Pixonaut, som vid en ny kontroll efter en "
+"publicering."
+
+#: src/Abilities/LinkProduct.php:133
+msgid ""
+"How many such variations Pixonaut could not check now, so they move when the "
+"store checks them again, in the background; until then they keep the version "
+"they were on."
+msgstr ""
+"Hur många sådana varianter som Pixonaut inte kunde kontrollera nu, så de "
+"flyttas när butiken kontrollerar dem igen, i bakgrunden; tills dess behåller "
+"de versionen de hade."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/ListProducts.php:70
@@ -1492,7 +1530,7 @@ msgstr "Sidan, från 1."
 msgid "The page of each variable product's variations, from 1, %d to a page."
 msgstr "Sidan med varje variabel produkts varianter, från 1, %d per sida."
 
-#: src/Abilities/ListProducts.php:133 src/Abilities/ProductLinks.php:276
+#: src/Abilities/ListProducts.php:133 src/Abilities/ProductLinks.php:285
 msgid ""
 "Whether customers can buy it now, its blank variants and WooCommerce's own "
 "checks included."
@@ -1702,7 +1740,7 @@ msgstr ""
 msgid "The store's products could not be read."
 msgstr "Butikens produkter kunde inte läsas."
 
-#: src/Abilities/MoveProductAttribute.php:244 src/Abilities/ProductLinks.php:91
+#: src/Abilities/MoveProductAttribute.php:244 src/Abilities/ProductLinks.php:94
 msgid "No simple or variable product has this id."
 msgstr "Ingen enkel eller variabel produkt har detta id."
 
@@ -1939,11 +1977,11 @@ msgstr "Regelns %s är inte ett tal."
 msgid "The product has no variation with this id: %s."
 msgstr "Produkten har ingen variant med detta id: %s."
 
-#: src/Abilities/ProductLinks.php:104
+#: src/Abilities/ProductLinks.php:107
 msgid "No simple or variable product or variation has this id."
 msgstr "Ingen enkel eller variabel produkt eller variant har detta id."
 
-#: src/Abilities/ProductLinks.php:272
+#: src/Abilities/ProductLinks.php:281
 msgid ""
 "For a variation, whether it has a setup of its own rather than following its "
 "product's, whose setup it then gives; false for a product."
@@ -1951,7 +1989,7 @@ msgstr ""
 "För en variant: om den har egna inställningar i stället för att följa "
 "produktens, som den annars anger; false för en produkt."
 
-#: src/Abilities/ProductLinks.php:280
+#: src/Abilities/ProductLinks.php:289
 msgid ""
 "Which of the product's variations sell no variant of the blank, in words; "
 "null when each does. Set a variation's `variant` with `set-product-setup`."
@@ -9713,7 +9751,12 @@ msgid ""
 "its media library. A higher number saves a long queue sooner, and takes more "
 "of the web server: on a small server, keep it low so the shop stays quick "
 "for shoppers."
-msgstr "Hur många produktbilder butiken sparar sida vid sida medan bilder väntar på att sparas. Pixonaut ritar varje bild; butiken väntar på den och sparar den sedan i sitt mediabibliotek. Ett högre tal sparar en lång kö snabbare men tar mer av webbservern: på en liten server, håll det lågt så att butiken förblir snabb för kunderna."
+msgstr ""
+"Hur många produktbilder butiken sparar sida vid sida medan bilder väntar på "
+"att sparas. Pixonaut ritar varje bild; butiken väntar på den och sparar den "
+"sedan i sitt mediabibliotek. Ett högre tal sparar en lång kö snabbare men "
+"tar mer av webbservern: på en liten server, håll det lågt så att butiken "
+"förblir snabb för kunderna."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether a product's Pixonaut tab warns when a print size makes one of its template's images print below its recommended resolution.
 #: src/Settings/Settings.php:375
