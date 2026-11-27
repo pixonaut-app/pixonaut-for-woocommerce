@@ -48,6 +48,8 @@ final class ProductValuesShopToolsTest extends WP_UnitTestCase {
 
 	private const UNPROCESSABLE = 422;
 
+	private const STORE_FAILED = 502;
+
 	/**
 	 * When the fixture's connection was made, as Unix time.
 	 */
@@ -85,6 +87,13 @@ final class ProductValuesShopToolsTest extends WP_UnitTestCase {
 	 * @var list<string|\Throwable>
 	 */
 	private array $answers = array();
+
+	/**
+	 * What another request does while the set is made; null for nothing.
+	 *
+	 * @var (\Closure(): void)|null
+	 */
+	private ?\Closure $meanwhile = null;
 
 	public function set_up(): void {
 		parent::set_up();
@@ -326,6 +335,37 @@ final class ProductValuesShopToolsTest extends WP_UnitTestCase {
 		$this->assertNull( SideValues::document_on( $this->reload( $mug ) ) );
 	}
 
+	public function test_values_judged_against_a_setup_changed_meanwhile_are_refused_and_nothing_is_saved(): void {
+		$mug             = $this->mug();
+		$this->answers   = array( self::SET );
+		$this->meanwhile = function () use ( $mug ): void {
+			// The front is linked to another template while Pixonaut judges the values.
+			( new ProductConfig( personalise: true, sides: array( new Side( 'front', 'Front', null, null, 'mini-tee', 2, null, 'Mini tee', array( new PrintSize( 280, 360, 'Tee' ) ) ), self::side( 'back' ) ) ) )->save_to( $this->reload( $mug ) );
+		};
+
+		$refused = $this->refuse( self::front_values( $mug->get_id() ) );
+
+		$this->assertSame( 'pixonaut_wc_ability_changed_meanwhile', $refused->get_error_code() );
+		$this->assertNull( SideValues::document_on( $this->reload( $mug ) ) );
+	}
+
+	public function test_as_a_shop_tool_a_template_pixonaut_does_not_have_is_named_and_a_pixonaut_without_value_sets_is_said(): void {
+		$mug = $this->mug();
+		$this->recorder->json( 404, array( 'error' => 'template_not_found' ) );
+
+		$missing = $this->call( self::front_values( $mug->get_id() ) );
+
+		$this->assertSame( self::UNPROCESSABLE, $missing->get_status(), (string) wp_json_encode( $missing->get_data() ) );
+		$this->assertStringContainsString( 'Pixonaut has no template `' . self::TEMPLATE . '@' . self::VERSION . '` for side `front`', $missing->get_data()['message'] );
+
+		$this->recorder->off_spec( 404, array( 'error' => 'not_found' ) );
+		$older = $this->call( self::front_values( $mug->get_id() ) );
+
+		$this->assertSame( self::STORE_FAILED, $older->get_status(), (string) wp_json_encode( $older->get_data() ) );
+		$this->assertStringContainsString( 'does not keep a product', $older->get_data()['message'] );
+		$this->assertNull( SideValues::document_on( $this->reload( $mug ) ) );
+	}
+
 	public function test_a_product_without_a_setup_and_a_variation_following_its_product_are_refused(): void {
 		$plain = new WC_Product_Simple();
 		$plain->set_name( 'Plain mug' );
@@ -414,7 +454,10 @@ final class ProductValuesShopToolsTest extends WP_UnitTestCase {
 	 */
 	public function made( string $template_id, array $values ): string {
 		$this->asked[] = array( $template_id, $values );
-		$answer        = array_shift( $this->answers );
+		if ( null !== $this->meanwhile ) {
+			( $this->meanwhile )();
+		}
+		$answer = array_shift( $this->answers );
 		if ( $answer instanceof \Throwable ) {
 			throw $answer;
 		}

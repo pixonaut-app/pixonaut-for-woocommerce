@@ -18,6 +18,7 @@ use Pixonaut\WooCommerce\Catalogue\SideValue;
 use Pixonaut\WooCommerce\Catalogue\SideValues;
 use Pixonaut\WooCommerce\Catalogue\TemplateId;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 use WC_Product;
 use WP_Error;
 use WP_Http;
@@ -151,7 +152,8 @@ final class SetProductValues implements Ability {
 			return $target;
 		}
 		$config = ProductConfig::stored_on( $target );
-		if ( null === ProductConfig::document_on( $target ) || array() === $config->sides ) {
+		$setup  = ProductConfig::document_on( $target );
+		if ( null === $setup || array() === $config->sides ) {
 			return new WP_Error( self::REFUSED, __( 'The product has no Pixonaut setup, so it has no sides to give values. Link it to a template first.', 'pixonaut-for-woocommerce' ) );
 		}
 		$document = SideValues::document_on( $target );
@@ -166,8 +168,11 @@ final class SetProductValues implements Ability {
 		if ( $sides instanceof WP_Error ) {
 			return $sides;
 		}
-		if ( ! SideValues::replace_on( $target, $sides, $document ) ) {
-			return new WP_Error( 'pixonaut_wc_ability_changed_meanwhile', __( 'The product\'s values were changed while these were saved, so nothing was changed. Set them again.', 'pixonaut-for-woocommerce' ), array( 'status' => WP_Http::CONFLICT ) );
+		$target_id = $target->get_id();
+		// The values were judged against the setup read above: one relinked meanwhile, or a variation that follows its product again, takes none of them.
+		$setup_stands = static fn (): bool => get_post_meta( $target_id, ProductConfig::META_KEY, true ) === $setup;
+		if ( ! SideValues::replace_on( $target, $sides, $document, $setup_stands ) ) {
+			return new WP_Error( 'pixonaut_wc_ability_changed_meanwhile', __( 'The product\'s values or its Pixonaut setup were changed while these were saved, so nothing was changed. Read the product again, then set them.', 'pixonaut-for-woocommerce' ), array( 'status' => WP_Http::CONFLICT ) );
 		}
 		$saved = wc_get_product( $target->get_id() );
 		return self::answer( $product, $saved instanceof WC_Product ? $saved : $target );
@@ -265,10 +270,14 @@ final class SetProductValues implements Ability {
 			} catch ( ValueSetRefused $refused ) {
 				$problems = array_merge( $problems, self::issues( $key, $refused ) );
 			} catch ( ApiException $error ) {
-				if ( WP_Http::NOT_FOUND === $error->status ) {
+				if ( ErrorCode::TEMPLATE_NOT_FOUND === $error->errorCode ) {
 					/* translators: 1: a side's key; 2: a template version, e.g. `mini-mug@3`. Why an AI assistant's change to the store was refused. */
 					$problems[] = sprintf( __( 'Pixonaut has no template `%2$s` for side `%1$s`', 'pixonaut-for-woocommerce' ), $key, $template );
 					continue;
+				}
+				if ( WP_Http::NOT_FOUND === $error->status ) {
+					// No such route: a Pixonaut from before value sets.
+					return new WP_Error( 'pixonaut_wc_ability_values_unsupported', __( 'The Pixonaut this store is connected to does not keep a product\'s own values yet, so nothing was saved. Try again once Pixonaut is updated.', 'pixonaut-for-woocommerce' ), array( 'status' => WP_Http::BAD_GATEWAY ) );
 				}
 				return new WP_Error( 'pixonaut_wc_ability_values_unchecked', __( 'Pixonaut could not be asked to judge the values, so nothing was saved. Try again.', 'pixonaut-for-woocommerce' ), array( 'status' => WP_Http::BAD_GATEWAY ) );
 			}
