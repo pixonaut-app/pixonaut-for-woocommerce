@@ -1079,7 +1079,8 @@ final class Plugin {
 	 */
 	public function picture_runner(): ?PictureRunner {
 		if ( null === $this->picture_runner && did_action( 'action_scheduler_init' ) ) {
-			$this->picture_runner = new PictureRunner();
+			$this->picture_runner = new PictureRunner( null, $this->settings() );
+			add_action( 'shutdown', array( $this->picture_runner, 'started' ) );
 		}
 		return $this->picture_runner;
 	}

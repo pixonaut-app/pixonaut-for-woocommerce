@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Abilities;
 
 use Pixonaut\WooCommerce\Admin\VariationPicturesField;
+use Pixonaut\WooCommerce\Catalogue\PictureQueue;
 use Pixonaut\WooCommerce\Catalogue\VariationPictureCost;
 use Pixonaut\WooCommerce\Catalogue\VariationPictures;
 use Pixonaut\WooCommerce\Settings\Settings;
@@ -80,6 +81,13 @@ final class VariationPicturesState {
 				'on'          => array( 'type' => 'boolean' ),
 				'turning_on'  => $cost,
 				'turning_off' => $cost,
+				'queue'       => array(
+					'type'       => 'object',
+					'properties' => array(
+						'queued'         => array( 'type' => 'integer' ),
+						'drawn_recently' => array( 'type' => 'integer' ),
+					),
+				),
 			) + ( $changed ? array( 'changed' => $cost ) : array() ),
 		);
 	}
@@ -119,6 +127,7 @@ final class VariationPicturesState {
 				'on'          => $store_wide,
 				'turning_on'  => self::described( $this->cost->changing_to( $following, true ) ),
 				'turning_off' => self::described( $this->cost->changing_to( $following, false ) ),
+				'queue'       => PictureQueue::counts( time() ),
 			);
 		}
 		return array(
@@ -128,6 +137,7 @@ final class VariationPicturesState {
 			'on'          => VariationPictures::on_for( $product, $this->settings ),
 			'turning_on'  => self::described( $this->field->product_cost( $product, VariationPictures::ON ) ),
 			'turning_off' => self::described( $this->field->product_cost( $product, VariationPictures::OFF ) ),
+			'queue'       => PictureQueue::counts( time() ),
 		);
 	}
 

@@ -8,12 +8,15 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Tests\Integration\Catalogue;
 
 use Pixonaut\WooCommerce\Catalogue\PictureRunner;
+use Pixonaut\WooCommerce\Catalogue\PictureQueue;
 use Pixonaut\WooCommerce\Catalogue\ProductPictures;
+use Pixonaut\WooCommerce\Plugin;
+use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Tests\Support\ActionSchedulerRunner;
 use WP_UnitTestCase;
 
 /**
- * At most `PictureRunner::RUNNERS` runners run in the store at once.
+ * At most as many runners as the store's setting run in the store at once.
  */
 final class PictureRunnerTest extends WP_UnitTestCase {
 
@@ -49,11 +52,11 @@ final class PictureRunnerTest extends WP_UnitTestCase {
 
 		( new PictureRunner() )->start();
 
-		$this->assertCount( PictureRunner::RUNNERS - 1, $this->sent );
+		$this->assertCount( Settings::DEFAULT_PICTURE_RUNNERS - 1, $this->sent );
 	}
 
 	public function test_nothing_runs_while_every_slot_is_held(): void {
-		self::hold( PictureRunner::RUNNERS, time() );
+		self::hold( Settings::DEFAULT_PICTURE_RUNNERS, time() );
 
 		( new PictureRunner() )->start();
 
@@ -63,7 +66,7 @@ final class PictureRunnerTest extends WP_UnitTestCase {
 	}
 
 	public function test_a_slot_held_longer_than_a_runner_runs_is_taken_over_and_given_up(): void {
-		self::hold( PictureRunner::RUNNERS, time() - PictureRunner::STALE_SECONDS );
+		self::hold( Settings::DEFAULT_PICTURE_RUNNERS, time() - PictureRunner::STALE_SECONDS );
 
 		$this->assertSame( 1, ( new PictureRunner() )->run() );
 
@@ -77,7 +80,31 @@ final class PictureRunnerTest extends WP_UnitTestCase {
 
 		( new PictureRunner() )->start();
 
-		$this->assertCount( PictureRunner::RUNNERS, $this->sent );
+		$this->assertCount( Settings::DEFAULT_PICTURE_RUNNERS, $this->sent );
+	}
+
+	public function test_the_store_sets_how_many_run_at_once(): void {
+		$settings = Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' )->settings();
+		$settings->set( Settings::PICTURE_RUNNERS, Settings::MAX_PICTURE_RUNNERS );
+		try {
+			( new PictureRunner( null, $settings ) )->start();
+		} finally {
+			$settings->set( Settings::PICTURE_RUNNERS, Settings::DEFAULT_PICTURE_RUNNERS );
+		}
+
+		$this->assertCount( Settings::MAX_PICTURE_RUNNERS, $this->sent );
+	}
+
+	public function test_a_request_that_queued_a_drawing_starts_the_runners_as_it_ends(): void {
+		// As a request starts: nothing queued in it yet.
+		( new \ReflectionProperty( PictureQueue::class, 'queued_now' ) )->setValue( null, false );
+		( new PictureRunner() )->started();
+		$this->assertSame( array(), $this->sent, 'nothing queued yet' );
+
+		PictureQueue::schedule( self::NO_PRODUCT + 1 );
+		( new PictureRunner() )->started();
+
+		$this->assertCount( Settings::DEFAULT_PICTURE_RUNNERS, $this->sent );
 	}
 
 	public function test_a_runner_short_of_memory_claims_no_job(): void {

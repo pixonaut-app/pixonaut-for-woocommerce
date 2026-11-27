@@ -65,6 +65,16 @@ final class Settings {
 
 	public const VARIATION_PICTURES = 'variation_pictures';
 
+	public const PICTURE_RUNNERS = 'picture_runners';
+
+	/**
+	 * Pictures saved at once unless the store says otherwise (`PICTURE_RUNNERS`),
+	 * and at most: each holds one of the web server's PHP workers while it runs.
+	 */
+	public const DEFAULT_PICTURE_RUNNERS = 2;
+
+	public const MAX_PICTURE_RUNNERS = 4;
+
 	public const SHOW_FIELD_VALUES = 'show_field_values';
 
 	public const LOW_RESOLUTION_WARNINGS = 'low_resolution_warnings';
@@ -339,6 +349,20 @@ final class Settings {
 					/* translators: Title of a setting on the settings page, shown to the merchant: whether each variation of a product gets a Pixonaut picture of its own, drawn on its blank's photo. */
 					'title' => __( 'Generate a picture for every variation', 'pixonaut-for-woocommerce' ),
 					'desc'  => __( 'Draws each variation on its blank\'s photo, in its own colour and size, so the product page shows the variation a shopper picks. Off, variations whose pictures are drawn flat share one picture. Each picture is a file in your shop\'s media library, on your shop\'s own server, not in Pixonaut: before you turn it on, you see how many pictures it would draw and how much space they take. A product can choose otherwise in its Pixonaut tab. Turning it off deletes the variation pictures nothing else uses.', 'pixonaut-for-woocommerce' ),
+				)
+			)
+		);
+		$this->register(
+			Setting::number(
+				self::PICTURE_RUNNERS,
+				self::DEFAULT_PICTURE_RUNNERS,
+				1,
+				self::MAX_PICTURE_RUNNERS,
+				static fn (): array => array(
+					/* translators: Title of a setting on the settings page, shown to the merchant: how many product pictures the shop saves at the same time; the value is a number. */
+					'title'    => __( 'Pictures saved at once', 'pixonaut-for-woocommerce' ),
+					'desc'     => __( 'How many product pictures the shop saves side by side while pictures wait to be saved. Pixonaut draws each one; the shop waits for it, then saves it to its media library. A higher number saves a long queue sooner, and takes more of the web server: on a small server, keep it low so the shop stays quick for shoppers.', 'pixonaut-for-woocommerce' ),
+					'desc_tip' => true,
 				)
 			)
 		);

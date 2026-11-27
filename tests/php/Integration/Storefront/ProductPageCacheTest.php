@@ -329,6 +329,39 @@ final class ProductPageCacheTest extends WP_UnitTestCase {
 		$this->assertSame( 'Rapsfält', $this->changed( $this->page( $poster ) )['image']['alt'] );
 	}
 
+	public function test_an_images_size_writes_read_the_posts_showing_it_once_until_one_takes_it(): void {
+		$poster = $this->personalised();
+		$image  = self::factory()->attachment->create_upload_object( DIR_TESTDATA . '/images/canola.jpg' );
+		$this->assertIsInt( $image );
+		$reads = 0;
+		$count = static function ( string $query ) use ( &$reads ): string {
+			if ( str_contains( $query, "meta_key = '_thumbnail_id' AND meta_value" ) ) {
+				++$reads;
+			}
+			return $query;
+		};
+		add_filter( 'query', $count );
+
+		// As WordPress writes a new image's metadata once per size it makes.
+		$metadata = wp_get_attachment_metadata( $image );
+		$this->assertIsArray( $metadata );
+		foreach ( array( 'thumbnail', 'medium', 'large' ) as $size ) {
+			$metadata['made'][] = $size;
+			wp_update_attachment_metadata( $image, $metadata );
+		}
+		$after_sizes = $reads;
+		$variation   = $this->variation_of( $poster );
+		$variation->set_image_id( $image );
+		$variation->save();
+		$this->page( $poster );
+		update_post_meta( $image, '_wp_attachment_image_alt', 'Rapsfält' );
+
+		remove_filter( 'query', $count );
+		$this->assertLessThanOrEqual( 1, $after_sizes, 'read once at most for every size' );
+		$this->assertSame( 1, $reads - $after_sizes, 'and again once a variation shows it' );
+		$this->assertSame( 'Rapsfält', $this->changed( $this->page( $poster ) )['image']['alt'] );
+	}
+
 	public function test_another_role_reads_its_own(): void {
 		$poster   = $this->personalised();
 		$customer = self::factory()->user->create( array( 'role' => 'customer' ) );

@@ -51,6 +51,24 @@ final class WpHttpTransportTest extends WP_UnitTestCase {
 		'webhookEndpointId' => 'wh_5f2a9c1d7e3b4a6f8c0d2e4a',
 	) + ConnectionAnswers::WORKSPACE_SETTINGS;
 
+	/**
+	 * How long `slow_server()` takes to answer, in seconds.
+	 */
+	private const SLOW_ANSWER_SECONDS = 1;
+
+	/**
+	 * The share of a wait a request may keep the CPU busy for: Requests'
+	 * own loop over `curl_multi_exec()` keeps it busy for all of it.
+	 */
+	private const BUSY_SHARE = 0.25;
+
+	/**
+	 * How long `slow_server()` waits for PHP's server to listen, in microseconds per try, and how many tries.
+	 */
+	private const LISTEN_WAIT_MICROSECONDS = 50000;
+
+	private const LISTEN_TRIES = 100;
+
 	private HttpRecorder $recorder;
 
 	public function set_up(): void {
@@ -179,6 +197,25 @@ final class WpHttpTransportTest extends WP_UnitTestCase {
 		$this->assertSame( 2, $handles );
 	}
 
+	public function test_requests_sent_together_wait_for_their_answers_without_keeping_a_cpu_busy(): void {
+		$server = $this->slow_server();
+		try {
+			$started = microtime( true );
+			$cpu     = self::cpu_seconds();
+			$answers = ( new WpHttpTransport() )->send_all( array( new Request( 'GET', $server['url'] ) ) );
+			$used    = self::cpu_seconds() - $cpu;
+			$waited  = microtime( true ) - $started;
+		} finally {
+			proc_terminate( $server['process'] );
+			proc_close( $server['process'] );
+		}
+
+		$this->assertInstanceOf( ResponseInterface::class, $answers[0] );
+		$this->assertSame( 'drawn', (string) $answers[0]->getBody() );
+		$this->assertGreaterThanOrEqual( self::SLOW_ANSWER_SECONDS, $waited );
+		$this->assertLessThan( self::SLOW_ANSWER_SECONDS * self::BUSY_SHARE, $used, 'the wait sleeps rather than spinning' );
+	}
+
 	public function test_an_unsafe_url_is_refused_before_it_is_sent(): void {
 		$handles = 0;
 		$count   = static function () use ( &$handles ): void {
@@ -257,5 +294,47 @@ final class WpHttpTransportTest extends WP_UnitTestCase {
 		$sent = $this->recorder->requests[0];
 		$this->assertSame( $legacy['body'], $sent['body'] );
 		$this->assertSame( 'wc:site:commit:abc', $sent['headers']['Idempotency-Key'] );
+	}
+
+	/**
+	 * PHP's own server on a free loopback port, answering `drawn` after
+	 * `SLOW_ANSWER_SECONDS`, as Pixonaut answers once it has drawn a picture.
+	 *
+	 * @return array{url: string, process: resource}
+	 */
+	private function slow_server(): array {
+		$probe = stream_socket_server( 'tcp://127.0.0.1:0' );
+		$this->assertIsResource( $probe );
+		$address = (string) stream_socket_get_name( $probe, false );
+		fclose( $probe ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- a socket, not a file.
+		$router = get_temp_dir() . 'pixonaut-slow-answer.php';
+		file_put_contents( $router, '<?php sleep( ' . self::SLOW_ANSWER_SECONDS . " ); echo 'drawn';" ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- a test's own script.
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.system_calls_proc_open -- a test's own server.
+		$process = proc_open( array( PHP_BINARY, '-S', $address, $router ), array( array( 'pipe', 'r' ), array( 'file', '/dev/null', 'w' ), array( 'file', '/dev/null', 'w' ) ), $pipes );
+		$this->assertIsResource( $process );
+		for ( $try = 0; $try < self::LISTEN_TRIES; ++$try ) {
+			$socket = @stream_socket_client( 'tcp://' . $address ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- refused until the server listens.
+			if ( false !== $socket ) {
+				fclose( $socket ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- a socket, not a file.
+				return array(
+					'url'     => 'http://' . $address . '/',
+					'process' => $process,
+				);
+			}
+			usleep( self::LISTEN_WAIT_MICROSECONDS ); // real-timer: waits for a real server process to listen.
+		}
+		proc_terminate( $process );
+		$this->fail( 'PHP\'s server did not start.' );
+	}
+
+	/**
+	 * The CPU time this process has used, in seconds.
+	 */
+	private static function cpu_seconds(): float {
+		$usage = getrusage();
+		if ( false === $usage ) {
+			throw new \RuntimeException( 'getrusage() failed.' );
+		}
+		return $usage['ru_utime.tv_sec'] + $usage['ru_stime.tv_sec'] + ( $usage['ru_utime.tv_usec'] + $usage['ru_stime.tv_usec'] ) / 1e6;
 	}
 }

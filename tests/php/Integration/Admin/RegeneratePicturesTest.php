@@ -245,7 +245,7 @@ final class RegeneratePicturesTest extends WP_UnitTestCase {
 
 		$this->request( 'POST', $id );
 
-		$this->assertSame( array_fill( 0, PictureRunner::RUNNERS, false ), $runners );
+		$this->assertSame( array_fill( 0, Settings::DEFAULT_PICTURE_RUNNERS, false ), $runners );
 		$this->assertSame( array(), ActionSchedulerRunner::pending( PictureQueue::VARIATIONS_ACTION ) );
 		$queued = array_map(
 			static fn ( $action ): int => (int) $action->get_args()[0],

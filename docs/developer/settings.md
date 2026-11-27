@@ -169,6 +169,12 @@ Default: `true`.
 
 Default: `false`.
 
+### `picture_runners`
+
+**Pictures saved at once** (number). How many product pictures the shop saves side by side while pictures wait to be saved. Pixonaut draws each one; the shop waits for it, then saves it to its media library. A higher number saves a long queue sooner, and takes more of the web server: on a small server, keep it low so the shop stays quick for shoppers.
+
+Default: `2`.
+
 ### `low_resolution_warnings`
 
 **Warn about soft images** (checkbox). Warns in a product's Pixonaut tab when one of its print sizes makes an image in its template print below the resolution Pixonaut recommends, so it may look soft or pixelated. Off, the tab says nothing of it. A size the Pixonaut workspace refuses for it is still refused and says why: whether Pixonaut warns, refuses or says nothing is chosen in the workspace's settings in the Pixonaut studio.
