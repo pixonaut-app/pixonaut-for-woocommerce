@@ -301,6 +301,28 @@ final class PictureRunner extends WP_Async_Request {
 		}
 	}
 
+	/**
+	 * The runner's query: its action, and a nonce for whoever its request
+	 * is from. It carries the sender's cookies (`WP_Async_Request`), so it
+	 * is from the sender; a request without cookies, as a REST call with an
+	 * application password or WP-CLI, sends one from a visitor, whose nonce
+	 * it then carries, or its runner would be refused.
+	 *
+	 * @return array<string, mixed>
+	 */
+	protected function get_query_args() {
+		if ( array() !== $_COOKIE ) {
+			return parent::get_query_args();
+		}
+		$user = get_current_user_id();
+		wp_set_current_user( 0 );
+		try {
+			return parent::get_query_args();
+		} finally {
+			wp_set_current_user( $user );
+		}
+	}
+
 	protected function handle(): void {
 		$this->run();
 	}

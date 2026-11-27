@@ -35,9 +35,15 @@ final class PictureRunnerTest extends WP_UnitTestCase {
 	 */
 	private array $sent = array();
 
+	/**
+	 * @var list<string> Each runner's request URL.
+	 */
+	private array $requests = array();
+
 	public function set_up(): void {
 		parent::set_up();
-		$this->sent = array();
+		$this->sent     = array();
+		$this->requests = array();
 		add_filter( 'pre_http_request', array( $this, 'catch_runner' ), 10, 3 );
 		as_enqueue_async_action( ProductPictures::ACTION, array( self::NO_PRODUCT ), ProductPictures::GROUP );
 	}
@@ -143,6 +149,25 @@ final class PictureRunnerTest extends WP_UnitTestCase {
 		$this->assertSame( 1 + Settings::DEFAULT_PICTURE_RUNNERS, ( new PictureRunner() )->concurrent_batches( 1 ), 'and one more per runner running' );
 	}
 
+	public function test_a_runner_sent_without_cookies_carries_a_visitors_nonce(): void {
+		$manager = self::factory()->user->create( array( 'role' => 'shop_manager' ) );
+		$this->assertIsInt( $manager );
+		// As a REST call signed in with an application password: no cookies.
+		wp_set_current_user( $manager );
+		$cookies = $_COOKIE;
+		$_COOKIE = array();
+		try {
+			( new PictureRunner() )->start();
+		} finally {
+			$_COOKIE = $cookies;
+		}
+
+		$this->assertNotSame( array(), $this->requests );
+		$nonce = (string) wp_parse_args( (string) wp_parse_url( $this->requests[0], PHP_URL_QUERY ) )['nonce'];
+		wp_set_current_user( 0 );
+		$this->assertNotFalse( wp_verify_nonce( $nonce, 'pixonaut_wc_pictures' ), 'which its cookie-less request passes' );
+	}
+
 	public function test_a_runner_short_of_memory_claims_no_job(): void {
 		$limit = (string) ini_get( 'memory_limit' );
 		ini_set( 'memory_limit', self::MEMORY_LIMIT ); // phpcs:ignore WordPress.PHP.IniSet.memory_limit_Disallowed -- a limit the runner measures against.
@@ -169,7 +194,8 @@ final class PictureRunnerTest extends WP_UnitTestCase {
 		if ( ! str_contains( $url, 'action=pixonaut_wc_pictures' ) ) {
 			return $preempt;
 		}
-		$this->sent[] = (bool) $args['blocking'];
+		$this->sent[]     = (bool) $args['blocking'];
+		$this->requests[] = $url;
 		return array(
 			'headers'  => array(),
 			'body'     => '',
