@@ -191,6 +191,15 @@ final class ProductRecheck {
 	 */
 	private ?int $retry_after = null;
 
+	/**
+	 * The priority the re-check running was queued at, when not
+	 * `PRIORITY`: a link's, which its retries keep so they do not fall
+	 * behind the bulk queue. Null for a bulk re-check.
+	 *
+	 * @var int|null
+	 */
+	private ?int $priority = null;
+
 	public function __construct(
 		private readonly ProductLinker $linker,
 		private readonly Catalogue $catalogue,
@@ -205,7 +214,7 @@ final class ProductRecheck {
 	public function register(): void {
 		add_action( 'pixonaut_wc_events_baseline_set', array( $this, 'recheck_all' ), 10, 0 );
 		add_action( self::QUEUE_ACTION, array( $this, 'queue_page' ), 10, 3 );
-		add_action( self::ACTION, array( $this, 'recheck' ), 10, 2 );
+		add_action( self::ACTION, array( $this, 'recheck' ), 10, 3 );
 		add_action( 'action_scheduler_init', array( $this, 'queue_backfill' ) );
 	}
 
@@ -336,11 +345,13 @@ final class ProductRecheck {
 	 *
 	 * @param array<int|string> $product_ids Products and variations.
 	 * @param int|string        $attempt     Which attempt this is, from 1.
+	 * @param int|string|null   $priority    The priority it was queued at when not `PRIORITY`, which its retries keep; null for a bulk re-check.
 	 * @throws ApiException When Pixonaut could not list the live templates; the batch is tried again later.
 	 */
-	public function recheck( array $product_ids, int|string $attempt = 1 ): void {
-		$product_ids = array_values( array_map( 'intval', $product_ids ) );
-		$attempt     = max( 1, (int) $attempt );
+	public function recheck( array $product_ids, int|string $attempt = 1, int|string|null $priority = null ): void {
+		$product_ids    = array_values( array_map( 'intval', $product_ids ) );
+		$attempt        = max( 1, (int) $attempt );
+		$this->priority = null === $priority ? null : (int) $priority;
 		// Started: a change from now on queues them again.
 		PendingRechecks::forget( $product_ids );
 		if ( null !== CheckSlowdown::until() ) {
@@ -692,7 +703,7 @@ final class ProductRecheck {
 	 * @return bool False when the job could not be queued.
 	 */
 	private function queue_batch( array $product_ids, int $attempt, int $delay ): bool {
-		return self::enqueue( $product_ids, $attempt, $delay, $this->logger );
+		return self::enqueue( $product_ids, $attempt, $delay, $this->logger, $this->priority );
 	}
 
 	/**
@@ -718,7 +729,7 @@ final class ProductRecheck {
 		$args   = array(
 			'product_ids' => $product_ids,
 			'attempt'     => $attempt,
-		);
+		) + ( self::PRIORITY === $priority ? array() : array( 'priority' => $priority ) );
 		$queued = 0 === $delay
 			? as_enqueue_async_action( self::ACTION, $args, self::GROUP, false, $priority )
 			: as_schedule_single_action( time() + $delay, self::ACTION, $args, self::GROUP, false, $priority );
