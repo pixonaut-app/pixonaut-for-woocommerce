@@ -11,6 +11,7 @@ namespace Pixonaut\WooCommerce\Catalogue;
 
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Api\Catalogue;
+use Pixonaut\WooCommerce\Api\Pixonaut;
 use Pixonaut\WooCommerce\Api\WpHttpTransport;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
@@ -74,11 +75,36 @@ final class ProductPictures {
 	public const LOCK_OPTION_PREFIX = Schema::PICTURE_LOCK_OPTION_PREFIX;
 
 	/**
-	 * Requests a drawing makes at most: the mockups read, then for each
-	 * showcase set its picture and, when Pixonaut no longer has the set, the
-	 * picture again without it.
+	 * How many times a drawing asks again for a picture Pixonaut did not
+	 * answer within the client's timeout. A cold mockup on a bound scene can
+	 * take longer than that, and Pixonaut draws one at a time, so the last of
+	 * a gallery asked for at once waits behind the others. Pixonaut finishes
+	 * and keeps a picture the store stopped waiting for, and an ask made
+	 * while it is still drawing waits for that drawing, so the picture is
+	 * drawn rather than recorded as failed.
 	 */
-	private const MAX_REQUESTS = 1 + 2 * ShowcaseImages::MAX_IMAGES;
+	public const STILL_DRAWING_ASKS = 2;
+
+	/**
+	 * Sends one round of a drawing's pictures takes at most: each showcase
+	 * set's picture, `Pixonaut::MAX_CONCURRENT` at a time (`MAX_IMAGES` of
+	 * them divided by that, rounded up).
+	 */
+	private const PICTURE_SENDS = ( self::ROUNDED_UP - self::ROUNDED_UP % Pixonaut::MAX_CONCURRENT ) / Pixonaut::MAX_CONCURRENT;
+
+	/**
+	 * `MAX_IMAGES` raised by one send short of a whole one, so that dividing
+	 * it down to a whole number of sends rounds up.
+	 */
+	private const ROUNDED_UP = ShowcaseImages::MAX_IMAGES + Pixonaut::MAX_CONCURRENT - 1;
+
+	/**
+	 * Sends a drawing makes at most, each within the client's timeout: the
+	 * mockups read, then its pictures, asked again while Pixonaut is still
+	 * drawing them, and when Pixonaut no longer has a set, the pictures again
+	 * without it, asked again the same way.
+	 */
+	private const MAX_SENDS = 1 + 2 * ( 1 + self::STILL_DRAWING_ASKS ) * self::PICTURE_SENDS;
 
 	/**
 	 * Pictures a drawing saves at most: one per showcase set, and a
@@ -98,7 +124,7 @@ final class ProductPictures {
 	 * over, and how long its job may run: each of its requests within the
 	 * client's timeout, and each picture's image sizes.
 	 */
-	public const LOCK_SECONDS = self::MAX_REQUESTS * WpHttpTransport::TIMEOUT_SECONDS + self::MAX_PICTURES * self::SIZES_SECONDS;
+	public const LOCK_SECONDS = self::MAX_SENDS * WpHttpTransport::TIMEOUT_SECONDS + self::MAX_PICTURES * self::SIZES_SECONDS;
 
 	/**
 	 * The picture's long edge in pixels: WordPress draws the smaller sizes from it.
@@ -498,7 +524,8 @@ final class ProductPictures {
 	}
 
 	/**
-	 * Pixonaut's PNGs of the sources, drawn at once.
+	 * Pixonaut's PNGs of the sources, drawn at once; each Pixonaut did not
+	 * answer in time asked for again, up to `STILL_DRAWING_ASKS` times.
 	 *
 	 * @param array<int, array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, photo?: string, showcase?: string, card_photo?: true}> $sources       What each is drawn from.
 	 * @param bool                                                                                                                                                                $with_showcase Whether each is drawn with its showcase set; else with the template's defaults.
@@ -510,13 +537,29 @@ final class ProductPictures {
 			return array();
 		}
 		$calls = array();
-		foreach ( $sources as $source ) {
-			$showcase = $with_showcase ? $source['showcase'] ?? null : null;
-			$calls[]  = isset( $source['blank'], $source['placement'], $source['view'] )
+		foreach ( $sources as $index => $source ) {
+			$showcase        = $with_showcase ? $source['showcase'] ?? null : null;
+			$calls[ $index ] = isset( $source['blank'], $source['placement'], $source['view'] )
 				? $this->pictures->mockup_of( $source['template'], $source['blank'], $source['placement'], $source['view'], $source['variant'] ?? null, self::SIZE, $showcase, $source['photo'] ?? null )
 				: $this->pictures->preview_of( $source['template'], self::SIZE, $showcase );
 		}
-		return array_combine( array_keys( $sources ), $this->pictures->all( $calls ) );
+		$pngs    = array();
+		$waiting = $calls;
+		for ( $ask = 0; $ask <= self::STILL_DRAWING_ASKS && array() !== $waiting; $ask++ ) {
+			$pngs    = array_replace( $pngs, array_combine( array_keys( $waiting ), $this->pictures->all( array_values( $waiting ) ) ) );
+			$waiting = array_intersect_key( $calls, array_filter( $pngs, self::unanswered( ... ) ) );
+		}
+		return $pngs;
+	}
+
+	/**
+	 * Whether Pixonaut gave no answer, as when the client stopped waiting
+	 * for a picture it was still drawing.
+	 *
+	 * @param string|ApiException $png A picture, or why Pixonaut did not draw it.
+	 */
+	private static function unanswered( string|ApiException $png ): bool {
+		return $png instanceof ApiException && ApiException::TRANSPORT_FAILED === $png->errorCode;
 	}
 
 	/**

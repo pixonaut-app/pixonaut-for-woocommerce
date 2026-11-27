@@ -68,6 +68,25 @@ final class ShowcasePicturesTest extends WP_UnitTestCase {
 		$this->assertSame( $own, (int) $gallery[1] );
 	}
 
+	public function test_only_the_set_pixonaut_was_still_drawing_is_asked_for_again(): void {
+		$product = $this->showcased( array( self::ANNA, self::TEAM ) );
+		// Anna's mockup is cold and outlasts the store's wait; the team's preview answers.
+		$this->recorder->fail();
+		$this->recorder->raw( 200, self::png(), 'image/png' );
+		$this->recorder->raw( 200, self::png(), 'image/png' );
+
+		ActionSchedulerRunner::run_once( ProductPictures::ACTION );
+
+		$urls = array_column( $this->recorder->requests, 'url' );
+		$this->assertCount( 3, $urls );
+		$this->assertSame( $urls[0], $urls[2], 'Anna asked for again' );
+		$this->assertStringContainsString( 'showcase=showcase-team', $urls[1] );
+		$product = $this->reload( $product );
+		$this->assertTrue( PictureImage::is_picture( (int) $product->get_image_id(), $product ) );
+		$this->assertCount( 1, $product->get_gallery_image_ids() );
+		$this->assertNull( ProductPictures::stored( $product )['failed_at'] );
+	}
+
 	public function test_without_sets_the_picture_is_drawn_as_before_and_the_gallery_is_left_alone(): void {
 		$product = $this->product( self::config() );
 		$own     = array( $this->image(), $this->image() );
