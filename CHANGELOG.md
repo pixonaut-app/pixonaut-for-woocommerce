@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.33.5](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.33.4...v1.33.5) (2026-11-27)
+
+
+### Bug Fixes
+
+* **abilities:** linking a product moves its variations with their own setup onto the version linked ([#417](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/417)) ([aeb05b3](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/aeb05b3c8d820a7480fda6a7a2dc4796b600adf2))
+
 ## [1.33.4](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.33.3...v1.33.4) (2026-11-27)
 
 
