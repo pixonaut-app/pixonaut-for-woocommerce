@@ -32252,7 +32252,9 @@ export interface operations {
                                 label: string;
                                 /** @description The rows the scene does not show, in the variants' order: their variants have no photo on it. */
                                 refused: {
-                                    /** @description The rule that refuses it: `shape_outside_grip` for a product of another kind or a size the grip does not close round, `no_product_model` for a row with no product model. */
+                                    /** @description The part a `part_colour_not_shown` row is refused by, such as `inside` or `handle`. */
+                                    part?: string;
+                                    /** @description The rule that refuses it: `part_colour_not_shown` for a product with a part of a colour of its own, such as a black inside, which the scene's photo, dyed whole, cannot show. */
                                     refusal: string;
                                     /** @description The row: its values of the options the blank's product changes with (`modelVariesBy`). Empty for a blank with one product. */
                                     row: {
@@ -33201,7 +33203,9 @@ export interface operations {
                             label: string;
                             /** @description The rows the scene does not show, in the variants' order: their variants have no photo on it. */
                             refused: {
-                                /** @description The rule that refuses it: `shape_outside_grip` for a product of another kind or a size the grip does not close round, `no_product_model` for a row with no product model. */
+                                /** @description The part a `part_colour_not_shown` row is refused by, such as `inside` or `handle`. */
+                                part?: string;
+                                /** @description The rule that refuses it: `part_colour_not_shown` for a product with a part of a colour of its own, such as a black inside, which the scene's photo, dyed whole, cannot show. */
                                 refusal: string;
                                 /** @description The row: its values of the options the blank's product changes with (`modelVariesBy`). Empty for a blank with one product. */
                                 row: {
@@ -53469,6 +53473,13 @@ export interface operations {
                         searchedProducts: number | null;
                         /** @description How many products answer the query (the category and the search), across every page; null when the partner did not say. */
                         total: number | null;
+                        /** @description The printshop's categories that could not be read this time, so none of their products is listed or counted; empty when every one was. */
+                        unreadCategories: {
+                            categoryId: string;
+                            name: string;
+                            /** @description True when asking again may read it, as after the printshop did not answer in time. */
+                            retryable: boolean;
+                        }[];
                     };
                 };
             };
@@ -53704,7 +53715,9 @@ export interface operations {
                                 label: string;
                                 /** @description The rows the scene does not show, in the variants' order: their variants have no photo on it. */
                                 refused: {
-                                    /** @description The rule that refuses it: `shape_outside_grip` for a product of another kind or a size the grip does not close round, `no_product_model` for a row with no product model. */
+                                    /** @description The part a `part_colour_not_shown` row is refused by, such as `inside` or `handle`. */
+                                    part?: string;
+                                    /** @description The rule that refuses it: `part_colour_not_shown` for a product with a part of a colour of its own, such as a black inside, which the scene's photo, dyed whole, cannot show. */
                                     refusal: string;
                                     /** @description The row: its values of the options the blank's product changes with (`modelVariesBy`). Empty for a blank with one product. */
                                     row: {
@@ -54605,7 +54618,9 @@ export interface operations {
                                 label: string;
                                 /** @description The rows the scene does not show, in the variants' order: their variants have no photo on it. */
                                 refused: {
-                                    /** @description The rule that refuses it: `shape_outside_grip` for a product of another kind or a size the grip does not close round, `no_product_model` for a row with no product model. */
+                                    /** @description The part a `part_colour_not_shown` row is refused by, such as `inside` or `handle`. */
+                                    part?: string;
+                                    /** @description The rule that refuses it: `part_colour_not_shown` for a product with a part of a colour of its own, such as a black inside, which the scene's photo, dyed whole, cannot show. */
                                     refusal: string;
                                     /** @description The row: its values of the options the blank's product changes with (`modelVariesBy`). Empty for a blank with one product. */
                                     row: {
@@ -56710,7 +56725,7 @@ export interface operations {
                                 rows: {
                                     /** @description The refusal as one plain sentence, to say as it is; null when the row is shown, and with `view=picker`, whose reader words the refusal itself. */
                                     reason: string | null;
-                                    /** @description Why the scene does not show the row, or null when it does: `no_product_model`, the row says no product; `kind_not_accepted`, the scene takes no product of that kind; `footprint_exceeds_anchor`, the product is larger than the anchor's room; `size_outside_reviewed_range`, no product of that size was looked at there; `angle_unsupported`, the camera looks too far up or down; `no_drawer`, nothing draws the kind yet; `shape_outside_grip`, the scene's photo holds a product of another kind or size in a hand. */
+                                    /** @description Why the scene does not show the row, or null when it does: `no_product_model`, the row says no product; `kind_not_accepted`, the scene takes no product of that kind; `footprint_exceeds_anchor`, the product is larger than the anchor's room; `size_outside_reviewed_range`, no product of that size was looked at there; `angle_unsupported`, the camera looks too far up or down; `no_drawer`, nothing draws the kind yet; `shape_outside_grip`, the scene's photo holds a product of another kind or size in a hand; `part_colour_not_shown`, the scene's photo, dyed whole, cannot show a part of a colour of its own. */
                                     refusal: string | null;
                                     /** @description A row of the blank's product: its values of the options its product changes with. Empty for a product that changes with none. */
                                     row: {
