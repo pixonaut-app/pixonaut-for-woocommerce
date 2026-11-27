@@ -329,6 +329,8 @@ final class WpHttpTransportTest extends WP_UnitTestCase {
 
 	/**
 	 * The CPU time this process has used, in seconds.
+	 *
+	 * @throws \RuntimeException When PHP cannot read it.
 	 */
 	private static function cpu_seconds(): float {
 		$usage = getrusage();

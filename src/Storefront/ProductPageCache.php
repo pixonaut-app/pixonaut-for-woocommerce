@@ -196,10 +196,10 @@ final class ProductPageCache {
 
 	/**
 	 * The posts showing each image as this request read them, by the
-	 * image's id, until a post's image is set: WordPress writes an image's
+	 * site's and the image's id, until a post's image is set: WordPress writes an image's
 	 * metadata once per size it makes, and each write would read them again.
 	 *
-	 * @var array<int, list<string>>
+	 * @var array<string, list<string>>
 	 */
 	private static array $showing = array();
 
@@ -313,13 +313,15 @@ final class ProductPageCache {
 			return;
 		}
 		$attachment_id = (int) $attachment_id;
-		if ( ! isset( self::$showing[ $attachment_id ] ) ) {
+		// Another site of a network has its own images under the same ids.
+		$key = get_current_blog_id() . ':' . $attachment_id;
+		if ( ! isset( self::$showing[ $key ] ) ) {
 			global $wpdb;
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- the posts showing an image, read once per request until one's image is set.
-			$posts                           = $wpdb->get_col( $wpdb->prepare( "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value = %s", self::THUMBNAIL_META, (string) $attachment_id ) );
-			self::$showing[ $attachment_id ] = array_values( array_map( 'strval', is_array( $posts ) ? $posts : array() ) );
+			$posts                 = $wpdb->get_col( $wpdb->prepare( "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value = %s", self::THUMBNAIL_META, (string) $attachment_id ) );
+			self::$showing[ $key ] = array_values( array_map( 'strval', is_array( $posts ) ? $posts : array() ) );
 		}
-		foreach ( self::$showing[ $attachment_id ] as $post_id ) {
+		foreach ( self::$showing[ $key ] as $post_id ) {
 			self::post_written( $post_id );
 		}
 	}

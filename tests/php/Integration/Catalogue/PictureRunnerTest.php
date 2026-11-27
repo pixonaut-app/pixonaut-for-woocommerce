@@ -107,6 +107,32 @@ final class PictureRunnerTest extends WP_UnitTestCase {
 		$this->assertCount( Settings::DEFAULT_PICTURE_RUNNERS, $this->sent );
 	}
 
+	public function test_a_runner_stopped_with_jobs_still_due_sends_another_in_its_place(): void {
+		as_enqueue_async_action( ProductPictures::ACTION, array( self::NO_PRODUCT + 1 ), ProductPictures::GROUP );
+		$checks = 0;
+		// Short of memory once it ran a job, as a runner past its time is too.
+		$memory = static function () use ( &$checks ): int {
+			return 0 === $checks++ ? 0 : PHP_INT_MAX;
+		};
+		$limit  = (string) ini_get( 'memory_limit' );
+		ini_set( 'memory_limit', self::MEMORY_LIMIT ); // phpcs:ignore WordPress.PHP.IniSet.memory_limit_Disallowed -- a limit the runner measures against.
+		try {
+			$ran = ( new PictureRunner( $memory ) )->run();
+		} finally {
+			ini_set( 'memory_limit', $limit ); // phpcs:ignore WordPress.PHP.IniSet.memory_limit_Disallowed -- the limit the tests run under.
+		}
+
+		$this->assertSame( 1, $ran );
+		$this->assertCount( 1, ActionSchedulerRunner::pending( ProductPictures::ACTION ), 'one still due' );
+		$this->assertCount( Settings::DEFAULT_PICTURE_RUNNERS, $this->sent, 'sent on' );
+	}
+
+	public function test_a_runner_that_ran_out_of_jobs_sends_none(): void {
+		$this->assertSame( 1, ( new PictureRunner() )->run() );
+
+		$this->assertSame( array(), $this->sent );
+	}
+
 	public function test_a_runner_short_of_memory_claims_no_job(): void {
 		$limit = (string) ini_get( 'memory_limit' );
 		ini_set( 'memory_limit', self::MEMORY_LIMIT ); // phpcs:ignore WordPress.PHP.IniSet.memory_limit_Disallowed -- a limit the runner measures against.

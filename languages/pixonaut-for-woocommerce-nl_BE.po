@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-27T00:11:41+00:00\n"
+"POT-Creation-Date: 2026-11-27T00:36:12+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -1362,12 +1362,14 @@ msgid ""
 "draws, about how many bytes they take, the share of the shop's free storage "
 "in `percent` (null when it cannot be read) and the `warning` that needs "
 "confirming; `turning_off` says how many variation pictures turning it off "
-"deletes and the bytes it frees. `queue` counts the store's pictures waiting "
-"to be drawn and saved, store-wide (`queued`), and those saved in the last "
-"hour (`drawn_recently`): a queue that shortens is being drawn, one that "
-"stays while none are saved is stuck. The pictures are files in the shop's "
-"media library, on the shop's own server, not in Pixonaut. Change it with %s."
-msgstr "Of er voor elke variatie een Pixonaut-afbeelding wordt aangemaakt, op de foto van het blanco product, voor de hele winkel of voor een variabel product (`choice`: `default` volgt de winkelinstelling). `turning_on` geeft aan hoeveel nieuwe afbeeldingen inschakelen aanmaakt, hoeveel bytes die ongeveer innemen, welk deel van de vrije opslagruimte van de winkel dat is in `percent` (null als die niet kan worden gelezen) en de waarschuwing `warning` die moet worden bevestigd; `turning_off` geeft aan hoeveel variatieafbeeldingen uitschakelen verwijdert en hoeveel bytes dat vrijmaakt. De afbeeldingen zijn bestanden in de mediabibliotheek van de winkel, op de eigen server van de winkel, niet in Pixonaut. Wijzigen kan met %s. `queue` telt de afbeeldingen van de winkel die wachten om te worden getekend en opgeslagen, voor de hele winkel (`queued`), en de afbeeldingen die het afgelopen uur zijn opgeslagen (`drawn_recently`): een wachtrij die korter wordt, wordt afgewerkt; een die gelijk blijft terwijl er geen worden opgeslagen, zit vast."
+"deletes and the bytes it frees. `queue` counts the store's picture jobs, "
+"store-wide: drawings waiting or running (`queued`), checks of products whose "
+"drawings are still to be queued (`checking`), and drawings finished in the "
+"last hour (`finished_recently`), saved or to be tried again; a queue that "
+"shortens is being worked through, one that stays while none finish is stuck. "
+"The pictures are files in the shop's media library, on the shop's own "
+"server, not in Pixonaut. Change it with %s."
+msgstr "Of er voor elke variatie een Pixonaut-afbeelding wordt aangemaakt, op de foto van het blanco product, voor de hele winkel of voor een variabel product (`choice`: `default` volgt de winkelinstelling). `turning_on` geeft aan hoeveel nieuwe afbeeldingen inschakelen aanmaakt, hoeveel bytes die ongeveer innemen, welk deel van de vrije opslagruimte van de winkel dat is in `percent` (null als die niet kan worden gelezen) en de waarschuwing `warning` die moet worden bevestigd; `turning_off` geeft aan hoeveel variatieafbeeldingen uitschakelen verwijdert en hoeveel bytes dat vrijmaakt. De afbeeldingen zijn bestanden in de mediabibliotheek van de winkel, op de eigen server van de winkel, niet in Pixonaut. Wijzigen kan met %s. `queue` telt de afbeeldingstaken van de winkel, voor de hele winkel: tekeningen die wachten of bezig zijn (`queued`), controles van producten waarvan de tekeningen nog in de wachtrij moeten (`checking`), en tekeningen die het afgelopen uur zijn afgerond (`finished_recently`), opgeslagen of opnieuw te proberen; een wachtrij die korter wordt, wordt afgewerkt, een die gelijk blijft terwijl er geen worden afgerond, zit vast."
 
 #: src/Abilities/LineView.php:45
 msgid "Where the line stands."
@@ -4802,7 +4804,7 @@ msgstr ""
 "winkelinstelling."
 
 #. translators: %d: a product's id.
-#: src/Abilities/VariationPicturesState.php:109
+#: src/Abilities/VariationPicturesState.php:110
 #, php-format
 msgid ""
 "Product %d is not a variable product: only a variable product's variations "

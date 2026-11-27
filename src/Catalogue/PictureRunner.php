@@ -119,14 +119,25 @@ final class PictureRunner extends WP_Async_Request {
 		if ( null === $slot ) {
 			return 0;
 		}
+		$left_work = false;
 		try {
-			return $this->claim_and_run();
+			[ $ran, $left_work ] = $this->claim_and_run();
+			return $ran;
 		} finally {
 			self::release( $slot[0], $slot[1] );
+			if ( $left_work ) {
+				// Stopped by its time or memory with jobs still due: the queue goes on side by side.
+				$this->start();
+			}
 		}
 	}
 
-	private function claim_and_run(): int {
+	/**
+	 * Claims and runs the jobs due, one at a time.
+	 *
+	 * @return array{int, bool} How many it ran, and whether it stopped for its time or memory before the jobs due ran out.
+	 */
+	private function claim_and_run(): array {
 		ActionScheduler_Compatibility::raise_time_limit( self::RUN_SECONDS + ProductPictures::LOCK_SECONDS );
 		$store    = ActionScheduler::store();
 		$deadline = time() + self::RUN_SECONDS;
@@ -148,19 +159,15 @@ final class PictureRunner extends WP_Async_Request {
 				$store->release_claim( $claim );
 			}
 			if ( array() === $ids ) {
-				break;
+				return array( $ran, false );
 			}
 			if ( wp_cache_supports( 'flush_runtime' ) ) {
 				wp_cache_flush_runtime();
 			}
 		}
-		return $ran;
+		return array( $ran, true );
 	}
 
-	/**
-	 * Whether the runner uses `MEMORY_SHARE` of PHP's memory limit already;
-	 * never when there is no limit.
-	 */
 	/**
 	 * Starts the runners once a request that queued a drawing to start at
 	 * once ends (`PictureQueue::queued_now()`). A WP-CLI run of Action
@@ -180,6 +187,10 @@ final class PictureRunner extends WP_Async_Request {
 		return max( 1, min( Settings::MAX_PICTURE_RUNNERS, $runners ) );
 	}
 
+	/**
+	 * Whether the runner uses `MEMORY_SHARE` of PHP's memory limit already;
+	 * never when there is no limit.
+	 */
 	private function memory_short(): bool {
 		$limit = wp_convert_hr_to_bytes( (string) ini_get( 'memory_limit' ) );
 		if ( $limit <= 0 ) {

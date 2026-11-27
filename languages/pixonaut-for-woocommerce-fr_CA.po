@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-27T00:11:41+00:00\n"
+"POT-Creation-Date: 2026-11-27T00:36:12+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -1371,12 +1371,14 @@ msgid ""
 "draws, about how many bytes they take, the share of the shop's free storage "
 "in `percent` (null when it cannot be read) and the `warning` that needs "
 "confirming; `turning_off` says how many variation pictures turning it off "
-"deletes and the bytes it frees. `queue` counts the store's pictures waiting "
-"to be drawn and saved, store-wide (`queued`), and those saved in the last "
-"hour (`drawn_recently`): a queue that shortens is being drawn, one that "
-"stays while none are saved is stuck. The pictures are files in the shop's "
-"media library, on the shop's own server, not in Pixonaut. Change it with %s."
-msgstr "Indique si une image Pixonaut est générée pour chaque variation, sur la photo de son produit vierge, pour toute la boutique ou pour un produit variable (`choice` : `default` suit le réglage de la boutique). `turning_on` indique combien de nouvelles images l'activation génère, combien d'octets elles occupent environ, la part de l'espace libre de la boutique que cela représente dans `percent` (null s'il ne peut pas être lu) et l'avertissement `warning` qui doit être confirmé; `turning_off` indique combien d'images de variation la désactivation supprime et combien d'octets elle libère. Les images sont des fichiers de la médiathèque de la boutique, sur le propre serveur de la boutique, pas dans Pixonaut. Le réglage se modifie avec %s. `queue` compte les images de la boutique qui attendent d’être dessinées et enregistrées, pour toute la boutique (`queued`), et celles enregistrées au cours de la dernière heure (`drawn_recently`) : une file qui raccourcit est en cours de traitement, une file qui ne bouge pas alors qu’aucune n’est enregistrée est bloquée."
+"deletes and the bytes it frees. `queue` counts the store's picture jobs, "
+"store-wide: drawings waiting or running (`queued`), checks of products whose "
+"drawings are still to be queued (`checking`), and drawings finished in the "
+"last hour (`finished_recently`), saved or to be tried again; a queue that "
+"shortens is being worked through, one that stays while none finish is stuck. "
+"The pictures are files in the shop's media library, on the shop's own "
+"server, not in Pixonaut. Change it with %s."
+msgstr "Indique si une image Pixonaut est générée pour chaque variation, sur la photo de son produit vierge, pour toute la boutique ou pour un produit variable (`choice` : `default` suit le réglage de la boutique). `turning_on` indique combien de nouvelles images l'activation génère, combien d'octets elles occupent environ, la part de l'espace libre de la boutique que cela représente dans `percent` (null s'il ne peut pas être lu) et l'avertissement `warning` qui doit être confirmé; `turning_off` indique combien d'images de variation la désactivation supprime et combien d'octets elle libère. Les images sont des fichiers de la médiathèque de la boutique, sur le propre serveur de la boutique, pas dans Pixonaut. Le réglage se modifie avec %s. `queue` compte les tâches d’image de la boutique, pour toute la boutique : dessins en attente ou en cours (`queued`), vérifications de produits dont les dessins restent à mettre en file (`checking`) et dessins terminés au cours de la dernière heure (`finished_recently`), enregistrés ou à réessayer ; une file qui raccourcit est en cours de traitement, une file qui ne bouge pas alors qu’aucun ne se termine est bloquée."
 
 #: src/Abilities/LineView.php:45
 msgid "Where the line stands."
@@ -4823,7 +4825,7 @@ msgstr ""
 "boutique."
 
 #. translators: %d: a product's id.
-#: src/Abilities/VariationPicturesState.php:109
+#: src/Abilities/VariationPicturesState.php:110
 #, php-format
 msgid ""
 "Product %d is not a variable product: only a variable product's variations "

@@ -84,8 +84,9 @@ final class VariationPicturesState {
 				'queue'       => array(
 					'type'       => 'object',
 					'properties' => array(
-						'queued'         => array( 'type' => 'integer' ),
-						'drawn_recently' => array( 'type' => 'integer' ),
+						'queued'            => array( 'type' => 'integer' ),
+						'checking'          => array( 'type' => 'integer' ),
+						'finished_recently' => array( 'type' => 'integer' ),
 					),
 				),
 			) + ( $changed ? array( 'changed' => $cost ) : array() ),

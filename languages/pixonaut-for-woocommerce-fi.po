@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-27T00:11:41+00:00\n"
+"POT-Creation-Date: 2026-11-27T00:36:12+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: fi\n"
@@ -1324,12 +1324,14 @@ msgid ""
 "draws, about how many bytes they take, the share of the shop's free storage "
 "in `percent` (null when it cannot be read) and the `warning` that needs "
 "confirming; `turning_off` says how many variation pictures turning it off "
-"deletes and the bytes it frees. `queue` counts the store's pictures waiting "
-"to be drawn and saved, store-wide (`queued`), and those saved in the last "
-"hour (`drawn_recently`): a queue that shortens is being drawn, one that "
-"stays while none are saved is stuck. The pictures are files in the shop's "
-"media library, on the shop's own server, not in Pixonaut. Change it with %s."
-msgstr "Luodaanko jokaisesta muunnelmasta Pixonautin kuva pohjatuotteen kuvaan, koko kaupassa tai muunnelmatuotteelle (`choice`: `default` noudattaa kaupan asetusta). `turning_on` kertoo, montako uutta kuvaa käyttöönotto luo, suunnilleen montako tavua ne vievät, kuinka suuri osuus kaupan vapaasta tallennustilasta se on kentässä `percent` (null, jos sitä ei voi lukea), sekä varoituksen `warning`, joka on vahvistettava; `turning_off` kertoo, montako muunnelmakuvaa käytöstä poistaminen poistaa ja montako tavua se vapauttaa. Kuvat ovat tiedostoja kaupan mediakirjastossa, kaupan omalla palvelimella, eivät Pixonautissa. Asetusta muutetaan kyvyllä %s. `queue` laskee kaupan kuvat, jotka odottavat piirtämistä ja tallennusta, koko kaupassa (`queued`), sekä viimeisen tunnin aikana tallennetut (`drawn_recently`): lyhenevää jonoa käsitellään, kun taas jono, joka pysyy samana eikä mitään tallenneta, on jumissa."
+"deletes and the bytes it frees. `queue` counts the store's picture jobs, "
+"store-wide: drawings waiting or running (`queued`), checks of products whose "
+"drawings are still to be queued (`checking`), and drawings finished in the "
+"last hour (`finished_recently`), saved or to be tried again; a queue that "
+"shortens is being worked through, one that stays while none finish is stuck. "
+"The pictures are files in the shop's media library, on the shop's own "
+"server, not in Pixonaut. Change it with %s."
+msgstr "Luodaanko jokaisesta muunnelmasta Pixonautin kuva pohjatuotteen kuvaan, koko kaupassa tai muunnelmatuotteelle (`choice`: `default` noudattaa kaupan asetusta). `turning_on` kertoo, montako uutta kuvaa käyttöönotto luo, suunnilleen montako tavua ne vievät, kuinka suuri osuus kaupan vapaasta tallennustilasta se on kentässä `percent` (null, jos sitä ei voi lukea), sekä varoituksen `warning`, joka on vahvistettava; `turning_off` kertoo, montako muunnelmakuvaa käytöstä poistaminen poistaa ja montako tavua se vapauttaa. Kuvat ovat tiedostoja kaupan mediakirjastossa, kaupan omalla palvelimella, eivät Pixonautissa. Asetusta muutetaan kyvyllä %s. `queue` laskee kaupan kuvatyöt koko kaupassa: odottavat tai käynnissä olevat piirrot (`queued`), tarkistukset tuotteille, joiden piirtoja ei ole vielä jonossa (`checking`), sekä viimeisen tunnin aikana päättyneet piirrot (`finished_recently`), tallennetut tai uudelleen yritettävät; lyhenevää jonoa käsitellään, kun taas jono, joka pysyy samana eikä mikään pääty, on jumissa."
 
 #: src/Abilities/LineView.php:45
 msgid "Where the line stands."
@@ -4693,7 +4695,7 @@ msgstr ""
 "asetuksesta."
 
 #. translators: %d: a product's id.
-#: src/Abilities/VariationPicturesState.php:109
+#: src/Abilities/VariationPicturesState.php:110
 #, php-format
 msgid ""
 "Product %d is not a variable product: only a variable product's variations "

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-27T00:11:41+00:00\n"
+"POT-Creation-Date: 2026-11-27T00:36:12+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: sv_SE\n"
@@ -1321,12 +1321,14 @@ msgid ""
 "draws, about how many bytes they take, the share of the shop's free storage "
 "in `percent` (null when it cannot be read) and the `warning` that needs "
 "confirming; `turning_off` says how many variation pictures turning it off "
-"deletes and the bytes it frees. `queue` counts the store's pictures waiting "
-"to be drawn and saved, store-wide (`queued`), and those saved in the last "
-"hour (`drawn_recently`): a queue that shortens is being drawn, one that "
-"stays while none are saved is stuck. The pictures are files in the shop's "
-"media library, on the shop's own server, not in Pixonaut. Change it with %s."
-msgstr "Om en Pixonaut-bild ritas för varje variant, på grundproduktens foto, för hela butiken eller för en variabel produkt (`choice`: `default` följer butiksinställningen). `turning_on` anger hur många nya bilder som ritas när inställningen slås på, ungefär hur många byte de tar, hur stor andel av butikens lediga lagringsutrymme det motsvarar i `percent` (null när det inte går att läsa) och varningen `warning` som måste bekräftas; `turning_off` anger hur många variantbilder som tas bort när den stängs av och hur många byte det frigör. Bilderna är filer i butikens mediabibliotek, på butikens egen server, inte i Pixonaut. Ändra inställningen med %s. `queue` räknar butikens bilder som väntar på att ritas och sparas, för hela butiken (`queued`), och de som sparats den senaste timmen (`drawn_recently`): en kö som krymper arbetas igenom, en som står still medan inga sparas har fastnat."
+"deletes and the bytes it frees. `queue` counts the store's picture jobs, "
+"store-wide: drawings waiting or running (`queued`), checks of products whose "
+"drawings are still to be queued (`checking`), and drawings finished in the "
+"last hour (`finished_recently`), saved or to be tried again; a queue that "
+"shortens is being worked through, one that stays while none finish is stuck. "
+"The pictures are files in the shop's media library, on the shop's own "
+"server, not in Pixonaut. Change it with %s."
+msgstr "Om en Pixonaut-bild ritas för varje variant, på grundproduktens foto, för hela butiken eller för en variabel produkt (`choice`: `default` följer butiksinställningen). `turning_on` anger hur många nya bilder som ritas när inställningen slås på, ungefär hur många byte de tar, hur stor andel av butikens lediga lagringsutrymme det motsvarar i `percent` (null när det inte går att läsa) och varningen `warning` som måste bekräftas; `turning_off` anger hur många variantbilder som tas bort när den stängs av och hur många byte det frigör. Bilderna är filer i butikens mediabibliotek, på butikens egen server, inte i Pixonaut. Ändra inställningen med %s. `queue` räknar butikens bildjobb för hela butiken: ritningar som väntar eller pågår (`queued`), kontroller av produkter vars ritningar ännu inte köats (`checking`) och ritningar som avslutats den senaste timmen (`finished_recently`), sparade eller att försöka igen; en kö som krymper arbetas igenom, en som står still medan inga avslutas har fastnat."
 
 #: src/Abilities/LineView.php:45
 msgid "Where the line stands."
@@ -4647,7 +4649,7 @@ msgstr ""
 "En variabel produkt, för dess eget val; utelämna för butiksinställningen."
 
 #. translators: %d: a product's id.
-#: src/Abilities/VariationPicturesState.php:109
+#: src/Abilities/VariationPicturesState.php:110
 #, php-format
 msgid ""
 "Product %d is not a variable product: only a variable product's variations "
