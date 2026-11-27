@@ -105,6 +105,11 @@ final class VariationPicturesAbilitiesTest extends WP_UnitTestCase {
 		as_enqueue_async_action( PictureQueue::VARIATIONS_ACTION, array( $this->poster_id ), ProductPictures::GROUP );
 		$saved = as_enqueue_async_action( ProductPictures::ACTION, array( 0 ), ProductPictures::GROUP );
 		\ActionScheduler::store()->mark_complete( $saved );
+		$earlier = as_enqueue_async_action( ProductPictures::ACTION, array( 1 ), ProductPictures::GROUP );
+		\ActionScheduler::store()->mark_complete( $earlier );
+		global $wpdb;
+		// Finished before the last hour.
+		$wpdb->update( $wpdb->actionscheduler_actions, array( 'last_attempt_gmt' => gmdate( 'Y-m-d H:i:s', time() - PictureQueue::RECENT_SECONDS - 1 ) ), array( 'action_id' => $earlier ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- a test.
 
 		$queue = $this->succeed( self::READ, array() )['queue'];
 

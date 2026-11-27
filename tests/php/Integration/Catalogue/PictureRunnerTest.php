@@ -133,6 +133,16 @@ final class PictureRunnerTest extends WP_UnitTestCase {
 		$this->assertSame( array(), $this->sent );
 	}
 
+	public function test_action_scheduler_runs_its_own_batch_beside_every_runner(): void {
+		$plugin = Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' )->picture_runner();
+		$this->assertInstanceOf( PictureRunner::class, $plugin );
+		$this->assertNotFalse( has_filter( 'action_scheduler_queue_runner_concurrent_batches', array( $plugin, 'concurrent_batches' ) ) );
+
+		$this->assertSame( 1, ( new PictureRunner() )->concurrent_batches( 1 ), 'as it was while no runner runs' );
+		self::hold( Settings::DEFAULT_PICTURE_RUNNERS, time() );
+		$this->assertSame( 1 + Settings::DEFAULT_PICTURE_RUNNERS, ( new PictureRunner() )->concurrent_batches( 1 ), 'and one more per runner running' );
+	}
+
 	public function test_a_runner_short_of_memory_claims_no_job(): void {
 		$limit = (string) ini_get( 'memory_limit' );
 		ini_set( 'memory_limit', self::MEMORY_LIMIT ); // phpcs:ignore WordPress.PHP.IniSet.memory_limit_Disallowed -- a limit the runner measures against.
