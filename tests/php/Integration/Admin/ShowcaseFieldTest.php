@@ -97,7 +97,7 @@ final class ShowcaseFieldTest extends WP_UnitTestCase {
 		parent::tear_down();
 	}
 
-	public function test_it_lists_the_templates_sets_with_those_chosen_ticked(): void {
+	public function test_it_lists_the_templates_sets_with_those_chosen_ticked_and_first(): void {
 		$product = $this->product();
 		ShowcaseImages::save( $product, array( self::SETS[1] + array( 'kind' => ShowcaseImages::PREVIEW ) ) );
 		$this->answer_sets( self::SETS );
@@ -106,9 +106,34 @@ final class ShowcaseFieldTest extends WP_UnitTestCase {
 
 		$this->assertStringContainsString( '/v1/templates/mini-tee%402', $this->recorder->requests[0]['url'] );
 		$this->assertStringContainsString( 'Anna, class of 2026', $html );
-		$this->assertMatchesRegularExpression( '#name="pixonaut_showcase_images\[1\]\[use\]" value="yes"\s+checked#', $html );
-		$this->assertDoesNotMatchRegularExpression( '#name="pixonaut_showcase_images\[0\]\[use\]" value="yes"\s+checked#', $html );
+		$this->assertMatchesRegularExpression( '#name="pixonaut_showcase_images\[0\]\[use\]" value="yes"\s+checked#', $html );
+		$this->assertDoesNotMatchRegularExpression( '#name="pixonaut_showcase_images\[1\]\[use\]" value="yes"\s+checked#', $html );
 		$this->assertStringNotContainsString( 'no longer in the template', $html );
+	}
+
+	public function test_a_set_chosen_twice_has_a_ticked_row_for_each_so_saving_keeps_both(): void {
+		$product = $this->product();
+		ShowcaseImages::save(
+			$product,
+			array(
+				self::SETS[0] + array( 'kind' => ShowcaseImages::PREVIEW ),
+				self::SETS[1] + array( 'kind' => ShowcaseImages::PREVIEW ),
+				self::SETS[0] + array(
+					'kind' => ShowcaseImages::MOCKUP,
+					'view' => self::FRONT_VIEW,
+				),
+			)
+		);
+		$this->answer_sets( self::SETS );
+
+		$html = $this->field->html( $this->reload( $product ) );
+
+		foreach ( array( 0, 1, 2 ) as $index ) {
+			$this->assertMatchesRegularExpression( '#name="pixonaut_showcase_images\[' . $index . '\]\[use\]" value="yes"\s+checked#', $html );
+		}
+		preg_match_all( '#name="pixonaut_showcase_images\[\d+\]\[id\]" value="([^"]+)"#', $html, $ids );
+		$this->assertSame( array( 'showcase-anna', 'showcase-team', 'showcase-anna' ), $ids[1], 'in the order they are drawn, so saving keeps it' );
+		$this->assertStringNotContainsString( 'pixonaut_showcase_images[3]', $html );
 	}
 
 	public function test_on_a_blank_with_a_photo_each_set_is_drawn_on_it_or_flat_each_with_a_thumbnail(): void {
@@ -121,8 +146,8 @@ final class ShowcaseFieldTest extends WP_UnitTestCase {
 
 		$this->assertStringContainsString( '/v1/blanks/' . self::BLANK_ID . '/mockups', $this->recorder->requests[1]['url'] );
 		$this->assertSame( 3, substr_count( $html, 'role="radiogroup"' ), 'the image without a set, and each set' );
-		$this->assertMatchesRegularExpression( '#name="pixonaut_showcase_images\[0\]\[kind\]" value="mockup"\s+checked#', $html );
-		$this->assertMatchesRegularExpression( '#name="pixonaut_showcase_images\[1\]\[kind\]" value="preview"\s+checked#', $html );
+		$this->assertMatchesRegularExpression( '#name="pixonaut_showcase_images\[0\]\[kind\]" value="preview"\s+checked#', $html );
+		$this->assertMatchesRegularExpression( '#name="pixonaut_showcase_images\[1\]\[kind\]" value="mockup"\s+checked#', $html );
 		$this->assertStringContainsString( 'Main photo', $html );
 		$this->assertStringContainsString( 'The design alone, without the product.', $html );
 		$this->assertStringContainsString( 'src="' . self::PHOTO_URL . '"', $html );
@@ -158,9 +183,9 @@ final class ShowcaseFieldTest extends WP_UnitTestCase {
 
 		$cards = $this->cards( $this->field->html( $this->reload( $product ) ) );
 
-		// In the order the template lists them, as they are saved.
-		$this->assertSame( 'Product image', $cards['showcase-anna']['badge'] );
-		$this->assertSame( 'Gallery', $cards['showcase-team']['badge'] );
+		// In the order they are drawn, which saving keeps.
+		$this->assertSame( 'Product image', $cards['showcase-team']['badge'] );
+		$this->assertSame( 'Gallery', $cards['showcase-anna']['badge'] );
 		$this->assertSame( '', $cards['own']['badge'] );
 	}
 

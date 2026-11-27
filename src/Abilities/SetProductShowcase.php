@@ -20,19 +20,21 @@ use WP_Http;
 /**
  * Sets the showcase sets a personalised product's images are drawn with,
  * as the product images field of its Pixonaut tab does: each one of its
- * template's sets, drawn on the blank's photo or as the flat design; a set
- * still drawn on the photo keeps the view and photo chosen for it
- * (`SetProductPictureView`). The pictures are drawn again once the choice
- * is saved. Whoever may edit the
- * product may set them.
+ * template's sets, drawn on the blank's photo or as the flat design, and
+ * on the photo on a view and photo of the blank it names, a scene's
+ * included; one named without a view keeps the view and photo chosen for it
+ * before (`SetProductPictureView`). A set may be named more than once, each
+ * time on another view or photo. The pictures are drawn again once the
+ * choice is saved. Whoever may edit the product may set them.
  */
 final class SetProductShowcase implements Ability {
 
 	/**
-	 * @param ProductLinks  $links     Gives the answer.
-	 * @param ShowcaseField $showcases Lists the template's sets.
+	 * @param ProductLinks           $links     Gives the answer.
+	 * @param ShowcaseField          $showcases Lists the template's sets.
+	 * @param GetProductPictureViews $views     Checks a view and photo named against the blank's.
 	 */
-	public function __construct( private readonly ProductLinks $links, private readonly ShowcaseField $showcases ) {
+	public function __construct( private readonly ProductLinks $links, private readonly ShowcaseField $showcases, private readonly GetProductPictureViews $views ) {
 	}
 
 	public function name(): string {
@@ -47,7 +49,7 @@ final class SetProductShowcase implements Ability {
 			'label'               => __( 'Set a product\'s showcase pictures', 'pixonaut-for-woocommerce' ),
 			'description'         => sprintf(
 				/* translators: %d: how many showcase pictures a product shows at most, e.g. 10. */
-				__( 'Sets which of its template\'s showcase sets a personalised simple or variable product\'s images are drawn with, in order, up to %d; replaces the ones it has, and an empty list removes them. Each is drawn on the blank\'s photo (`mockup`) or as the flat design (`preview`); a product without a blank has only the flat design. The pictures are drawn again. The answer lists the sets the template offers.', 'pixonaut-for-woocommerce' ),
+				__( 'Sets which of its template\'s showcase sets a personalised simple or variable product\'s images are drawn with, in order, up to %d; replaces the ones it has, and an empty list removes them. Each is drawn on the blank\'s photo (`mockup`) or as the flat design (`preview`); a product without a blank has only the flat design. On the photo, `view` and `photo` name a view of the blank and one of its photos, a scene\'s too, as `get-product-picture-views` lists them; `view` null is the photo the product page starts on, and leaving both out keeps what the set was drawn on before. A set may be named more than once, on another view or photo each time, so a gallery can show the same set on several views. The pictures are drawn again. The answer lists the sets the template offers.', 'pixonaut-for-woocommerce' ),
 				ShowcaseImages::MAX_IMAGES
 			),
 			'input_schema'        => array(
@@ -63,14 +65,22 @@ final class SetProductShowcase implements Ability {
 						'items'    => array(
 							'type'                 => 'object',
 							'properties'           => array(
-								'id'   => array(
+								'id'    => array(
 									'type'        => 'string',
 									'description' => __( 'One of the template\'s showcase sets, by id.', 'pixonaut-for-woocommerce' ),
 								),
-								'kind' => array(
+								'kind'  => array(
 									'type'    => 'string',
 									'enum'    => array( ShowcaseImages::MOCKUP, ShowcaseImages::PREVIEW ),
 									'default' => ShowcaseImages::MOCKUP,
+								),
+								'view'  => array(
+									'type'        => array( 'string', 'null' ),
+									'description' => __( 'On the photo, one of the views `get-product-picture-views` lists; null for the one the product page starts on. Left out with `photo`, the set keeps what it was drawn on before.', 'pixonaut-for-woocommerce' ),
+								),
+								'photo' => array(
+									'type'        => 'string',
+									'description' => __( 'On the photo, one of the photos `get-product-picture-views` lists; its view is found when `view` is left out. Without it, the view\'s photo of the variant sold.', 'pixonaut-for-woocommerce' ),
 								),
 							),
 							'required'             => array( 'id' ),
@@ -112,8 +122,9 @@ final class SetProductShowcase implements Ability {
 		}
 		$by_id   = array_column( $sets, null, 'id' );
 		$on_flat = null === ProductConfig::stored_on( $product )->blank_id;
-		$before  = array_column( ShowcaseImages::on( $product ), null, 'id' );
 		$images  = array();
+		// The first choice of each set, which a set named without a view keeps.
+		$before = array_column( array_reverse( ShowcaseImages::on( $product ) ), null, 'id' );
 		foreach ( is_array( $input['images'] ?? null ) ? $input['images'] : array() as $image ) {
 			$id  = is_array( $image ) && is_string( $image['id'] ?? null ) ? $image['id'] : '';
 			$set = $by_id[ $id ] ?? null;
@@ -128,15 +139,44 @@ final class SetProductShowcase implements Ability {
 					)
 				);
 			}
-			$kind     = $on_flat || ShowcaseImages::PREVIEW === ( $image['kind'] ?? null ) ? ShowcaseImages::PREVIEW : ShowcaseImages::MOCKUP;
-			$earlier  = $before[ $set['id'] ] ?? array( 'kind' => $kind );
+			$kind  = $on_flat || ShowcaseImages::PREVIEW === ( $image['kind'] ?? null ) ? ShowcaseImages::PREVIEW : ShowcaseImages::MOCKUP;
+			$named = is_array( $image ) && ( array_key_exists( 'view', $image ) || array_key_exists( 'photo', $image ) );
+			if ( $named && ShowcaseImages::MOCKUP === $kind ) {
+				$choice = $this->named( $product, $image );
+				if ( $choice instanceof WP_Error ) {
+					return $choice;
+				}
+			} else {
+				$earlier = $before[ $set['id'] ] ?? array( 'kind' => $kind );
+				$choice  = ! $named && $earlier['kind'] === $kind ? array_intersect_key( $earlier, array_flip( array( 'kind', 'view', 'photo' ) ) ) : array( 'kind' => $kind );
+			}
 			$images[] = array(
 				'id'   => $set['id'],
 				'name' => $set['name'],
-			) + ( $earlier['kind'] === $kind ? array_intersect_key( $earlier, array_flip( array( 'kind', 'view', 'photo' ) ) ) : array( 'kind' => $kind ) );
+			) + $choice;
 		}
 		ShowcaseImages::save( $product, $images );
 		return $this->links->summary( $product ) + array( 'available_showcases' => $sets );
+	}
+
+	/**
+	 * The choice an image names: on the photo the product page starts on
+	 * when its view is null, else the view and photo, checked against the
+	 * blank's.
+	 *
+	 * @param WC_Product          $product The product.
+	 * @param array<mixed, mixed> $image   The image as posted, naming `view` or `photo`.
+	 *
+	 * @return array{kind: string, view?: string, photo?: string}|WP_Error
+	 */
+	private function named( WC_Product $product, array $image ): array|WP_Error {
+		$view  = is_string( $image['view'] ?? null ) && '' !== $image['view'] ? $image['view'] : null;
+		$photo = is_string( $image['photo'] ?? null ) && '' !== $image['photo'] ? $image['photo'] : null;
+		if ( null === $view && null === $photo ) {
+			return array( 'kind' => ShowcaseImages::MOCKUP );
+		}
+		$found = $this->views->found( $product, $view, $photo );
+		return $found instanceof WP_Error ? $found : array( 'kind' => ShowcaseImages::MOCKUP ) + $found;
 	}
 
 	/**

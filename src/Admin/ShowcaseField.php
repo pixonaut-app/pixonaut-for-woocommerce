@@ -537,8 +537,9 @@ final class ShowcaseField {
 	}
 
 	/**
-	 * Each set the field lists: the template's, then the chosen ones it no
-	 * longer has, or Pixonaut drew without them; each with the value of
+	 * Each set the field lists: the chosen ones in the order they are drawn,
+	 * once for each view, those the template no longer has or Pixonaut drew
+	 * without marked gone; then the template's others; each with the value of
 	 * how it is drawn, and whether that names a view or photo the blank no
 	 * longer has.
 	 *
@@ -552,21 +553,25 @@ final class ShowcaseField {
 	 * @return list<array{id: string, name: string, kind: string, value: string, chosen: bool, gone: bool, view_gone: bool, view_label: string}>
 	 */
 	private static function rows( array $sets, array $chosen, array $gone, bool $on_photo, ?array $views ): array {
-		$by_id = array_column( $chosen, null, 'id' );
-		$rows  = array();
-		foreach ( $sets as $set ) {
-			$choice = $by_id[ $set['id'] ] ?? null;
-			unset( $by_id[ $set['id'] ] );
-			$rows[] = self::row( $set, $choice ?? array( 'kind' => ShowcaseImages::MOCKUP ), $on_photo, $views ) + array(
-				'chosen' => null !== $choice,
-				'gone'   => null !== $choice && in_array( $set['id'], $gone, true ),
+		// The chosen ones first, in the order they are drawn, a set chosen on
+		// several views once for each, so saving keeps the gallery's order.
+		$offered = array_column( $sets, null, 'id' );
+		$rows    = array();
+		foreach ( $chosen as $choice ) {
+			$set    = $offered[ $choice['id'] ] ?? null;
+			$rows[] = self::row( $set ?? $choice, $choice, $on_photo, $views ) + array(
+				'chosen' => true,
+				'gone'   => null === $set || in_array( $choice['id'], $gone, true ),
 			);
 		}
-		foreach ( $by_id as $kept ) {
-			$rows[] = self::row( $kept, $kept, $on_photo, $views ) + array(
-				'chosen' => true,
-				'gone'   => true,
-			);
+		$shown = array_column( $chosen, 'id', 'id' );
+		foreach ( $sets as $set ) {
+			if ( ! isset( $shown[ $set['id'] ] ) ) {
+				$rows[] = self::row( $set, array( 'kind' => ShowcaseImages::MOCKUP ), $on_photo, $views ) + array(
+					'chosen' => false,
+					'gone'   => false,
+				);
+			}
 		}
 		return $rows;
 	}

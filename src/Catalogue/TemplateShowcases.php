@@ -68,7 +68,7 @@ final class TemplateShowcases {
 
 	/**
 	 * The choices as the template a product is drawn on has them: each
-	 * with that template's set, once. Unchanged when it is drawn on the
+	 * with that template's set, each drawing once. Unchanged when it is drawn on the
 	 * template they were chosen from.
 	 *
 	 * @param WC_Product                                                                         $product A product or variation.
@@ -90,11 +90,16 @@ final class TemplateShowcases {
 		$drawn = array();
 		foreach ( $images as $index => $image ) {
 			$set = self::matching( $sets, $image ) ?? ( 0 === $index ? $sets[0] : null );
-			if ( null !== $set && ! isset( $drawn[ $set['id'] ] ) ) {
-				$drawn[ $set['id'] ] = array(
-					'id'   => $set['id'],
-					'name' => $set['name'],
-				) + $image;
+			if ( null === $set ) {
+				continue;
+			}
+			$choice = array(
+				'id'   => $set['id'],
+				'name' => $set['name'],
+			) + $image;
+			$key    = ShowcaseImages::key( $choice );
+			if ( ! isset( $drawn[ $key ] ) ) {
+				$drawn[ $key ] = $choice;
 			}
 		}
 		return array_values( $drawn );

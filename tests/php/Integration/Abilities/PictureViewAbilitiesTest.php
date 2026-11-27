@@ -39,6 +39,8 @@ final class PictureViewAbilitiesTest extends WP_UnitTestCase {
 
 	public const SET = Abilities::NAMESPACE . '/set-product-picture-view';
 
+	public const SHOWCASE = Abilities::NAMESPACE . '/set-product-showcase';
+
 	private const BLANK_ID = 'blank_tee';
 
 	/**
@@ -54,6 +56,13 @@ final class PictureViewAbilitiesTest extends WP_UnitTestCase {
 	private const VIEW = 'view-' . self::PLACEMENT_ID;
 
 	private const PHOTO = 'mock-' . self::PLACEMENT_ID;
+
+	/**
+	 * A second view of the placement, as a bound scene lists, and its photo.
+	 */
+	private const SCENE_VIEW = 'sv_breakfast';
+
+	private const SCENE_PHOTO = 'mock-breakfast';
 
 	private const ANNA = array(
 		'id'   => 'showcase-anna',
@@ -176,6 +185,97 @@ final class PictureViewAbilitiesTest extends WP_UnitTestCase {
 		);
 	}
 
+	public function test_set_product_showcase_shows_one_set_on_several_views_in_the_order_named(): void {
+		$product = $this->product();
+		$this->recorder->raw( 200, self::template_with( array( self::ANNA ) ), 'application/json' );
+		$this->answer_mockups_with_scene();
+
+		$this->succeed(
+			self::SHOWCASE,
+			array(
+				'product_id' => $product->get_id(),
+				'images'     => array(
+					array(
+						'id'   => self::ANNA['id'],
+						'view' => null,
+					),
+					array(
+						'id'   => self::ANNA['id'],
+						'view' => self::VIEW,
+					),
+					array(
+						'id'    => self::ANNA['id'],
+						'photo' => self::SCENE_PHOTO,
+					),
+					array(
+						'id'   => self::ANNA['id'],
+						'kind' => ShowcaseImages::PREVIEW,
+					),
+				),
+			)
+		);
+
+		$this->assertSame(
+			array(
+				self::ANNA,
+				self::ANNA + array( 'view' => self::VIEW ),
+				self::ANNA + array(
+					'view'  => self::SCENE_VIEW,
+					'photo' => self::SCENE_PHOTO,
+				),
+				array_replace( self::ANNA, array( 'kind' => ShowcaseImages::PREVIEW ) ),
+			),
+			ShowcaseImages::on( $this->reload( $product ) )
+		);
+
+		$read = $this->succeed( self::GET, array( 'product_id' => $product->get_id() ) );
+		$this->assertSame( array( null, self::VIEW, self::SCENE_VIEW, null ), array_column( $read['showcase_images'], 'view' ) );
+		$this->assertSame( array( self::VIEW, self::SCENE_VIEW ), array_column( $read['views'], 'id' ) );
+	}
+
+	public function test_set_product_showcase_refuses_a_view_the_blank_does_not_have_and_changes_nothing(): void {
+		$product = $this->product();
+		ShowcaseImages::save( $product, array( self::ANNA ) );
+		$this->recorder->raw( 200, self::template_with( array( self::ANNA ) ), 'application/json' );
+		$this->answer_mockups_with_scene();
+
+		$answer = $this->ability( self::SHOWCASE )->execute(
+			array(
+				'product_id' => $product->get_id(),
+				'images'     => array(
+					array(
+						'id'   => self::ANNA['id'],
+						'view' => 'view-elsewhere',
+					),
+				),
+			)
+		);
+
+		$this->assertInstanceOf( WP_Error::class, $answer );
+		$this->assertSame( 'pixonaut_wc_ability_unknown_picture_view', $answer->get_error_code() );
+		$this->assertStringContainsString( self::SCENE_VIEW . ' (' . self::SCENE_PHOTO . ')', $answer->get_error_message() );
+		$this->assertSame( array( self::ANNA ), ShowcaseImages::on( $this->reload( $product ) ) );
+	}
+
+	public function test_a_set_shown_on_two_views_is_not_changed_one_image_at_a_time(): void {
+		$product = $this->product();
+		$both    = array( self::ANNA, self::ANNA + array( 'view' => self::VIEW ) );
+		ShowcaseImages::save( $product, $both );
+
+		$answer = $this->ability( self::SET )->execute(
+			array(
+				'product_id' => $product->get_id(),
+				'showcase'   => self::ANNA['id'],
+				'kind'       => PictureView::PREVIEW,
+			)
+		);
+
+		$this->assertInstanceOf( WP_Error::class, $answer );
+		$this->assertSame( 'pixonaut_wc_ability_showcase_shown_twice', $answer->get_error_code() );
+		$this->assertStringContainsString( 'set-product-showcase', $answer->get_error_message() );
+		$this->assertSame( $both, ShowcaseImages::on( $this->reload( $product ) ) );
+	}
+
 	public function test_a_flat_choice_is_not_checked_against_the_views(): void {
 		$product = $this->product();
 		$this->answer_mockups();
@@ -276,6 +376,21 @@ final class PictureViewAbilitiesTest extends WP_UnitTestCase {
 
 	private function answer_mockups(): void {
 		$this->recorder->json( 200, BlankFixture::mockups( Hosts::server_api() ) );
+	}
+
+	/**
+	 * Answers the blank's views with a second one, a scene's, after the fixture's.
+	 */
+	private function answer_mockups_with_scene(): void {
+		$mockups = BlankFixture::mockups( Hosts::server_api() );
+		$front   = $mockups['placements'][0]['views'][0];
+
+		$mockups['placements'][0]['views'][] = array(
+			'id'     => self::SCENE_VIEW,
+			'label'  => 'Breakfast table',
+			'photos' => array( array( 'id' => self::SCENE_PHOTO ) + $front['photos'][0] ),
+		) + $front;
+		$this->recorder->json( 200, $mockups );
 	}
 
 	/**

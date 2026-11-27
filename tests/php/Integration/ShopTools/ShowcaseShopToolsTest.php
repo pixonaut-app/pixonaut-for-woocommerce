@@ -137,6 +137,20 @@ final class ShowcaseShopToolsTest extends WP_UnitTestCase {
 		$this->assertCount( 1, $this->recorder->requests, 'the template\'s sets are listed once' );
 	}
 
+	public function test_the_view_of_one_image_is_set_on_the_route(): void {
+		$product = $this->product();
+
+		$set = $this->succeed(
+			'set-product-picture-view',
+			array(
+				'product_id' => $product->get_id(),
+				'kind'       => ShowcaseImages::PREVIEW,
+			)
+		);
+
+		$this->assertSame( ShowcaseImages::PREVIEW, $set['picture_view']['kind'] );
+	}
+
 	public function test_an_empty_list_takes_every_set_off(): void {
 		$product = $this->product();
 		ShowcaseImages::save( $product, array( self::GRADUATE + array( 'kind' => ShowcaseImages::PREVIEW ) ) );

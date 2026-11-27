@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-27T12:12:26+00:00\n"
+"POT-Creation-Date: 2026-11-27T14:45:17+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -946,7 +946,33 @@ msgstr ""
 msgid "A simple or variable product, or a variation."
 msgstr "Un produit simple ou variable, ou une variation."
 
-#: src/Abilities/GetProductPictureViews.php:160
+#: src/Abilities/GetProductPictureViews.php:147
+msgid ""
+"Pixonaut could not be asked for the blank's views and photos. Try again "
+"later."
+msgstr ""
+"Impossible d'obtenir de Pixonaut les vues et les photos du produit vierge. "
+"Réessayez plus tard."
+
+#: src/Abilities/GetProductPictureViews.php:166
+msgid ""
+"The product is not on a blank with photos for its side, so its images can "
+"only be drawn as the product page shows them, or flat."
+msgstr ""
+"Le produit ne repose pas sur un produit vierge doté de photos pour sa face : "
+"ses images ne peuvent donc être générées que telles que la page produit les "
+"montre, ou à plat."
+
+#. translators: 1: the views of the blank with their photos, e.g. "front (mock-1, mock-2), back (mock-3)".
+#: src/Abilities/GetProductPictureViews.php:169
+#, php-format
+msgid ""
+"The blank has no such view or photo for the product's side. It has: %1$s."
+msgstr ""
+"Le produit vierge n'a pas cette vue ou cette photo pour la face du produit. "
+"Il propose : %1$s."
+
+#: src/Abilities/GetProductPictureViews.php:204
 msgid ""
 "The showcase sets the product's template offers, by id and name: those of "
 "the template version it is linked to, the ids `set-product-showcase` takes. "
@@ -958,20 +984,20 @@ msgstr ""
 "identifiants qu'accepte `set-product-showcase`. Vide sans modèle et pour une "
 "variation; null lorsque Pixonaut n'a pas pu être interrogé."
 
-#: src/Abilities/GetProductPictureViews.php:175
+#: src/Abilities/GetProductPictureViews.php:219
 msgid "`mockup` on the blank's photo, `preview` the flat design."
 msgstr ""
 "`mockup` sur la photo du produit vierge, `preview` pour la création à plat."
 
-#: src/Abilities/GetProductPictureViews.php:179
+#: src/Abilities/GetProductPictureViews.php:223
 msgid "The view chosen; null for the one the product page starts on."
 msgstr "La vue choisie; null pour celle sur laquelle s'ouvre la page produit."
 
-#: src/Abilities/GetProductPictureViews.php:183
+#: src/Abilities/GetProductPictureViews.php:227
 msgid "The view's photo chosen; null for its photo of the variant sold."
 msgstr "La photo choisie de la vue; null pour sa photo de la variante vendue."
 
-#: src/Abilities/GetProductPictureViews.php:187
+#: src/Abilities/GetProductPictureViews.php:231
 msgid ""
 "True when the blank no longer has the view or photo: the image is drawn on "
 "the photo the product page starts on until another is chosen."
@@ -980,7 +1006,7 @@ msgstr ""
 "générée sur la photo sur laquelle s'ouvre la page produit jusqu'à ce qu'une "
 "autre soit choisie."
 
-#: src/Abilities/GetProductPictureViews.php:196
+#: src/Abilities/GetProductPictureViews.php:240
 msgid ""
 "On a product, what its image is drawn on while no showcase set is chosen; on "
 "a variation, its own choice. Null for none: the photo the product page "
@@ -991,7 +1017,7 @@ msgstr ""
 "choix : la photo sur laquelle s'ouvre la page produit, ou pour une variation "
 "le choix de son produit."
 
-#: src/Abilities/GetProductPictureViews.php:201
+#: src/Abilities/GetProductPictureViews.php:245
 msgid ""
 "The showcase sets chosen as the product's images, the first its image; empty "
 "on a variation."
@@ -999,7 +1025,7 @@ msgstr ""
 "Les jeux d'exemples choisis comme images du produit, le premier donnant son "
 "image; vide pour une variation."
 
-#: src/Abilities/GetProductPictureViews.php:212
+#: src/Abilities/GetProductPictureViews.php:256
 msgid ""
 "The views of the side's placement with the photos an image can be drawn on, "
 "in the blank's order; empty without a blank; null when Pixonaut could not be "
@@ -1009,11 +1035,11 @@ msgstr ""
 "image peut être générée, dans l'ordre du produit vierge; vide sans produit "
 "vierge; null lorsque Pixonaut n'a pas pu être interrogé."
 
-#: src/Abilities/GetProductPictureViews.php:226
+#: src/Abilities/GetProductPictureViews.php:270
 msgid "A link to the photo that opens for an hour or two."
 msgstr "Un lien vers la photo, valable une heure ou deux."
 
-#: src/Abilities/GetProductPictureViews.php:231
+#: src/Abilities/GetProductPictureViews.php:275
 msgid "The blank variants the photo shows; empty for every one."
 msgstr "Les variantes du produit vierge que montre la photo; vide pour toutes."
 
@@ -3238,8 +3264,21 @@ msgstr ""
 "Une variation ne choisit que la vue et la photo de sa propre image, ou ni "
 "l'une ni l'autre pour suivre son produit."
 
+#. translators: %s: a showcase set's id.
+#: src/Abilities/SetProductPictureView.php:123
+#, php-format
+msgid ""
+"The product shows the showcase set \"%s\" more than once, each on its own "
+"view or photo, so it is not clear which image to change. Set them all with "
+"set-product-showcase, giving each image its view and photo."
+msgstr ""
+"Le produit affiche le jeu d'exemples « %s » plusieurs fois, chaque fois sur "
+"sa propre vue ou sa propre photo, de sorte que l'on ne sait pas quelle image "
+"modifier. Définissez-les tous avec set-product-showcase, en indiquant pour "
+"chaque image sa vue et sa photo."
+
 #. translators: 1: a showcase set's id; 2: the ids chosen as the product's images, e.g. "graduate, wedding".
-#: src/Abilities/SetProductPictureView.php:122
+#: src/Abilities/SetProductPictureView.php:133
 #, php-format
 msgid ""
 "The product shows no showcase set \"%1$s\": choose it with set-product-"
@@ -3248,36 +3287,10 @@ msgstr ""
 "Le produit n'affiche pas de jeu d'exemples « %1$s » : choisissez-le d'abord "
 "avec set-product-showcase. Il affiche : %2$s."
 
-#: src/Abilities/SetProductPictureView.php:124
+#: src/Abilities/SetProductPictureView.php:135
 msgctxt "showcase sets a product shows"
 msgid "none"
 msgstr "aucun"
-
-#: src/Abilities/SetProductPictureView.php:149
-msgid ""
-"Pixonaut could not be asked for the blank's views and photos. Try again "
-"later."
-msgstr ""
-"Impossible d'obtenir de Pixonaut les vues et les photos du produit vierge. "
-"Réessayez plus tard."
-
-#: src/Abilities/SetProductPictureView.php:168
-msgid ""
-"The product is not on a blank with photos for its side, so its images can "
-"only be drawn as the product page shows them, or flat."
-msgstr ""
-"Le produit ne repose pas sur un produit vierge doté de photos pour sa face : "
-"ses images ne peuvent donc être générées que telles que la page produit les "
-"montre, ou à plat."
-
-#. translators: 1: the views of the blank with their photos, e.g. "front (mock-1, mock-2), back (mock-3)".
-#: src/Abilities/SetProductPictureView.php:171
-#, php-format
-msgid ""
-"The blank has no such view or photo for the product's side. It has: %1$s."
-msgstr ""
-"Le produit vierge n'a pas cette vue ou cette photo pour la face du produit. "
-"Il propose : %1$s."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetProductPriceChanges.php:45
@@ -3434,38 +3447,70 @@ msgstr ""
 "Une variation suit son produit pour option_groups et group_numbers : "
 "définissez-les sur le produit."
 
-#: src/Abilities/SetProductShowcase.php:44
+#: src/Abilities/SetProductShowcase.php:46
 msgid "The sets the product's template offers, by id and name."
 msgstr "Les jeux que propose le modèle du produit, avec identifiant et nom."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/SetProductShowcase.php:47
+#: src/Abilities/SetProductShowcase.php:49
 msgid "Set a product's showcase pictures"
 msgstr "Définir les images d'exemple d'un produit"
 
 #. translators: %d: how many showcase pictures a product shows at most, e.g. 10.
-#: src/Abilities/SetProductShowcase.php:50
+#: src/Abilities/SetProductShowcase.php:52
 #, php-format
 msgid ""
 "Sets which of its template's showcase sets a personalised simple or variable "
 "product's images are drawn with, in order, up to %d; replaces the ones it "
 "has, and an empty list removes them. Each is drawn on the blank's photo "
 "(`mockup`) or as the flat design (`preview`); a product without a blank has "
-"only the flat design. The pictures are drawn again. The answer lists the "
-"sets the template offers."
+"only the flat design. On the photo, `view` and `photo` name a view of the "
+"blank and one of its photos, a scene's too, as `get-product-picture-views` "
+"lists them; `view` null is the photo the product page starts on, and leaving "
+"both out keeps what the set was drawn on before. A set may be named more "
+"than once, on another view or photo each time, so a gallery can show the "
+"same set on several views. The pictures are drawn again. The answer lists "
+"the sets the template offers."
 msgstr ""
 "Définit avec quels jeux d'exemples de son modèle les images d'un produit "
 "simple ou variable personnalisé sont générées, dans l'ordre, jusqu'à %d; "
 "remplace ceux qu'il a, et une liste vide les supprime. Chacun est généré sur "
 "la photo du produit vierge (`mockup`) ou en création à plat (`preview`); un "
-"produit sans produit vierge n'a que la création à plat. Les images sont "
-"générées de nouveau. La réponse liste les jeux que propose le modèle."
+"produit sans produit vierge n'a que la création à plat. Sur la photo, `view` "
+"et `photo` désignent une vue du produit vierge et l'une de ses photos, y "
+"compris celle d'une scène, telles que les liste `get-product-picture-views`; "
+"`view` à null est la photo sur laquelle la page produit démarre, et si les "
+"deux sont omis, le jeu garde ce sur quoi il était généré auparavant. Un jeu "
+"peut être nommé plusieurs fois, chaque fois sur une autre vue ou une autre "
+"photo, pour qu'une galerie puisse montrer le même jeu sur plusieurs vues. "
+"Les images sont générées de nouveau. La réponse liste les jeux que propose "
+"le modèle."
 
-#: src/Abilities/SetProductShowcase.php:68
+#: src/Abilities/SetProductShowcase.php:70
 msgid "One of the template's showcase sets, by id."
 msgstr "L'un des jeux d'exemples du modèle, par identifiant."
 
-#: src/Abilities/SetProductShowcase.php:106
+#: src/Abilities/SetProductShowcase.php:79
+msgid ""
+"On the photo, one of the views `get-product-picture-views` lists; null for "
+"the one the product page starts on. Left out with `photo`, the set keeps "
+"what it was drawn on before."
+msgstr ""
+"Sur la photo, l'une des vues que liste `get-product-picture-views`; null "
+"pour celle sur laquelle la page produit démarre. Si elle est omise avec "
+"`photo`, le jeu garde ce sur quoi il était généré auparavant."
+
+#: src/Abilities/SetProductShowcase.php:83
+msgid ""
+"On the photo, one of the photos `get-product-picture-views` lists; its view "
+"is found when `view` is left out. Without it, the view's photo of the "
+"variant sold."
+msgstr ""
+"Sur la photo, l'une des photos que liste `get-product-picture-views`; sa vue "
+"est déduite si `view` est omis. Sans photo, la photo de la vue pour la "
+"variante vendue."
+
+#: src/Abilities/SetProductShowcase.php:116
 msgid ""
 "The product is not personalised with a template, so it has no showcase sets. "
 "Set it up first."
@@ -3473,7 +3518,7 @@ msgstr ""
 "Le produit n'est pas personnalisé avec un modèle, il n'a donc pas de jeux "
 "d'exemples. Configurez-le d'abord."
 
-#: src/Abilities/SetProductShowcase.php:111
+#: src/Abilities/SetProductShowcase.php:121
 msgid ""
 "Pixonaut could not be asked for the template's showcase sets. Try again "
 "later."
@@ -3482,12 +3527,12 @@ msgstr ""
 "plus tard."
 
 #. translators: 1: a showcase set's id; 2: the ids the template offers, e.g. "graduate, wedding".
-#: src/Abilities/SetProductShowcase.php:125
+#: src/Abilities/SetProductShowcase.php:136
 #, php-format
 msgid "The template has no showcase set \"%1$s\". It has: %2$s."
 msgstr "Le modèle n'a pas de jeu d'exemples « %1$s ». Il propose : %2$s."
 
-#: src/Abilities/SetProductShowcase.php:127
+#: src/Abilities/SetProductShowcase.php:138
 msgctxt "showcase sets a template offers"
 msgid "none"
 msgstr "aucun"
