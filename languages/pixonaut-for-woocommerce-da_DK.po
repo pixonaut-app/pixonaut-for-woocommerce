@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-27T00:36:12+00:00\n"
+"POT-Creation-Date: 2026-11-27T12:12:26+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: da_DK\n"
@@ -1329,7 +1329,22 @@ msgid ""
 "shortens is being worked through, one that stays while none finish is stuck. "
 "The pictures are files in the shop's media library, on the shop's own "
 "server, not in Pixonaut. Change it with %s."
-msgstr "Om der laves et Pixonaut-billede til hver variant, på basisproduktets foto, for hele webshoppen eller for en varevariant (`choice`: `default` følger butiksindstillingen). `turning_on` angiver, hvor mange nye billeder der laves, når indstillingen slås til, omtrent hvor mange byte de fylder, hvor stor en del af webshoppens ledige lagerplads det svarer til i `percent` (null, når den ikke kan aflæses), og advarslen `warning`, der skal bekræftes; `turning_off` angiver, hvor mange variantbilleder der slettes, når den slås fra, og hvor mange byte det frigør. Billederne er filer i webshoppens mediebibliotek, på webshoppens egen server, ikke i Pixonaut. Skift indstillingen med %s. `queue` tæller butikkens billedjob for hele butikken: tegninger, der venter eller er i gang (`queued`), kontroller af produkter, hvis tegninger endnu ikke er sat i kø (`checking`), og tegninger afsluttet inden for den seneste time (`finished_recently`), gemt eller til at prøve igen; en kø, der bliver kortere, arbejdes igennem; en, der står stille, mens ingen afsluttes, sidder fast."
+msgstr ""
+"Om der laves et Pixonaut-billede til hver variant, på basisproduktets foto, "
+"for hele webshoppen eller for en varevariant (`choice`: `default` følger "
+"butiksindstillingen). `turning_on` angiver, hvor mange nye billeder der "
+"laves, når indstillingen slås til, omtrent hvor mange byte de fylder, hvor "
+"stor en del af webshoppens ledige lagerplads det svarer til i `percent` "
+"(null, når den ikke kan aflæses), og advarslen `warning`, der skal "
+"bekræftes; `turning_off` angiver, hvor mange variantbilleder der slettes, "
+"når den slås fra, og hvor mange byte det frigør. Billederne er filer i "
+"webshoppens mediebibliotek, på webshoppens egen server, ikke i Pixonaut. "
+"Skift indstillingen med %s. `queue` tæller butikkens billedjob for hele "
+"butikken: tegninger, der venter eller er i gang (`queued`), kontroller af "
+"produkter, hvis tegninger endnu ikke er sat i kø (`checking`), og tegninger "
+"afsluttet inden for den seneste time (`finished_recently`), gemt eller til "
+"at prøve igen; en kø, der bliver kortere, arbejdes igennem; en, der står "
+"stille, mens ingen afsluttes, sidder fast."
 
 #: src/Abilities/LineView.php:45
 msgid "Where the line stands."
@@ -1392,14 +1407,17 @@ msgstr "Tilknyt en vare til en Pixonaut-skabelon"
 msgid ""
 "Makes a simple or variable product personalisable with one Pixonaut "
 "template, optionally printed on a placement of a blank, and replaces the "
-"sides it had. Pixonaut checks the link; a product that fails a check is "
-"saved but cannot be bought, and the answer says why."
+"sides it had. Its variations with a setup of their own move onto the version "
+"linked where their side on that template is not pinned. Pixonaut checks the "
+"link; a product that fails a check is saved but cannot be bought, and the "
+"answer says why."
 msgstr ""
-"Gør en simpel vare eller en varevariant personaliserbar med én Pixonaut-"
-"skabelon, eventuelt trykt på en placering på et basisprodukt, og erstatter "
-"de sider, varen havde. Pixonaut kontrollerer tilknytningen; en vare, der "
-"ikke består en kontrol, gemmes, men kan ikke købes, og svaret forklarer "
-"hvorfor."
+"Gør en simpel vare eller en varevariant personaliserbar med én "
+"Pixonaut-skabelon, eventuelt trykt på en placering på et basisprodukt, og "
+"erstatter de sider, varen havde. Dens varianter med egen opsætning flyttes "
+"til den tilknyttede version, hvor deres side på skabelonen ikke er fastlåst. "
+"Pixonaut kontrollerer tilknytningen; en vare, der ikke består en kontrol, "
+"gemmes, men kan ikke købes, og svaret forklarer hvorfor."
 
 #: src/Abilities/LinkProduct.php:54
 msgid ""
@@ -1441,6 +1459,27 @@ msgstr ""
 #: src/Abilities/LinkProduct.php:104
 msgid "The template id is not one the template list gives."
 msgstr "Skabelon-id'et findes ikke i skabelonlisten."
+
+#: src/Abilities/LinkProduct.php:128
+msgid ""
+"How many of the product's variations with a setup of their own moved onto "
+"the template version linked: those with a side on that template that is not "
+"pinned. Each was checked with Pixonaut, as a re-check after a publish does."
+msgstr ""
+"Hvor mange af varens varianter med egen opsætning, der blev flyttet til den "
+"tilknyttede skabelonversion: dem med en side på skabelonen, som ikke er "
+"fastlåst. Hver af dem blev kontrolleret med Pixonaut, som en fornyet kontrol "
+"efter en udgivelse gør."
+
+#: src/Abilities/LinkProduct.php:133
+msgid ""
+"How many such variations Pixonaut could not check now, so they move when the "
+"store checks them again, in the background; until then they keep the version "
+"they were on."
+msgstr ""
+"Hvor mange sådanne varianter Pixonaut ikke kunne kontrollere nu, så de "
+"flyttes, når butikken kontrollerer dem igen, i baggrunden; indtil da "
+"beholder de den version, de havde."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/ListProducts.php:70
@@ -1494,7 +1533,7 @@ msgstr "Siden, fra 1."
 msgid "The page of each variable product's variations, from 1, %d to a page."
 msgstr "Siden med hver varevariants varianter, fra 1, %d pr. side."
 
-#: src/Abilities/ListProducts.php:133 src/Abilities/ProductLinks.php:276
+#: src/Abilities/ListProducts.php:133 src/Abilities/ProductLinks.php:285
 msgid ""
 "Whether customers can buy it now, its blank variants and WooCommerce's own "
 "checks included."
@@ -1704,7 +1743,7 @@ msgstr ""
 msgid "The store's products could not be read."
 msgstr "Butikkens varer kunne ikke læses."
 
-#: src/Abilities/MoveProductAttribute.php:244 src/Abilities/ProductLinks.php:91
+#: src/Abilities/MoveProductAttribute.php:244 src/Abilities/ProductLinks.php:94
 msgid "No simple or variable product has this id."
 msgstr "Ingen simpel vare eller varevariant har dette id."
 
@@ -1939,11 +1978,11 @@ msgstr "Reglens %s er ikke et tal."
 msgid "The product has no variation with this id: %s."
 msgstr "Varen har ingen variant med dette id: %s."
 
-#: src/Abilities/ProductLinks.php:104
+#: src/Abilities/ProductLinks.php:107
 msgid "No simple or variable product or variation has this id."
 msgstr "Ingen simpel vare, varevariant eller variant har dette id."
 
-#: src/Abilities/ProductLinks.php:272
+#: src/Abilities/ProductLinks.php:281
 msgid ""
 "For a variation, whether it has a setup of its own rather than following its "
 "product's, whose setup it then gives; false for a product."
@@ -1951,7 +1990,7 @@ msgstr ""
 "For en variant: om den har sin egen opsætning i stedet for at følge varens, "
 "hvis opsætning den så angiver; false for en vare."
 
-#: src/Abilities/ProductLinks.php:280
+#: src/Abilities/ProductLinks.php:289
 msgid ""
 "Which of the product's variations sell no variant of the blank, in words; "
 "null when each does. Set a variation's `variant` with `set-product-setup`."
@@ -9697,7 +9736,12 @@ msgid ""
 "its media library. A higher number saves a long queue sooner, and takes more "
 "of the web server: on a small server, keep it low so the shop stays quick "
 "for shoppers."
-msgstr "Hvor mange produktbilleder butikken gemmer side om side, mens billeder venter på at blive gemt. Pixonaut tegner hvert billede; butikken venter på det og gemmer det derefter i sit mediebibliotek. Et højere tal gemmer en lang kø hurtigere, men bruger mere af webserveren: på en lille server bør det holdes lavt, så butikken forbliver hurtig for kunderne."
+msgstr ""
+"Hvor mange produktbilleder butikken gemmer side om side, mens billeder "
+"venter på at blive gemt. Pixonaut tegner hvert billede; butikken venter på "
+"det og gemmer det derefter i sit mediebibliotek. Et højere tal gemmer en "
+"lang kø hurtigere, men bruger mere af webserveren: på en lille server bør "
+"det holdes lavt, så butikken forbliver hurtig for kunderne."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether a product's Pixonaut tab warns when a print size makes one of its template's images print below its recommended resolution.
 #: src/Settings/Settings.php:375

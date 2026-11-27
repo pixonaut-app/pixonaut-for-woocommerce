@@ -119,6 +119,14 @@ final class ProductRecheck {
 	public const MAX_ATTEMPTS = 5;
 
 	/**
+	 * Seconds a link spends moving its variations with a setup of their
+	 * own before it leaves the rest to a re-check: Pixonaut waits 30
+	 * seconds for the store's answer to a link, the product's own check
+	 * included.
+	 */
+	public const FOLLOW_BUDGET_SECONDS = 15;
+
+	/**
 	 * Wait before the second attempt; it doubles with every attempt after.
 	 */
 	public const RETRY_BASE_SECONDS = 60;
@@ -354,6 +362,163 @@ final class ProductRecheck {
 		if ( array() !== $again ) {
 			$this->failed( $again, $attempt, 'Pixonaut could not check the configuration.' );
 		}
+	}
+
+	/**
+	 * Moves the variations of a product just linked to a template version
+	 * that have a setup of their own, with a side on that template that is
+	 * not pinned, onto the version linked, checked with Pixonaut as a
+	 * re-check does; their other sides follow their templates' live
+	 * versions. Without it such a variation waits for the re-check the
+	 * version's publishing queued, which a busy store can run long after,
+	 * and its customers design on the version it left until then. A
+	 * variation Pixonaut could not check now, or one left once the link has
+	 * spent `FOLLOW_BUDGET_SECONDS`, is re-checked later, against the live
+	 * versions then. A template that is not live moves nothing: the
+	 * re-check its event queued stops those variations' sales.
+	 *
+	 * @param WC_Product $product  The product linked.
+	 * @param TemplateId $template The template version it is linked to.
+	 * @return array{moved: int, later: int} How many variations moved, and how many were queued to be re-checked later instead.
+	 */
+	public function follow_link( WC_Product $product, TemplateId $template ): array {
+		$started = microtime( true );
+		$ids     = self::following_own_setups( $product, $template );
+		$none    = array(
+			'moved' => 0,
+			'later' => 0,
+		);
+		if ( array() === $ids ) {
+			return $none;
+		}
+		if ( null !== CheckSlowdown::until() ) {
+			// Pixonaut would refuse every check until then.
+			return array(
+				'moved' => 0,
+				'later' => $this->queue_later( $ids, self::slowed_delay( null ) ),
+			);
+		}
+		try {
+			$live = $this->catalogue->live_versions();
+		} catch ( ApiException $e ) {
+			$this->logger->error( 'Variations not moved onto the version linked: ' . $e->getMessage(), array( 'products' => $ids ) );
+			return array(
+				'moved' => 0,
+				'later' => $this->queue_later( $ids, self::RETRY_BASE_SECONDS ),
+			);
+		}
+		if ( ! isset( $live[ $template->base_id ] ) ) {
+			return $none;
+		}
+		$live[ $template->base_id ] = $template->version;
+
+		$moved   = 0;
+		$again   = array();
+		$slowed  = array();
+		$waiting = null;
+		foreach ( $ids as $i => $id ) {
+			if ( microtime( true ) - $started >= self::FOLLOW_BUDGET_SECONDS ) {
+				// The store's caller waits only so long for the link's answer.
+				$again = array_merge( $again, array_slice( $ids, $i ) );
+				break;
+			}
+			$this->retry_after = null;
+			$checked           = $this->recheck_one( $id, $live );
+			if ( self::SLOWED_DOWN === $checked ) {
+				// The variations after it would be refused too.
+				$slowed  = array_slice( $ids, $i );
+				$waiting = $this->retry_after;
+				break;
+			}
+			$variation = wc_get_product( $id );
+			if ( self::CHECKED === $checked && $variation instanceof WC_Product && array() === self::following_own_setups_of( array( $variation ), $template ) ) {
+				++$moved;
+				continue;
+			}
+			// Not asked, or saved meanwhile on the version it had.
+			$again[] = $id;
+		}
+		$later = 0;
+		if ( array() !== $again ) {
+			$this->logger->warning( 'Variations not moved onto the version linked yet: they are checked again later.', array( 'products' => $again ) );
+			$later += $this->queue_later( $again, self::RETRY_BASE_SECONDS );
+		}
+		if ( array() !== $slowed ) {
+			$later += $this->queue_later( $slowed, self::slowed_delay( $waiting ) );
+		}
+		return array(
+			'moved' => $moved,
+			'later' => $later,
+		);
+	}
+
+	/**
+	 * Queues the re-check of variations not moved now, in batches, as
+	 * their first attempt. One that could not be queued is logged, and not
+	 * counted; the template's next event re-checks it.
+	 *
+	 * @param int[] $ids   Variations.
+	 * @param int   $delay Seconds to wait.
+	 * @phpstan-param list<int> $ids
+	 * @return int How many were queued, or were waiting in a re-check already.
+	 */
+	private function queue_later( array $ids, int $delay ): int {
+		$queued = 0;
+		foreach ( array_chunk( $ids, self::BATCH ) as $batch ) {
+			$queued += $this->queue_batch( $batch, 1, $delay ) ? count( $batch ) : 0;
+		}
+		return $queued;
+	}
+
+	/**
+	 * The product's variations with a setup of their own that has a side
+	 * following the template on another version than the one given.
+	 *
+	 * @param WC_Product $product  A product.
+	 * @param TemplateId $template The template version.
+	 * @return list<int>
+	 */
+	private static function following_own_setups( WC_Product $product, TemplateId $template ): array {
+		if ( ! $product->is_type( 'variable' ) ) {
+			return array();
+		}
+		$variations = array();
+		foreach ( $product->get_children() as $child_id ) {
+			$child = wc_get_product( $child_id );
+			if ( $child instanceof WC_Product ) {
+				$variations[] = $child;
+			}
+		}
+		return self::following_own_setups_of( $variations, $template );
+	}
+
+	/**
+	 * Which of the variations given have a setup of their own with a side
+	 * following the template on another version than the one given.
+	 *
+	 * @param WC_Product[] $variations Variations.
+	 * @param TemplateId   $template   The template version.
+	 * @phpstan-param list<WC_Product> $variations
+	 * @return list<int>
+	 */
+	private static function following_own_setups_of( array $variations, TemplateId $template ): array {
+		$ids = array();
+		foreach ( $variations as $variation ) {
+			if ( null === ProductConfig::document_on( $variation ) || TrashedProducts::in_trash( $variation ) ) {
+				continue;
+			}
+			$config = ProductConfig::stored_on( $variation );
+			if ( ! $config->override || ! $config->personalise ) {
+				continue;
+			}
+			foreach ( $config->sides as $side ) {
+				if ( $side->template_base_id === $template->base_id && ! $side->pinned && $side->template_version !== $template->version ) {
+					$ids[] = $variation->get_id();
+					break;
+				}
+			}
+		}
+		return $ids;
 	}
 
 	/**

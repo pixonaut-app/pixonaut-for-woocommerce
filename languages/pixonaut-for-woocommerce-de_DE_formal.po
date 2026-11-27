@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-27T00:36:12+00:00\n"
+"POT-Creation-Date: 2026-11-27T12:12:26+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -1380,7 +1380,23 @@ msgid ""
 "shortens is being worked through, one that stays while none finish is stuck. "
 "The pictures are files in the shop's media library, on the shop's own "
 "server, not in Pixonaut. Change it with %s."
-msgstr "Ob für jede Variante ein Pixonaut-Bild auf dem Foto ihres Rohlings erstellt wird, für den ganzen Shop oder für ein variables Produkt (`choice`: `default` folgt der Shop-Einstellung). `turning_on` gibt an, wie viele neue Bilder das Einschalten erstellt, wie viele Bytes sie ungefähr belegen, welchen Anteil am freien Speicherplatz des Shops das in `percent` ausmacht (null, wenn er sich nicht auslesen lässt), und die Warnung `warning`, die bestätigt werden muss; `turning_off` gibt an, wie viele Variantenbilder das Ausschalten löscht und wie viele Bytes es freigibt. Die Bilder sind Dateien in der Mediathek des Shops, auf dem eigenen Server des Shops, nicht in Pixonaut. Geändert wird die Einstellung mit %s. `queue` zählt die Bildaufträge des Shops, shopweit: wartende oder laufende Zeichnungen (`queued`), Prüfungen von Produkten, deren Zeichnungen noch einzureihen sind (`checking`), und in der letzten Stunde beendete Zeichnungen (`finished_recently`), gespeichert oder erneut zu versuchen; eine Warteschlange, die kürzer wird, wird abgearbeitet, eine, die gleich bleibt, während keine endet, hängt fest."
+msgstr ""
+"Ob für jede Variante ein Pixonaut-Bild auf dem Foto ihres Rohlings erstellt "
+"wird, für den ganzen Shop oder für ein variables Produkt (`choice`: "
+"`default` folgt der Shop-Einstellung). `turning_on` gibt an, wie viele neue "
+"Bilder das Einschalten erstellt, wie viele Bytes sie ungefähr belegen, "
+"welchen Anteil am freien Speicherplatz des Shops das in `percent` ausmacht "
+"(null, wenn er sich nicht auslesen lässt), und die Warnung `warning`, die "
+"bestätigt werden muss; `turning_off` gibt an, wie viele Variantenbilder das "
+"Ausschalten löscht und wie viele Bytes es freigibt. Die Bilder sind Dateien "
+"in der Mediathek des Shops, auf dem eigenen Server des Shops, nicht in "
+"Pixonaut. Geändert wird die Einstellung mit %s. `queue` zählt die "
+"Bildaufträge des Shops, shopweit: wartende oder laufende Zeichnungen "
+"(`queued`), Prüfungen von Produkten, deren Zeichnungen noch einzureihen sind "
+"(`checking`), und in der letzten Stunde beendete Zeichnungen "
+"(`finished_recently`), gespeichert oder erneut zu versuchen; eine "
+"Warteschlange, die kürzer wird, wird abgearbeitet, eine, die gleich bleibt, "
+"während keine endet, hängt fest."
 
 #: src/Abilities/LineView.php:45
 msgid "Where the line stands."
@@ -1444,14 +1460,18 @@ msgstr "Produkt mit einer Pixonaut-Vorlage verknüpfen"
 msgid ""
 "Makes a simple or variable product personalisable with one Pixonaut "
 "template, optionally printed on a placement of a blank, and replaces the "
-"sides it had. Pixonaut checks the link; a product that fails a check is "
-"saved but cannot be bought, and the answer says why."
+"sides it had. Its variations with a setup of their own move onto the version "
+"linked where their side on that template is not pinned. Pixonaut checks the "
+"link; a product that fails a check is saved but cannot be bought, and the "
+"answer says why."
 msgstr ""
 "Macht ein einfaches oder variables Produkt mit einer Pixonaut-Vorlage "
 "personalisierbar, wahlweise auf eine Druckposition eines Rohlings gedruckt, "
-"und ersetzt die Seiten, die es bisher hatte. Pixonaut prüft die Verknüpfung; "
-"ein Produkt, das eine Prüfung nicht besteht, wird gespeichert, kann aber "
-"nicht gekauft werden, und die Antwort nennt den Grund."
+"und ersetzt die Seiten, die es bisher hatte. Seine Varianten mit eigener "
+"Einrichtung werden auf die verknüpfte Version umgestellt, wenn ihre Seite "
+"auf dieser Vorlage nicht fixiert ist. Pixonaut prüft die Verknüpfung; ein "
+"Produkt, das eine Prüfung nicht besteht, wird gespeichert, kann aber nicht "
+"gekauft werden, und die Antwort nennt den Grund."
 
 #: src/Abilities/LinkProduct.php:54
 msgid ""
@@ -1495,6 +1515,27 @@ msgstr ""
 #: src/Abilities/LinkProduct.php:104
 msgid "The template id is not one the template list gives."
 msgstr "Diese Vorlagen-ID kommt in der Vorlagenliste nicht vor."
+
+#: src/Abilities/LinkProduct.php:128
+msgid ""
+"How many of the product's variations with a setup of their own moved onto "
+"the template version linked: those with a side on that template that is not "
+"pinned. Each was checked with Pixonaut, as a re-check after a publish does."
+msgstr ""
+"Wie viele der Varianten des Produkts mit eigener Einrichtung auf die "
+"verknüpfte Vorlagenversion umgestellt wurden: die mit einer Seite auf dieser "
+"Vorlage, die nicht fixiert ist. Jede wurde mit Pixonaut geprüft, so wie es "
+"eine erneute Prüfung nach einer Veröffentlichung tut."
+
+#: src/Abilities/LinkProduct.php:133
+msgid ""
+"How many such variations Pixonaut could not check now, so they move when the "
+"store checks them again, in the background; until then they keep the version "
+"they were on."
+msgstr ""
+"Wie viele solcher Varianten Pixonaut jetzt nicht prüfen konnte; sie werden "
+"umgestellt, wenn der Shop sie im Hintergrund erneut prüft, und behalten bis "
+"dahin die Version, auf der sie waren."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/ListProducts.php:70
@@ -1551,7 +1592,7 @@ msgstr "Die Seite, beginnend bei 1."
 msgid "The page of each variable product's variations, from 1, %d to a page."
 msgstr "Die Seite der Varianten jedes variablen Produkts, ab 1, %d pro Seite."
 
-#: src/Abilities/ListProducts.php:133 src/Abilities/ProductLinks.php:276
+#: src/Abilities/ListProducts.php:133 src/Abilities/ProductLinks.php:285
 msgid ""
 "Whether customers can buy it now, its blank variants and WooCommerce's own "
 "checks included."
@@ -1767,7 +1808,7 @@ msgstr ""
 msgid "The store's products could not be read."
 msgstr "Die Produkte des Shops konnten nicht gelesen werden."
 
-#: src/Abilities/MoveProductAttribute.php:244 src/Abilities/ProductLinks.php:91
+#: src/Abilities/MoveProductAttribute.php:244 src/Abilities/ProductLinks.php:94
 msgid "No simple or variable product has this id."
 msgstr "Kein einfaches oder variables Produkt hat diese ID."
 
@@ -2011,11 +2052,11 @@ msgstr "Der Regelteil %s ist keine Zahl."
 msgid "The product has no variation with this id: %s."
 msgstr "Das Produkt hat keine Variante mit dieser ID: %s."
 
-#: src/Abilities/ProductLinks.php:104
+#: src/Abilities/ProductLinks.php:107
 msgid "No simple or variable product or variation has this id."
 msgstr "Kein einfaches oder variables Produkt und keine Variante hat diese ID."
 
-#: src/Abilities/ProductLinks.php:272
+#: src/Abilities/ProductLinks.php:281
 msgid ""
 "For a variation, whether it has a setup of its own rather than following its "
 "product's, whose setup it then gives; false for a product."
@@ -2024,7 +2065,7 @@ msgstr ""
 "Produkts zu folgen, dessen Einrichtung sie dann nennt; false bei einem "
 "Produkt."
 
-#: src/Abilities/ProductLinks.php:280
+#: src/Abilities/ProductLinks.php:289
 msgid ""
 "Which of the product's variations sell no variant of the blank, in words; "
 "null when each does. Set a variation's `variant` with `set-product-setup`."
@@ -10014,7 +10055,13 @@ msgid ""
 "its media library. A higher number saves a long queue sooner, and takes more "
 "of the web server: on a small server, keep it low so the shop stays quick "
 "for shoppers."
-msgstr "Wie viele Produktbilder der Shop nebeneinander speichert, während Bilder auf das Speichern warten. Pixonaut zeichnet jedes Bild; der Shop wartet darauf und speichert es dann in seiner Mediathek. Eine höhere Zahl arbeitet eine lange Warteschlange schneller ab, beansprucht aber mehr vom Webserver: Auf einem kleinen Server sollte sie niedrig bleiben, damit der Shop für Kunden schnell bleibt."
+msgstr ""
+"Wie viele Produktbilder der Shop nebeneinander speichert, während Bilder auf "
+"das Speichern warten. Pixonaut zeichnet jedes Bild; der Shop wartet darauf "
+"und speichert es dann in seiner Mediathek. Eine höhere Zahl arbeitet eine "
+"lange Warteschlange schneller ab, beansprucht aber mehr vom Webserver: Auf "
+"einem kleinen Server sollte sie niedrig bleiben, damit der Shop für Kunden "
+"schnell bleibt."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether a product's Pixonaut tab warns when a print size makes one of its template's images print below its recommended resolution.
 #: src/Settings/Settings.php:375

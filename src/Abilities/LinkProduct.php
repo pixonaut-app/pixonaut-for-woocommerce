@@ -41,7 +41,7 @@ final class LinkProduct implements Ability {
 		return array(
 			/* translators: Name of an ability an AI assistant or an MCP client can use on the store. */
 			'label'               => __( 'Link a product to a Pixonaut template', 'pixonaut-for-woocommerce' ),
-			'description'         => __( 'Makes a simple or variable product personalisable with one Pixonaut template, optionally printed on a placement of a blank, and replaces the sides it had. Pixonaut checks the link; a product that fails a check is saved but cannot be bought, and the answer says why.', 'pixonaut-for-woocommerce' ),
+			'description'         => __( 'Makes a simple or variable product personalisable with one Pixonaut template, optionally printed on a placement of a blank, and replaces the sides it had. Its variations with a setup of their own move onto the version linked where their side on that template is not pinned. Pixonaut checks the link; a product that fails a check is saved but cannot be bought, and the answer says why.', 'pixonaut-for-woocommerce' ),
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
@@ -78,7 +78,7 @@ final class LinkProduct implements Ability {
 				'required'             => array( 'product_id', 'template_id' ),
 				'additionalProperties' => false,
 			),
-			'output_schema'       => ProductLinks::output_schema(),
+			'output_schema'       => self::output_schema(),
 			'execute_callback'    => array( $this, 'execute' ),
 			'permission_callback' => array( ProductLinks::class, 'can_edit' ),
 			'annotations'         => array(
@@ -110,6 +110,30 @@ final class LinkProduct implements Ability {
 			is_string( $input['placement_id'] ?? null ) ? sanitize_text_field( $input['placement_id'] ) : '',
 			self::print_size( $input )
 		);
+	}
+
+	/**
+	 * What the link answers: the setup saved, as the other setup abilities
+	 * answer it, and what became of the variations with a setup of their own.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function output_schema(): array {
+		$schema = ProductLinks::output_schema();
+
+		$schema['properties'] += array(
+			'variations_moved'       => array(
+				'type'        => 'integer',
+				'minimum'     => 0,
+				'description' => __( 'How many of the product\'s variations with a setup of their own moved onto the template version linked: those with a side on that template that is not pinned. Each was checked with Pixonaut, as a re-check after a publish does.', 'pixonaut-for-woocommerce' ),
+			),
+			'variations_moved_later' => array(
+				'type'        => 'integer',
+				'minimum'     => 0,
+				'description' => __( 'How many such variations Pixonaut could not check now, so they move when the store checks them again, in the background; until then they keep the version they were on.', 'pixonaut-for-woocommerce' ),
+			),
+		);
+		return $schema;
 	}
 
 	/**
