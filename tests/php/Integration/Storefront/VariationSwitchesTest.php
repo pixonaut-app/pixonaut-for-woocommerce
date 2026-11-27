@@ -12,6 +12,8 @@ use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
 use Pixonaut\WooCommerce\Catalogue\Side;
+use Pixonaut\WooCommerce\Catalogue\SideValue;
+use Pixonaut\WooCommerce\Catalogue\SideValues;
 use Pixonaut\WooCommerce\Connection\ConnectionStore;
 use Pixonaut\WooCommerce\FormLayout;
 use Pixonaut\WooCommerce\Layout;
@@ -53,6 +55,13 @@ final class VariationSwitchesTest extends WP_UnitTestCase {
 		'heightMm' => 210,
 		'label'    => 'A4 landscape',
 	);
+
+	/**
+	 * Value sets of the template's own values, one per recipient.
+	 */
+	private const FARMOR = 'vs_3f2e9a1b7c4d5e6f8a9b0c1d';
+
+	private const MORMOR = 'vs_0a1b2c3d4e5f6a7b8c9d0e1f';
 
 	private ConnectionStore $store;
 
@@ -364,6 +373,27 @@ final class VariationSwitchesTest extends WP_UnitTestCase {
 		$this->assertTrue( $switches[ $variations['M']->get_id() ]['sides']['front']['drawAtTemplateRatio'] );
 		$this->assertFalse( $switches[ $variations['S']->get_id() ]['sides']['front']['drawAtTemplateRatio'] );
 		$this->assertTrue( $switches[ $variations['T']->get_id() ]['sides']['front']['drawAtTemplateRatio'], 'a variation choosing nothing takes the product’s choice' );
+	}
+
+	public function test_a_side_mounts_on_its_value_set_and_a_variation_names_the_one_it_switches_to(): void {
+		[ $product, $variations ] = self::variable(
+			self::front(),
+			array(
+				'M' => null,
+				'S' => self::front(),
+				'T' => self::front(),
+			)
+		);
+		SideValues::replace_on( $product, array( 'front' => new SideValue( 'mini-tee', self::FARMOR, array( 'title' => array( 'content' => 'farmor' ) ) ) ), null );
+		SideValues::replace_on( $variations['S'], array( 'front' => new SideValue( 'mini-tee', self::MORMOR, array( 'title' => array( 'content' => 'mormor' ) ) ) ), null );
+
+		$html     = $this->form_html( $product );
+		$switches = self::data( $html, 'variations' );
+
+		$this->assertSame( array( 'mini-tee' => self::FARMOR ), self::data( $html, 'mounts' )['front']['valueSets'] );
+		$this->assertSame( self::FARMOR, $switches[ $variations['M']->get_id() ]['sides']['front']['valueSet'], 'a variation following its product opens on the product’s' );
+		$this->assertSame( self::MORMOR, $switches[ $variations['S']->get_id() ]['sides']['front']['valueSet'] );
+		$this->assertArrayNotHasKey( 'valueSet', $switches[ $variations['T']->get_id() ]['sides']['front'], 'a variation of its own without values opens on the template’s own' );
 	}
 
 	public function test_a_variation_without_a_design_is_plain_and_one_that_cannot_mount_unavailable(): void {

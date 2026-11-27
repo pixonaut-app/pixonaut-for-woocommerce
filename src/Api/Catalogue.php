@@ -214,13 +214,14 @@ final class Catalogue {
 	 *
 	 * @param string      $template_id `<baseId>@<version>`.
 	 * @param string|null $language    One of `DesignerLanguage::languages()` to read the template in; null for the workspace's default language.
+	 * @param string|null $value_set   A value set of the template to read it with, its values written in as the layers' own (`valueSetId` in the answer); null for the template's own values.
 	 *
 	 * @return string A JSON object: `template`, `formSchema`, `status`, `language`, ….
 	 *
-	 * @throws ApiException When Pixonaut refused (`404` for an unknown template), could not be reached, or answered with something else than a JSON object.
+	 * @throws ApiException When Pixonaut refused (`404` for an unknown template, `value_set_not_found` for a set it does not hold), could not be reached, or answered with something else than a JSON object.
 	 */
-	public function template_answer( string $template_id, ?string $language = null ): string {
-		return $this->answer( 'templates.get', array( 'id' => $template_id ), array( self::LANGUAGE => $language ) );
+	public function template_answer( string $template_id, ?string $language = null, ?string $value_set = null ): string {
+		return $this->answer( 'templates.get', array( 'id' => $template_id ), array( self::LANGUAGE => $language ) + ValueSetQuery::of( $value_set ) );
 	}
 
 	/**

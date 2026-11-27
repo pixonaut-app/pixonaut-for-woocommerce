@@ -42,6 +42,11 @@ const FRONT = {
 	printSizes: [0],
 };
 
+/** Value sets of the template's own values, one per recipient. */
+const FARMOR = 'vs_3f2e9a1b7c4d5e6f8a9b0c1d';
+
+const MORMOR = 'vs_0a1b2c3d4e5f6a7b8c9d0e1f';
+
 function personalised(
 	size: string,
 	sides: object,
@@ -109,6 +114,11 @@ const VARIATIONS = {
 			printSizes: [1],
 			drawAtTemplateRatio: true,
 		},
+	}),
+	'29': personalised('V', { front: { ...FRONT, valueSet: FARMOR } }),
+	'30': personalised('V', { front: { ...FRONT, valueSet: MORMOR } }),
+	'33': personalised('V', {
+		front: { ...FRONT, printSizes: [1], valueSet: MORMOR },
 	}),
 };
 
@@ -904,6 +914,40 @@ describe('ProductDesigner on a variable product', () => {
 			initialValues: values,
 		});
 		expect(options(mount, 2)).not.toHaveProperty('drawAtTemplateRatio');
+	});
+
+	it('mounts the side again on the customer’s values for another value set, and drops it for the template’s own', async () => {
+		const { form, mount, sdkDesigner } = start();
+		await settle();
+		const values = { headline: { text: 'Hello' } };
+		sdkDesigner.getState.mockReturnValue({ templateId: 'mini-tee@2', values });
+
+		await choose(form, '29');
+		await choose(form, '30');
+		await choose(form, '12');
+
+		expect(mount).toHaveBeenCalledTimes(4);
+		expect(options(mount, 1)).toMatchObject({
+			valueSets: { 'mini-tee': FARMOR },
+			initialValues: values,
+		});
+		expect(options(mount, 2)).toMatchObject({
+			valueSets: { 'mini-tee': MORMOR },
+			initialValues: values,
+		});
+		expect(options(mount, 2)).toHaveProperty('templateId', 'mini-tee@2');
+		expect(options(mount, 3)).not.toHaveProperty('valueSets');
+	});
+
+	it('keeps the side mounted on its value set for a variation on the same set', async () => {
+		const { form, mount, sdkDesigner } = start();
+		await settle();
+
+		await choose(form, '30');
+		await choose(form, '33');
+
+		expect(mount).toHaveBeenCalledTimes(2);
+		expect(sdkDesigner.setPrintSize).toHaveBeenCalledExactlyOnceWith(1);
 	});
 
 	it('switches the template in the mounted designer for another template', async () => {

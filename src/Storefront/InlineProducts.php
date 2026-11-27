@@ -18,6 +18,7 @@ use Pixonaut\WooCommerce\Catalogue\BlankOptionLinks;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\RequestCache;
 use Pixonaut\WooCommerce\Catalogue\Side;
+use Pixonaut\WooCommerce\Catalogue\SideValues;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\DesignerLanguage;
@@ -262,9 +263,9 @@ final class InlineProducts {
 	}
 
 	/**
-	 * A variation's mount options. Variations set up alike mount alike, but
-	 * for what the mount options filter makes of each: while nothing
-	 * filters them, those of one serve all set up as it is.
+	 * A variation's mount options. Variations set up alike, with the same
+	 * values, mount alike, but for what the mount options filter makes of
+	 * each: while nothing filters them, those of one serve all set up as it is.
 	 *
 	 * @param WC_Product                                              $variation A variation.
 	 * @param ProductConfig                                           $config    Its configuration.
@@ -277,7 +278,9 @@ final class InlineProducts {
 		if ( null === $shared ) {
 			return $this->mounts( $variation, $config, $variants );
 		}
-		$key              = md5( serialize( $config ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize -- compares two configurations, never stored.
+		// Alike with the values they are sold with: a variation of its own may have other values than its twin.
+		$values           = SideValues::document_on( SideValues::holder( $variation ) );
+		$key              = md5( serialize( array( $config, $values ) ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize -- compares two configurations, never stored.
 		$shared[ $key ] ??= $this->mounts( $variation, $config, $variants );
 		return $shared[ $key ];
 	}
@@ -361,6 +364,11 @@ final class InlineProducts {
 			if ( null !== $groups ) {
 				$options['formGroups'] = $groups;
 			}
+			$value_set = SideValues::set_of( $product, $side );
+			if ( null !== $value_set ) {
+				// The side's own values, by its template's base id: the designer opens on them, and names the set in every read and request.
+				$options['valueSets'] = array( $side->template_base_id => $value_set );
+			}
 
 			/**
 			 * Filters the options one side of the inline designer mounts with,
@@ -408,7 +416,7 @@ final class InlineProducts {
 			 *
 			 * @since 0.1.0
 			 *
-			 * @param array<string, mixed> $options  `publishableKey`, `apiBase`, `templateId`, `blankId`, `placementId`, `placements`, `views` and `variants` (with a blank; `variants` once a variant is sold), `initialView` (with a blank, when the product names a starting view), `printSizes` (with a size menu), `selectedPrintSizeIndex` (the size the side starts on), `locale` (one of `DesignerLanguage::languages()`, absent for the workspace's default), `layout` (`page` or `steps`, absent to follow the template), `formGroups` (with an arrangement), `drawAtTemplateRatio` (`true` to draw the canvas at the template's ratio at every print size, `false` at the chosen size's; absent to follow the template), `preload`, `showPrintAreaFrame`, `accent` (with a custom accent colour).
+			 * @param array<string, mixed> $options  `publishableKey`, `apiBase`, `templateId`, `blankId`, `placementId`, `placements`, `views` and `variants` (with a blank; `variants` once a variant is sold), `initialView` (with a blank, when the product names a starting view), `printSizes` (with a size menu), `selectedPrintSizeIndex` (the size the side starts on), `locale` (one of `DesignerLanguage::languages()`, absent for the workspace's default), `layout` (`page` or `steps`, absent to follow the template), `formGroups` (with an arrangement), `valueSets` (the template's base id and the value set of the side's own values, with values; `set-product-values`), `drawAtTemplateRatio` (`true` to draw the canvas at the template's ratio at every print size, `false` at the chosen size's; absent to follow the template), `preload`, `showPrintAreaFrame`, `accent` (with a custom accent colour).
 			 * @param WC_Product           $product  The product, or on a variable product the variation the options are for.
 			 * @param string               $side_key The side, e.g. `front`.
 			 *

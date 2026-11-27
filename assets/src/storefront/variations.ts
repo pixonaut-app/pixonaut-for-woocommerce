@@ -27,6 +27,9 @@ export type VariationSide = {
 	selectedPrintSizeIndex?: number;
 	/** The view the side starts on; absent for its first. */
 	initialView?: string;
+	/** The value set of the side's own values its template opens on;
+	 *  absent for none. A variation on another set mounts the side again. */
+	valueSet?: string;
 };
 
 /** A variation as the server prints it: personalised, bought without a

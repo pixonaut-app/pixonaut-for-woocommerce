@@ -56,6 +56,8 @@ final class ServerReadsTest extends WP_UnitTestCase {
 		'placementId' => 'front',
 	);
 
+	private const VALUE_SET = 'vs_3f2e9a1b7c4d5e6f8a9b0c1d';
+
 	private HttpRecorder $recorder;
 
 	private ConnectionStore $store;
@@ -166,6 +168,23 @@ final class ServerReadsTest extends WP_UnitTestCase {
 		$this->reads->for_mounts( array( 'front' => array( 'locale' => 'de' ) + self::FRONT ) );
 
 		$this->assertSame( array( '/v1/templates/mini-tee%402?lang=de', '/v1/blanks/blank_tee/mockups?lang=de', '/v1/blanks/blank_tee/variants?lang=de' ), $this->paths() );
+	}
+
+	public function test_a_side_on_a_value_set_reads_its_template_with_the_set_and_keeps_it_apart(): void {
+		$this->answer_side();
+		$valued = array( 'valueSets' => array( 'mini-tee' => self::VALUE_SET ) ) + self::FRONT;
+
+		$this->reads->for_mounts( array( 'front' => $valued ) );
+
+		$this->assertSame( '/v1/templates/mini-tee%402?valueSet=' . self::VALUE_SET, $this->paths()[0] );
+		$this->assertCount( 4, $this->paths() );
+
+		$this->recorder->requests = array();
+		$this->recorder->raw( 200, self::example_json( '/v1/templates/{id}' ), self::JSON );
+		$this->reads->for_mounts( array( 'front' => self::FRONT ) );
+		$this->reads->for_mounts( array( 'front' => $valued ) );
+
+		$this->assertSame( array( '/v1/templates/mini-tee%402' ), $this->paths(), 'the template without the set is another read; the placement, the blank and the set\'s are kept' );
 	}
 
 	public function test_a_locale_pixonaut_does_not_speak_reads_the_template_in_the_workspaces_language(): void {

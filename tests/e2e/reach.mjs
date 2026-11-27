@@ -552,6 +552,7 @@ export const REACH = {
 		'src/Cart/AddRefused.php',
 		'src/Cart/DesignCheck.php',
 		'assets/src/storefront/designer.ts',
+		'assets/src/storefront/value-sets.ts',
 		'assets/src/storefront/variant.ts',
 	],
 	'journey.spec.ts': [

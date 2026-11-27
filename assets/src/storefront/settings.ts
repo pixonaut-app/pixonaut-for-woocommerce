@@ -1,4 +1,5 @@
 import type { MountOptions } from '../types/sdk';
+import type { ValueSets } from './value-sets';
 
 /** What every designer on the page shares, printed by the server as
  *  `window.pixonautStorefront`. */
@@ -26,11 +27,13 @@ export type StorefrontSettings = {
 
 /** One side's mount options, as the server built them: everything but the
  *  targets. A page opened to edit a cart line's design mounts each side on
- *  its committed design, through a correction link. */
+ *  its committed design, through a correction link. A side with values of
+ *  its own names its template's value set (`valueSets`), which the pinned
+ *  SDK's types predate. */
 export type SideOptions = Extract<
 	MountOptions,
 	{ publishableKey: string } | { correctionLink: string }
->;
+> & { valueSets?: ValueSets };
 
 /** Mount options by side key, in display order. */
 export type ProductMounts = Record<string, SideOptions>;

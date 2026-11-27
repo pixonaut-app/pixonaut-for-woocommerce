@@ -122,6 +122,33 @@ describe('mountSide', () => {
 		expect(passed).not.toHaveProperty('initialValues');
 	});
 
+	it('draws from reads made with the side’s value set, and reads afresh for another set or for none', async () => {
+		const { sdk, mount, createDesigner } = coreSdk(SPLIT_SDK);
+		const farmor = { valueSets: { 'mini-tee': 'vs_3f2e9a1b7c4d5e6f8a9b0c1d' } };
+		const mormor = { valueSets: { 'mini-tee': 'vs_0a1b2c3d4e5f6a7b8c9d0e1f' } };
+
+		await mountSide(sdk, { ...options, ...farmor }, READS, {
+			...readFor,
+			...farmor,
+		});
+		await mountSide(sdk, { ...options, ...mormor }, READS, {
+			...readFor,
+			...farmor,
+		});
+		await mountSide(sdk, options, READS, { ...readFor, ...farmor });
+
+		expect(createDesigner).toHaveBeenCalledOnce();
+		expect(createDesigner.mock.calls[0]?.[0]).toHaveProperty(
+			'valueSets',
+			farmor.valueSets,
+		);
+		expect(mount).toHaveBeenCalledTimes(2);
+		expect(mount.mock.calls[0]?.[0]).toHaveProperty(
+			'valueSets',
+			mormor.valueSets,
+		);
+	});
+
 	it('mounts as before on an SDK whose createDesigner takes one target', async () => {
 		const { sdk, mount, createDesigner } = coreSdk('0.5.0');
 
