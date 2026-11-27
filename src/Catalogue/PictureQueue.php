@@ -334,7 +334,8 @@ final class PictureQueue {
 				ProductPictures::ACTION,
 				array(
 					'status'           => ActionScheduler_Store::STATUS_COMPLETE,
-					'modified'         => gmdate( 'Y-m-d H:i:s', $now - self::RECENT_SECONDS ),
+					// Action Scheduler compares `modified` only when it is a DateTime.
+					'modified'         => new \DateTime( '@' . ( $now - self::RECENT_SECONDS ) ),
 					'modified_compare' => '>=',
 				)
 			),

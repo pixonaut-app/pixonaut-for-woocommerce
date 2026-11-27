@@ -138,8 +138,9 @@ final class PictureRunnerTest extends WP_UnitTestCase {
 		$this->assertInstanceOf( PictureRunner::class, $plugin );
 		$this->assertNotFalse( has_filter( 'action_scheduler_queue_runner_concurrent_batches', array( $plugin, 'concurrent_batches' ) ) );
 
-		// Action Scheduler's one batch, and one per runner.
-		$this->assertSame( 1 + Settings::DEFAULT_PICTURE_RUNNERS, ( new PictureRunner() )->concurrent_batches( 1 ) );
+		$this->assertSame( 1, ( new PictureRunner() )->concurrent_batches( 1 ), 'as it was while no runner runs' );
+		self::hold( Settings::DEFAULT_PICTURE_RUNNERS, time() );
+		$this->assertSame( 1 + Settings::DEFAULT_PICTURE_RUNNERS, ( new PictureRunner() )->concurrent_batches( 1 ), 'and one more per runner running' );
 	}
 
 	public function test_a_runner_short_of_memory_claims_no_job(): void {
