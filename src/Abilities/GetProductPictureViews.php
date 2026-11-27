@@ -132,6 +132,50 @@ final class GetProductPictureViews implements Ability {
 	}
 
 	/**
+	 * The view and photo named, checked against the blank's: a photo's view
+	 * is found when not named.
+	 *
+	 * @param WC_Product  $product A product or variation.
+	 * @param string|null $view    The view named.
+	 * @param string|null $photo   The photo named.
+	 *
+	 * @return array{view: string, photo?: string}|WP_Error
+	 */
+	public function found( WC_Product $product, ?string $view, ?string $photo ): array|WP_Error {
+		$views = $this->views( $product );
+		if ( null === $views ) {
+			return new WP_Error( 'pixonaut_wc_ability_pixonaut_unreachable', __( 'Pixonaut could not be asked for the blank\'s views and photos. Try again later.', 'pixonaut-for-woocommerce' ) );
+		}
+		foreach ( $views as $listed ) {
+			if ( null !== $view && $listed['id'] !== $view ) {
+				continue;
+			}
+			if ( null === $photo ) {
+				return array( 'view' => $listed['id'] );
+			}
+			if ( in_array( $photo, array_column( $listed['photos'], 'id' ), true ) ) {
+				return array(
+					'view'  => $listed['id'],
+					'photo' => $photo,
+				);
+			}
+		}
+		return new WP_Error(
+			'pixonaut_wc_ability_unknown_picture_view',
+			array() === $views
+				? __( 'The product is not on a blank with photos for its side, so its images can only be drawn as the product page shows them, or flat.', 'pixonaut-for-woocommerce' )
+				: sprintf(
+					/* translators: 1: the views of the blank with their photos, e.g. "front (mock-1, mock-2), back (mock-3)". */
+					__( 'The blank has no such view or photo for the product\'s side. It has: %1$s.', 'pixonaut-for-woocommerce' ),
+					implode(
+						', ',
+						array_map( static fn ( array $listed ): string => $listed['id'] . ' (' . implode( ', ', array_column( $listed['photos'], 'id' ) ) . ')', $views )
+					)
+				)
+		);
+	}
+
+	/**
 	 * A choice as the answer gives it.
 	 *
 	 * @param array{kind: string, view?: string, photo?: string}                                                                      $choice The choice.

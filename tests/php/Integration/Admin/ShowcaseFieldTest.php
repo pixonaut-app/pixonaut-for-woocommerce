@@ -111,6 +111,30 @@ final class ShowcaseFieldTest extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( 'no longer in the template', $html );
 	}
 
+	public function test_a_set_chosen_twice_has_a_ticked_row_for_each_so_saving_keeps_both(): void {
+		$product = $this->product();
+		ShowcaseImages::save(
+			$product,
+			array(
+				self::SETS[0] + array( 'kind' => ShowcaseImages::PREVIEW ),
+				self::SETS[1] + array( 'kind' => ShowcaseImages::PREVIEW ),
+				self::SETS[0] + array(
+					'kind' => ShowcaseImages::MOCKUP,
+					'view' => self::FRONT_VIEW,
+				),
+			)
+		);
+		$this->answer_sets( self::SETS );
+
+		$html = $this->field->html( $this->reload( $product ) );
+
+		foreach ( array( 0, 1, 2 ) as $index ) {
+			$this->assertMatchesRegularExpression( '#name="pixonaut_showcase_images\[' . $index . '\]\[use\]" value="yes"\s+checked#', $html );
+		}
+		$this->assertSame( 2, substr_count( $html, 'value="showcase-anna"' ) );
+		$this->assertStringNotContainsString( 'pixonaut_showcase_images[3]', $html );
+	}
+
 	public function test_on_a_blank_with_a_photo_each_set_is_drawn_on_it_or_flat_each_with_a_thumbnail(): void {
 		$product = $this->product( self::BLANK_ID );
 		ShowcaseImages::save( $product, array( self::SETS[1] + array( 'kind' => ShowcaseImages::PREVIEW ) ) );

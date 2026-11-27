@@ -537,7 +537,7 @@ final class ShowcaseField {
 	}
 
 	/**
-	 * Each set the field lists: the template's, then the chosen ones it no
+	 * Each set the field lists, once for each view it is chosen on: the template's, then the chosen ones it no
 	 * longer has, or Pixonaut drew without them; each with the value of
 	 * how it is drawn, and whether that names a view or photo the blank no
 	 * longer has.
@@ -552,17 +552,23 @@ final class ShowcaseField {
 	 * @return list<array{id: string, name: string, kind: string, value: string, chosen: bool, gone: bool, view_gone: bool, view_label: string}>
 	 */
 	private static function rows( array $sets, array $chosen, array $gone, bool $on_photo, ?array $views ): array {
-		$by_id = array_column( $chosen, null, 'id' );
-		$rows  = array();
-		foreach ( $sets as $set ) {
-			$choice = $by_id[ $set['id'] ] ?? null;
-			unset( $by_id[ $set['id'] ] );
-			$rows[] = self::row( $set, $choice ?? array( 'kind' => ShowcaseImages::MOCKUP ), $on_photo, $views ) + array(
-				'chosen' => null !== $choice,
-				'gone'   => null !== $choice && in_array( $set['id'], $gone, true ),
-			);
+		// A set chosen on several views has a row for each.
+		$by_id = array();
+		foreach ( $chosen as $choice ) {
+			$by_id[ $choice['id'] ][] = $choice;
 		}
-		foreach ( $by_id as $kept ) {
+		$rows = array();
+		foreach ( $sets as $set ) {
+			$choices = $by_id[ $set['id'] ] ?? array( null );
+			unset( $by_id[ $set['id'] ] );
+			foreach ( $choices as $choice ) {
+				$rows[] = self::row( $set, $choice ?? array( 'kind' => ShowcaseImages::MOCKUP ), $on_photo, $views ) + array(
+					'chosen' => null !== $choice,
+					'gone'   => null !== $choice && in_array( $set['id'], $gone, true ),
+				);
+			}
+		}
+		foreach ( array_merge( ...array_values( $by_id ) ) as $kept ) {
 			$rows[] = self::row( $kept, $kept, $on_photo, $views ) + array(
 				'chosen' => true,
 				'gone'   => true,

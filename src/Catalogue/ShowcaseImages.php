@@ -20,8 +20,10 @@ use WC_Product;
  * the blank's photo (`MOCKUP`), on a view and photo of it the store
  * manager names (`PictureView`), or flat (`PREVIEW`). The first is the
  * product's image, the others are its gallery; a variation's image is drawn
- * with its product's first. The designer never sees them: a customer always
- * starts from the template's own defaults.
+ * with its product's first. A set may be chosen more than once, each time
+ * drawn on another view or photo, so a gallery can show the same example
+ * values on several of the blank's views and scenes. The designer never sees
+ * them: a customer always starts from the template's own defaults.
  *
  * Each choice keeps the set's name, so one Pixonaut no longer has can still
  * be named.
@@ -86,7 +88,7 @@ final class ShowcaseImages {
 	}
 
 	/**
-	 * The choices in a stored or posted value, each set once, at most `MAX_IMAGES`.
+	 * The choices in a stored or posted value, each drawing once, at most `MAX_IMAGES`.
 	 *
 	 * @param mixed $value JSON text, or a list.
 	 *
@@ -108,6 +110,18 @@ final class ShowcaseImages {
 	}
 
 	/**
+	 * What tells one choice's picture from another's: its set, and what it
+	 * is drawn on. Two choices with the same key draw the same picture.
+	 *
+	 * @param array{id: string, kind: string, view?: string, photo?: string} $image A choice.
+	 */
+	public static function key( array $image ): string {
+		return (string) wp_json_encode( array( $image['id'], $image['kind'], $image['view'] ?? null, $image['photo'] ?? null ) );
+	}
+
+	/**
+	 * Each choice once: the first of any that draw the same picture.
+	 *
 	 * @param mixed $value JSON text, or a list.
 	 *
 	 * @return list<array{id: string, name: string, kind: string, view?: string, photo?: string}>
@@ -117,14 +131,18 @@ final class ShowcaseImages {
 		$images = array();
 		foreach ( is_array( $list ) ? $list : array() as $image ) {
 			$id = is_array( $image ) ? ( $image['id'] ?? null ) : null;
-			if ( ! is_string( $id ) || '' === $id || isset( $images[ $id ] ) ) {
+			if ( ! is_string( $id ) || '' === $id ) {
 				continue;
 			}
-			$name          = $image['name'] ?? null;
-			$images[ $id ] = array(
+			$name   = $image['name'] ?? null;
+			$choice = array(
 				'id'   => $id,
 				'name' => is_string( $name ) && '' !== $name ? $name : $id,
 			) + ( PictureView::parse( $image ) ?? array( 'kind' => self::MOCKUP ) );
+			$key    = self::key( $choice );
+			if ( ! isset( $images[ $key ] ) ) {
+				$images[ $key ] = $choice;
+			}
 		}
 		return array_values( $images );
 	}

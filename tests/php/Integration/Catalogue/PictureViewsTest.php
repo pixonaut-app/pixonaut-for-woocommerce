@@ -92,6 +92,39 @@ final class PictureViewsTest extends WP_UnitTestCase {
 		$this->assertSame( self::mockup_url( 'viewId=' . self::VIEW . '&variant=' . BlankFixture::VARIANT_REF ) . '&showcase=showcase-anna', $this->last_url() );
 	}
 
+	public function test_one_set_on_several_views_draws_a_picture_for_each_in_the_order_chosen(): void {
+		$product = $this->product( self::config() );
+		$anna    = array(
+			'id'   => 'showcase-anna',
+			'name' => 'Anna',
+			'kind' => ShowcaseImages::MOCKUP,
+		);
+		ShowcaseImages::save( $product, array( $anna, $anna + self::photo(), array( 'kind' => ShowcaseImages::PREVIEW ) + $anna ) );
+		$this->answer_mockups();
+		$this->recorder->raw( 200, self::png(), 'image/png' );
+		$this->recorder->raw( 200, self::png(), 'image/png' );
+		$this->recorder->raw( 200, self::png(), 'image/png' );
+
+		ActionSchedulerRunner::run_pending( ProductPictures::ACTION );
+
+		$drawn = array_values( array_filter( array_column( $this->recorder->requests, 'url' ), static fn ( string $url ): bool => str_contains( $url, '.png?' ) ) );
+		$this->assertSame(
+			array(
+				self::mockup_url( 'viewId=' . BlankFixture::VIEW_ID . '&variant=' . BlankFixture::VARIANT_REF ) . '&showcase=showcase-anna',
+				self::mockup_url( 'mockupId=' . self::PHOTO ) . '&showcase=showcase-anna',
+				Hosts::server_api() . '/t/mini-tee%402/preview.png?size=' . ProductPictures::SIZE . '&showcase=showcase-anna',
+			),
+			$drawn
+		);
+		$product = $this->reload( $product );
+		$gallery = array_map( 'intval', $product->get_gallery_image_ids() );
+		$this->assertCount( 2, $gallery );
+		$this->assertCount( 3, array_unique( array_merge( array( (int) $product->get_image_id() ), $gallery ) ), 'a picture of its own for each' );
+		foreach ( $gallery as $picture ) {
+			$this->assertTrue( PictureImage::is_picture( $picture, $product ) );
+		}
+	}
+
 	public function test_a_photo_the_blank_no_longer_has_is_drawn_as_without_a_choice(): void {
 		$product = $this->product( self::config() );
 		PictureView::save(

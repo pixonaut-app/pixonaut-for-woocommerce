@@ -23,6 +23,7 @@ use Pixonaut\WooCommerce\Abilities\GetShipping;
 use Pixonaut\WooCommerce\Abilities\SetShippingMethod;
 use Pixonaut\WooCommerce\Abilities\SetAttributeChoicePrice;
 use Pixonaut\WooCommerce\Abilities\SetAttributeQueryName;
+use Pixonaut\WooCommerce\Abilities\SetProductPictureView;
 use Pixonaut\WooCommerce\Abilities\SetProductSetup;
 use Pixonaut\WooCommerce\Abilities\SetProductShowcase;
 use Pixonaut\WooCommerce\Abilities\SetProductSplitListing;
@@ -59,7 +60,7 @@ final class ShopTools {
 	 * @param Closure $links     Makes what links a template to a product, once a call needs it.
 	 * @param Closure $variants  Gives what reads a blank's variants and stores a variation's, once a call needs it.
 	 * @param Closure $showcases Makes what lists a template's showcase sets, once a call needs it.
-	 * @param Closure $views     Makes the ability that reads what a product's images are drawn on, once a call needs it.
+	 * @param Closure $views     Makes the ability that reads what a product's images are drawn on, which the one that sets it and the one that chooses showcase sets check views with, once a call needs it.
 	 * @param Closure $print_size Makes the ability that sets a variation's print size, once a call needs it.
 	 * @param Closure $setup      Makes the ability that sets up a product or variation, once a call needs it.
 	 * @param Closure $pricing    Makes the abilities that read and change the pricing settings and a product's prices, once a call needs them.
@@ -108,7 +109,8 @@ final class ShopTools {
 			}
 		}
 		$links = ( $this->links )();
-		foreach ( array( new LinkProduct( $links ), new SetVariationVariants( $links, ( $this->variants )() ), new SetProductShowcase( $links, ( $this->showcases )() ), ( $this->views )(), ( $this->print_size )(), ( $this->setup )(), new GetProductSplitListing(), new SetProductSplitListing(), new SetAttributeSplitListing(), new GetAttributeQueryNames(), new SetAttributeQueryName(), new GetAttributeChoicePrices(), new SetAttributeChoicePrice(), new GetShipping(), new SetShippingMethod(), ...( $this->pricing )(), ...( $this->settings )(), ...( $this->form )(), ...( $this->variations )(), ( $this->pictures )() ) as $tool ) {
+		$views = ( $this->views )();
+		foreach ( array( new LinkProduct( $links ), new SetVariationVariants( $links, ( $this->variants )() ), new SetProductShowcase( $links, ( $this->showcases )(), $views ), $views, new SetProductPictureView( $views ), ( $this->print_size )(), ( $this->setup )(), new GetProductSplitListing(), new SetProductSplitListing(), new SetAttributeSplitListing(), new GetAttributeQueryNames(), new SetAttributeQueryName(), new GetAttributeChoicePrices(), new SetAttributeChoicePrice(), new GetShipping(), new SetShippingMethod(), ...( $this->pricing )(), ...( $this->settings )(), ...( $this->form )(), ...( $this->variations )(), ( $this->pictures )() ) as $tool ) {
 			$tools[ $tool->name() ] = $tool;
 		}
 		return $tools;

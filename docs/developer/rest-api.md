@@ -81,7 +81,7 @@ offered to a user:
 | Blank variants of variations | `set-variation-variants` |
 | A variation's print size | `set-variation-print-size` |
 | A variation's own setup | `set-product-setup`, always with a variation's id |
-| Showcase pictures | `set-product-showcase`, `get-product-picture-views` |
+| Showcase pictures | `set-product-showcase`, `get-product-picture-views`, `set-product-picture-view` |
 | A product's designer form | `get-product-form`, `set-product-form` |
 | Listing each value as its own product | `get-product-split-listing`, `set-product-split-listing`, `set-attribute-split-listing` |
 | The plugin's settings | `get-plugin-settings`, `update-plugin-settings` |

@@ -666,7 +666,7 @@ final class Plugin {
 					new SetVariationVariants( $links, $this->product_variants() ),
 					new SetProductSetup( $links, $fields ),
 					$this->variation_print_size(),
-					new SetProductShowcase( $links, $this->showcase_field() ),
+					new SetProductShowcase( $links, $this->showcase_field(), $views ),
 					$views,
 					new SetProductPictureView( $views ),
 					new GetProductSplitListing(),
