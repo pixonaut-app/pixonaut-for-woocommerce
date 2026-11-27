@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.33.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.33.0...v1.33.1) (2026-11-27)
+
+
+### Bug Fixes
+
+* **catalogue:** Action Scheduler's own runner runs beside the picture runners, and the queue counts the last hour ([#410](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/410)) ([adec306](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/adec306284185625a38749cf53ebf39a4995cad5))
+
 ## [1.33.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.32.1...v1.33.0) (2026-11-27)
 
 
