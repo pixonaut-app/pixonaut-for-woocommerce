@@ -1,7 +1,9 @@
 // What the fake knows: tenants, the stores connected to them with their keys,
 // and each tenant's catalogue. Everything a test changes lives here, and
 // `/__fake/reset` replaces all of it with a named fixture set.
+
 import { FIXTURE } from './fixture-ids';
+import type { ValueSet } from './handlers/value-sets';
 import type { components } from './openapi';
 
 type Schemas = components['schemas'];
@@ -550,6 +552,8 @@ export type State = {
 	catalogueImportsHeld: boolean;
 	/** Store-made records by collection, then id. */
 	records: Map<string, Map<string, Owned<unknown>>>;
+	/** Templates' value sets, by id. */
+	valueSets: Map<string, ValueSet>;
 };
 
 export function emptyState(): State {
@@ -570,6 +574,7 @@ export function emptyState(): State {
 		catalogue: new Map(),
 		catalogueImportsHeld: false,
 		records: new Map(),
+		valueSets: new Map(),
 	};
 }
 

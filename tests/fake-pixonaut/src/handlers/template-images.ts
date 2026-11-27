@@ -5,7 +5,8 @@
 import type { Photo, TemplateVersion } from '../state';
 import { tenantBlank } from './catalogue';
 import { visibleTemplate } from './templates';
-import { type Handler, refusal } from './types';
+import { type Handler, type HandlerContext, refusal } from './types';
+import { namedSet } from './value-sets';
 
 /** An 8×8 white PNG: every picture the fake draws. */
 export const WHITE_PNG = Buffer.from(
@@ -28,8 +29,16 @@ const NOT_FOUND = {
 	contentType: 'text/plain; charset=UTF-8',
 } as const;
 
-/** The picture, unless `showcase` names a set the template does not have. */
-function drawn(template: TemplateVersion, showcase: string | null) {
+/** The picture, unless `showcase` names a set the template does not have,
+ *  or `valueSet` a value set it holds none by. */
+function drawn(
+	template: TemplateVersion,
+	showcase: string | null,
+	context: HandlerContext,
+) {
+	if (namedSet(context, template) === 'unknown') {
+		return refusal(404, 'value_set_not_found');
+	}
 	return showcase === null || template.showcases.some((s) => s.id === showcase)
 		? picture()
 		: refusal(404, 'showcase_not_found');
@@ -80,7 +89,7 @@ export const readTemplateMockup: Handler = (context) => {
 	}
 	if (mockupId !== null) {
 		return placement.views.some((v) => v.photos.some((m) => m.id === mockupId))
-			? drawn(template, query.get('showcase'))
+			? drawn(template, query.get('showcase'), context)
 			: NOT_FOUND;
 	}
 	const view = placement.views.find((v) => v.id === viewId);
@@ -88,7 +97,7 @@ export const readTemplateMockup: Handler = (context) => {
 		return NOT_FOUND;
 	}
 	if (ref === null) {
-		return drawn(template, query.get('showcase'));
+		return drawn(template, query.get('showcase'), context);
 	}
 	const variant = blank.variants.find((v) => v.ref === ref);
 	if (variant === undefined) {
@@ -123,7 +132,7 @@ export const readTemplateMockup: Handler = (context) => {
 			},
 		};
 	}
-	return drawn(template, query.get('showcase'));
+	return drawn(template, query.get('showcase'), context);
 };
 
 export const readTemplatePreview: Handler = (context) => {
@@ -134,5 +143,5 @@ export const readTemplatePreview: Handler = (context) => {
 	const template = visibleTemplate(context, context.params.id ?? '');
 	return template === undefined
 		? NOT_FOUND
-		: drawn(template, context.query.get('showcase'));
+		: drawn(template, context.query.get('showcase'), context);
 };

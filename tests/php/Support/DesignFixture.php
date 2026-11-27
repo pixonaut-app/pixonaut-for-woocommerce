@@ -78,6 +78,7 @@ final class DesignFixture {
 				),
 				'page'                 => null,
 				'pageCount'            => null,
+				'valueSetId'           => null,
 				'variantRow'           => null,
 				'externalRef'          => null,
 				'previewOpened'        => null,

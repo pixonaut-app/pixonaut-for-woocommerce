@@ -20,14 +20,14 @@ use Pixonaut\WooCommerce\Settings\Settings;
  */
 final class Sdk {
 
-	public const VERSION = '0.48.3';
+	public const VERSION = '0.49.0';
 
 	/**
 	 * The script's path on a CDN, with no query string: a query would split
 	 * the browser's cache key, and the SDK resolves its wasm beside the
 	 * script under the same query.
 	 */
-	public const SCRIPT_PATH = '/sdk/0.48.3/pixonaut.iife.js';
+	public const SCRIPT_PATH = '/sdk/0.49.0/pixonaut.iife.js';
 
 	/**
 	 * The script on Pixonaut's own CDN.
@@ -38,7 +38,7 @@ final class Sdk {
 	 * Subresource Integrity of the script. The script checks the wasm it
 	 * boots against hashes of its own.
 	 */
-	public const INTEGRITY = 'sha384-TlfB2cC5Vj1RXbEir7fg+EmZgVomH5SinUG1wCBpCCjP527zv/H1U5jYcB7+0AYC';
+	public const INTEGRITY = 'sha384-oAjHmrX6ch/HPPBhgAzJFpf5CMCMSScUKeXhUAPLyOpJ6NxwhYCa/Kq8vASSdfFU';
 
 	/**
 	 * The Pixonaut operations the SDK calls from the customer's browser as

@@ -60,6 +60,8 @@ final class PixonautRefusal {
 
 	private const PRINTSHOP = 'printshop';
 
+	private const VALUE_SET = 'value_set';
+
 	/**
 	 * The codes by the message they share.
 	 */
@@ -83,6 +85,7 @@ final class PixonautRefusal {
 		self::PLACEMENT      => array( 'unknown_placement' ),
 		self::VARIANT        => array( 'variant_not_of_blank', 'variant_row_invalid', 'variant_required' ),
 		self::PRINTSHOP      => array( 'printshop_differs_from_blank', 'printshop_disconnected', 'printshop_unavailable', 'unknown_printshop' ),
+		self::VALUE_SET      => array( 'value_set_not_found' ),
 	);
 
 	/**
@@ -157,6 +160,8 @@ final class PixonautRefusal {
 					__( 'The printshop is unknown, disconnected, unavailable, or not the one the blank is printed at. Choose another printshop in %s, or connect it again in the Pixonaut studio.', 'pixonaut-for-woocommerce' ),
 					$place
 				);
+			case self::VALUE_SET:
+				return __( 'Pixonaut does not hold the value set of the product’s own values for its template. Set the product’s values again, then update the product.', 'pixonaut-for-woocommerce' );
 			default:
 				return null;
 		}

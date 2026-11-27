@@ -58,6 +58,9 @@ export type Proof = {
 	/** The language its template was read in: the request's `lang`, else
 	 *  the workspace's default. */
 	language: HostedLocale;
+	/** The value set its template was read with (`valueSet`); null for none.
+	 *  Its design records it. */
+	valueSetId: string | null;
 	/** Fingerprint of the template, values, size and placement. */
 	docHash: string;
 	expiresAt: number;
@@ -97,6 +100,8 @@ export type ProofRequest = {
 	language?: string | null;
 	/** Absent: a side of no pages. */
 	page?: { page: number; pageCount: number };
+	/** The request's `valueSet`; absent: none. */
+	valueSetId?: string | null;
 };
 
 /** The proof `token` the store made, or undefined. */
@@ -153,6 +158,7 @@ export function mintProof(
 		pickedColours: request.pickedColours ?? null,
 		viewId: request.viewId ?? null,
 		values,
+		valueSetId: request.valueSetId ?? null,
 		language: isHostedLocale(request.language)
 			? request.language
 			: (state.tenants.get(store.tenantId)?.workspace.defaultLanguage ?? 'en'),

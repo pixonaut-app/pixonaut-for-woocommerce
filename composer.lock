@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c65a4729742921af22a198b400b682cc",
+    "content-hash": "fd2c3d433997aa76e237eeed36b278f1",
     "packages": [
         {
             "name": "nyholm/psr7",
@@ -86,16 +86,16 @@
         },
         {
             "name": "pixonaut/pixonaut-php",
-            "version": "v31.0.0",
+            "version": "v32.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/pixonaut-app/pixonaut-php.git",
-                "reference": "d5f2be7d508aa5afc0bb5e7db7741c4b0b774f49"
+                "reference": "4bc57fde05318ca237f0c7b968df7d4153755cb2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/pixonaut-app/pixonaut-php/zipball/d5f2be7d508aa5afc0bb5e7db7741c4b0b774f49",
-                "reference": "d5f2be7d508aa5afc0bb5e7db7741c4b0b774f49",
+                "url": "https://api.github.com/repos/pixonaut-app/pixonaut-php/zipball/4bc57fde05318ca237f0c7b968df7d4153755cb2",
+                "reference": "4bc57fde05318ca237f0c7b968df7d4153755cb2",
                 "shasum": ""
             },
             "require": {
@@ -120,7 +120,7 @@
             "type": "library",
             "extra": {
                 "pixonaut": {
-                    "api-version": "14.4.0"
+                    "api-version": "14.11.0"
                 }
             },
             "autoload": {
@@ -144,7 +144,7 @@
                 "issues": "https://github.com/pixonaut-app/pixonaut-php/issues",
                 "source": "https://github.com/pixonaut-app/pixonaut-php"
             },
-            "time": "2026-11-25T00:09:30+00:00"
+            "time": "2026-11-27T14:34:01+00:00"
         },
         {
             "name": "psr/http-client",

@@ -108,6 +108,7 @@ export function seedDesign(
 		viewId: null,
 		expiresAt: now,
 		values: {},
+		valueSetId: null,
 		language: state.tenants.get(tenantId)?.workspace.defaultLanguage ?? 'en',
 		docHash: '',
 		sessionId: null,

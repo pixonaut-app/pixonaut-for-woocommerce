@@ -1590,6 +1590,12 @@ declare interface MountOptionsBase extends ErrorOption, FormMountOptions, SideMo
      *  key naming no layer of the template is ignored, with a console line.
      *  `onChange` is not called for them. */
     initialValues?: DesignerState["values"];
+    /** The value sets a store product sells its templates with (#4193), by
+     *  template id (`baseId`, or `baseId@version`): every read, check, proof
+     *  and commit of that template names its set, so the product's values
+     *  are the template's own, its offered fields start at them and its fixed
+     *  ones print them. A template named by none reads its own. */
+    valueSets?: Readonly<Record<string, string>>;
     onValidation?: (violations: RemoteViolation[]) => void;
     /** BCP-47 tag picking the bundled words: en sv de fr es nl da nb fi, by
      *  its language (`sv-SE` is `sv`). Any other tag, or none, is the
@@ -1938,6 +1944,10 @@ declare function operations({ json, raw }: Reads): {
         get: (id: string, query?: QueryOf<"/v1/templates/{id}">) => Promise<AnswerOf<"/v1/templates/{id}">>;
         /** List the tenant's templates */
         list: (query?: QueryOf<"/v1/templates">) => Promise<AnswerOf<"/v1/templates">>;
+        valueSets: {
+            /** Read a value set */
+            get: (id: string, valueSetId: string) => Promise<AnswerOf<"/v1/templates/{id}/value-sets/{valueSetId}">>;
+        };
     };
     upscales: {
         /** Read an upscale */
