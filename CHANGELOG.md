@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.37.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.37.0...v1.37.1) (2026-11-28)
+
+
+### Bug Fixes
+
+* **storefront:** side tabs take the names of the chosen variation's sides ([#435](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/435)) ([83ec9a7](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/83ec9a7394afbe1e7c694f77793154f70cea1ecc))
+
 ## [1.37.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.36.1...v1.37.0) (2026-11-28)
 
 
