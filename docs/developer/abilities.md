@@ -310,8 +310,9 @@ Its variations with a setup of their own move with it: onto the version
 linked where their side on that template is not pinned, and, linked to
 another template, from the template it had to the one linked where their
 setup is the product's but for the blank, blank variant or print size (as
-many sides, each on the template the product's side at its place was on, in
-the same mode, not pinned, with no values of its own for that template). A
+many sides, each with the key of the product's side at its place, on the
+template that side was on, in the same mode, not pinned, with no values of
+its own for that template). A
 moved variation keeps its blank, variant, placements and print sizes, and
 takes the product's values. `variations_moved` counts those Pixonaut checked
 at once; `variations_moved_later` those it checks in the background, which

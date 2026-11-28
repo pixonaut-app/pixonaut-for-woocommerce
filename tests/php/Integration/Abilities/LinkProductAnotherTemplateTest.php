@@ -153,6 +153,19 @@ final class LinkProductAnotherTemplateTest extends WP_UnitTestCase {
 		$this->assertCount( 2, $this->recorder->requests, 'Only the link itself is checked.' );
 	}
 
+	public function test_a_variation_whose_side_has_another_key_than_the_product_has_now_stays_on_its_template(): void {
+		$product = $this->product_on_copy();
+		$config  = self::own_setup( self::COPY_ID, self::COPY_VERSION );
+		$keyed   = $this->variation( $product, $config->with_sides( array( new Side( 'chest', 'Chest', null, null, self::COPY_ID, self::COPY_VERSION, null, 'Kids tee', $config->sides[0]->print_sizes ) ) ) );
+		$this->script_check();
+
+		$answer = $this->link( $product );
+
+		$this->assertIsArray( $answer );
+		$this->assertSame( array( 0, 0 ), array( $answer['variations_moved'], $answer['variations_moved_later'] ) );
+		$this->assertSame( self::COPY_ID, $this->stored( $keyed )->sides[0]->template_base_id, 'The product\'s values would not reach it there.' );
+	}
+
 	public function test_one_pixonaut_did_not_answer_is_on_the_template_linked_on_its_own_blank_until_its_queued_check(): void {
 		$product = $this->product_on_copy();
 		$own     = $this->variation( $product, self::own_setup( self::COPY_ID, self::COPY_VERSION, false, self::BLANK_ID ) );

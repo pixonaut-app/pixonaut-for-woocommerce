@@ -19,10 +19,10 @@ use WC_Product;
  * print size follow it there: a setup of their own is most often only that,
  * and left on the template the product left, they keep it in use and are
  * sold without the product's values. Such a variation has as many sides as
- * the product had and has now, each on the template of the product's side
- * at its place before the link, in the same mode, not pinned, and with no
- * values of its own for that template; a variation on any other template
- * stays there. Each moved side keeps its placement, print sizes, size it
+ * the product had and has now, each with the key of the product's side at
+ * its place now, on the template of the product's side there before the
+ * link, in the same mode, not pinned, and with no values of its own for that
+ * template; a variation on any other template stays there. Each moved side keeps its placement, print sizes, size it
  * starts on, form arrangement and mode, and the variation its blank and
  * variant. It is stored on the version linked as not yet checked
  * (`CHECK_PENDING`), so it is not sold until Pixonaut has checked it there,
@@ -100,9 +100,17 @@ final class OwnSetupsOnLeftTemplate {
 			return false;
 		}
 		$values = SideValues::stored_on( $variation );
+		if ( array() === $values && null !== SideValues::document_on( $variation ) ) {
+			// Values of its own this plugin cannot read (a newer version's) may be for this template.
+			return false;
+		}
 		foreach ( $sides as $i => $side ) {
 			$base = $side->template_base_id;
 			if ( '' === $base || $base === $template->base_id || $base !== $was[ $i ]->template_base_id || $side->mode !== $was[ $i ]->mode || $side->pinned ) {
+				return false;
+			}
+			if ( $side->key !== $linked->sides[ $i ]->key ) {
+				// The product's values reach a side only by its key.
 				return false;
 			}
 			if ( isset( $values[ $side->key ] ) && $values[ $side->key ]->applies_to( $side ) ) {
