@@ -63,16 +63,19 @@ final class DesignCheck {
 	 * page layouts instead of its template: it is then judged by the
 	 * layout's versions and value set.
 	 *
-	 * @param Design                $design       The design, as Pixonaut answered it.
-	 * @param Side                  $side         The side the design was made for.
-	 * @param string|null           $blank_id     The product's blank; null for a template-only product.
-	 * @param string|null           $value_set_id The side's own value set (`SideValues::set_of()`); null when it has none.
-	 * @param array<string, string> $layout_sets  The value set of each of the side's page layouts that has one, by its
-	 *                                            base id (`SideValues::sets_of()`); a layout without one has none.
+	 * @param Design                $design          The design, as Pixonaut answered it.
+	 * @param Side                  $side            The side the design was made for.
+	 * @param string|null           $blank_id        The product's blank; null for a template-only product.
+	 * @param string|null           $value_set_id    The side's own value set (`SideValues::set_of()`); null when it has none.
+	 * @param array<string, string> $layout_sets     The value set of each of the side's page layouts that has one, by its
+	 *                                               base id (`SideValues::sets_of()`); a layout without one has none.
+	 * @param list<string>          $layouts_pending The base ids of the side's page layouts whose set could not be made
+	 *                                               yet (`SideValues::pending_of()`): a page on one is refused, as it
+	 *                                               was made without the side's values.
 	 *
 	 * @return string|null One of the class constants, or null.
 	 */
-	public static function mismatch( Design $design, Side $side, ?string $blank_id, ?string $value_set_id, array $layout_sets = array() ): ?string {
+	public static function mismatch( Design $design, Side $side, ?string $blank_id, ?string $value_set_id, array $layout_sets = array(), array $layouts_pending = array() ): ?string {
 		// Pixonaut moves a design to its template's new id; the side may hold the old one until `template.renamed` is handled.
 		$own    = TemplateRenames::same( $design->template_base_id, $side->template_base_id );
 		$layout = $own || null === $design->page ? null : $side->page_template( $design->template_base_id );
@@ -84,6 +87,11 @@ final class DesignCheck {
 			return self::TEMPLATE_OUTDATED;
 		}
 		if ( null !== $layout ) {
+			foreach ( $layouts_pending as $pending ) {
+				if ( TemplateRenames::same( $pending, $layout->base_id ) ) {
+					return self::VALUES;
+				}
+			}
 			$value_set_id = $layout_sets[ $layout->base_id ] ?? null;
 		}
 		if ( $design->blank_id !== $blank_id ) {

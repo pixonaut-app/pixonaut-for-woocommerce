@@ -958,7 +958,7 @@ final class Plugin {
 	 * Re-checks products when their templates or blanks change.
 	 */
 	public function product_recheck(): ProductRecheck {
-		$this->product_recheck ??= new ProductRecheck( new ProductLinker( $this->catalogue(), new Designs( $this->sdk() ), $this->sdk(), new WcLogger() ), $this->catalogue(), new InvalidProductNotice( $this->notices() ), new WcLogger(), $this->product_variants(), $this->designer_links(), fn ( WC_Product $product ) => $this->cost_refresh()->rechecked( $product ) );
+		$this->product_recheck ??= new ProductRecheck( new ProductLinker( $this->catalogue(), new Designs( $this->sdk() ), $this->sdk(), new WcLogger() ), $this->catalogue(), new InvalidProductNotice( $this->notices() ), new WcLogger(), $this->product_variants(), $this->designer_links(), fn ( WC_Product $product ) => $this->cost_refresh()->rechecked( $product ), new LayoutValueSets( new PixonautValueSets( $this->pixonaut() ), new WcLogger() ) );
 		return $this->product_recheck;
 	}
 

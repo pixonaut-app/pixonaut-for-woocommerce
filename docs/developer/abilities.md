@@ -515,7 +515,12 @@ value a layout's rules refuse refuses the call. The sets are kept beside the
 values and given in `page_template_value_sets`, by the layout's template id
 without its version. A setup saved with other layouts makes the new
 layouts' sets and drops the sets of those gone (`LayoutValueSets`); a
-layout moving to another version keeps its set, as the side's own does.
+layout moving to another version keeps its set, as the side's own does. A
+variation with a setup of its own whose side is sold with its product's
+values gets a set for each layout it offers too, kept with the product's
+values. A layout whose set Pixonaut refused, or could not be asked for, is
+listed in `page_templates_pending`: the product cannot be bought until a
+re-check makes it.
 
 `get-product-split-listing` reads what the product's Attributes tab shows
 for [listing each value as its own product](../../merchant/split-listings/):

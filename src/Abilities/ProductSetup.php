@@ -415,6 +415,11 @@ final class ProductSetup {
 				'description'          => __( 'On a side with page layouts: the value set Pixonaut made of the values for each layout\'s layers, by the layout\'s template id without its version; a layout with none of the layers has none, and so does every layout without values. Absent on a side without layouts.', 'pixonaut-for-woocommerce' ),
 				'additionalProperties' => array( 'type' => 'string' ),
 			),
+			'page_templates_pending'   => array(
+				'type'        => 'array',
+				'items'       => array( 'type' => 'string' ),
+				'description' => __( 'On a side with page layouts: the layouts, by template id without version, whose value set Pixonaut refused or could not be asked for. While one is listed the product cannot be bought; a re-check makes the set again. Absent on a side without layouts.', 'pixonaut-for-woocommerce' ),
+			),
 			'values_from'              => array(
 				'type'        => array( 'string', 'null' ),
 				'enum'        => array( SideValues::FROM_OWN, SideValues::FROM_PRODUCT, null ),
@@ -430,7 +435,7 @@ final class ProductSetup {
 	 *
 	 * @param WC_Product $product The product or variation sold with the side.
 	 * @param Side       $side    The side.
-	 * @return array{value_set_id: string|null, values: array<string, array<string, mixed>>|null, values_from: string|null, page_template_value_sets?: object}
+	 * @return array{value_set_id: string|null, values: array<string, array<string, mixed>>|null, values_from: string|null, page_template_value_sets?: object, page_templates_pending?: list<string>}
 	 */
 	public static function side_values( WC_Product $product, Side $side ): array {
 		$sold = SideValues::sold_with( $product, $side );
@@ -445,7 +450,10 @@ final class ProductSetup {
 		$sets = SideValues::sets_of( $product, $side );
 		unset( $sets[ $side->template_base_id ] );
 		// An object even when empty, as the schema says.
-		return $read + array( 'page_template_value_sets' => (object) $sets );
+		return $read + array(
+			'page_template_value_sets' => (object) $sets,
+			'page_templates_pending'   => SideValues::pending_of( $product, $side ),
+		);
 	}
 
 	/**

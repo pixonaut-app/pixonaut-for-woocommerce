@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Catalogue;
 
+use Pixonaut\WooCommerce\Abilities\ProductSetup;
 use Pixonaut\WooCommerce\Abilities\SetProductValues;
 use Pixonaut\WooCommerce\Api\ValueSetRefused;
 use Pixonaut\WooCommerce\Api\ValueSets;
@@ -16,8 +17,11 @@ use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\Side;
 use Pixonaut\WooCommerce\Catalogue\SideValues;
 use Pixonaut\WooCommerce\Tests\Support\RecordingLogger;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use WC_Product;
 use WC_Product_Simple;
+use WC_Product_Variable;
+use WC_Product_Variation;
 use WP_Error;
 use WP_UnitTestCase;
 
@@ -35,13 +39,21 @@ final class PageTemplateValuesTest extends WP_UnitTestCase {
 
 	private const FOUR_PHOTOS = 'four-photos';
 
+	private const PHOTO_AND_TITLE = 'photo-and-title';
+
+	/**
+	 * The status Pixonaut answers while it is down.
+	 */
+	private const UNAVAILABLE = 503;
+
 	/**
 	 * Each template version's layers, as the scripted maker reads them.
 	 */
 	private const LAYERS = array(
-		self::TEMPLATE . '@3'    => array( 'title', 'motif', 'photo' ),
-		self::TWO_PHOTOS . '@2'  => array( 'title', 'photo-1', 'photo-2' ),
-		self::FOUR_PHOTOS . '@1' => array( 'grid' ),
+		self::TEMPLATE . '@3'        => array( 'title', 'motif', 'photo' ),
+		self::TWO_PHOTOS . '@2'      => array( 'title', 'photo-1', 'photo-2' ),
+		self::FOUR_PHOTOS . '@1'     => array( 'grid' ),
+		self::PHOTO_AND_TITLE . '@1' => array( 'title', 'photo-2' ),
 	);
 
 	private const VALUES = array(
@@ -63,6 +75,13 @@ final class PageTemplateValuesTest extends WP_UnitTestCase {
 	 * @var list<string>
 	 */
 	private array $refusing = array();
+
+	/**
+	 * Templates the scripted maker cannot be asked about, as if Pixonaut were down.
+	 *
+	 * @var list<string>
+	 */
+	private array $unreachable = array();
 
 	public function test_a_book_sides_values_reach_each_layout_with_the_layers_it_has(): void {
 		$product = $this->book( array( self::TWO_PHOTOS . '@2', self::FOUR_PHOTOS . '@1' ) );
@@ -164,6 +183,74 @@ final class PageTemplateValuesTest extends WP_UnitTestCase {
 		$this->assertSame( array( self::TWO_PHOTOS => self::set_id( self::TWO_PHOTOS . '@2' ) ), SideValues::stored_on( $this->reload( $product ) )['pages']->layout_sets );
 	}
 
+	public function test_a_variation_of_its_own_sold_with_its_products_values_has_a_set_for_a_layout_only_it_offers(): void {
+		list( $product, $variation ) = $this->variable_book();
+		$this->assertIsArray( $this->set( $product ) );
+		$this->own_setup( $variation, array( self::TWO_PHOTOS . '@2', self::PHOTO_AND_TITLE . '@1' ) );
+		$this->asked = array();
+
+		$this->assertTrue( ( new LayoutValueSets( $this->maker(), new RecordingLogger() ) )->refresh( $this->reload( $variation ) ) );
+
+		$side = ProductConfig::stored_on( $this->reload( $variation ) )->sides[0];
+		$this->assertSame( SideValues::FROM_PRODUCT, SideValues::sold_with( $this->reload( $variation ), $side )['from'] );
+		$this->assertSame(
+			array(
+				array(
+					self::PHOTO_AND_TITLE . '@1',
+					array(
+						'title'   => self::VALUES['title'],
+						'photo-2' => self::VALUES['photo-2'],
+					),
+				),
+			),
+			$this->asked,
+			'only the layout its product does not offer is asked for'
+		);
+		$this->assertSame(
+			array(
+				self::TEMPLATE        => self::set_id( self::TEMPLATE . '@3' ),
+				self::TWO_PHOTOS      => self::set_id( self::TWO_PHOTOS . '@2' ),
+				self::PHOTO_AND_TITLE => self::set_id( self::PHOTO_AND_TITLE . '@1' ),
+			),
+			SideValues::sets_of( $this->reload( $variation ), $side )
+		);
+
+		$this->assertIsArray( $this->set( $product, array( 'title' => array( 'content' => 'Otter' ) ) ) );
+
+		$this->assertSame(
+			self::set_id( self::PHOTO_AND_TITLE . '@1' ),
+			SideValues::sets_of( $this->reload( $variation ), $side )[ self::PHOTO_AND_TITLE ] ?? null,
+			'the product\'s new values reach the variation\'s layout too'
+		);
+		$this->assertSame( array( self::PHOTO_AND_TITLE . '@1', array( 'title' => array( 'content' => 'Otter' ) ) ), end( $this->asked ) );
+	}
+
+	public function test_a_layout_left_without_its_set_while_pixonaut_is_down_is_pending_until_a_retry_makes_it(): void {
+		$product = $this->book( array() );
+		$this->assertIsArray( $this->set( $product ) );
+		$config = ProductConfig::stored_on( $this->reload( $product ) );
+		$config->with_sides( array( $config->sides[0]->with_page_templates( array( new PageTemplate( self::TWO_PHOTOS, 2 ) ) ) ) )->save_to( $product );
+		$this->unreachable[] = self::TWO_PHOTOS . '@2';
+		$logger              = new RecordingLogger();
+		$refresh             = new LayoutValueSets( $this->maker(), $logger );
+
+		$this->assertFalse( $refresh->refresh( $this->reload( $product ) ) );
+
+		$side = ProductConfig::stored_on( $this->reload( $product ) )->sides[0];
+		$this->assertSame( array( self::TWO_PHOTOS ), SideValues::pending_of( $this->reload( $product ), $side ) );
+		$this->assertTrue( SideValues::any_pending( $this->reload( $product ), ProductConfig::stored_on( $this->reload( $product ) ) ), 'the book is not sold' );
+		$this->assertArrayNotHasKey( self::TWO_PHOTOS, SideValues::sets_of( $this->reload( $product ), $side ) );
+		$this->assertSame( array( self::TWO_PHOTOS ), ProductSetup::side_values( $this->reload( $product ), $side )['page_templates_pending'] ?? null );
+		$this->assertNotSame( array(), $logger->entries );
+
+		$this->unreachable = array();
+		$this->assertTrue( $refresh->retry( $this->reload( $product ) ) );
+
+		$this->assertSame( array(), SideValues::pending_of( $this->reload( $product ), $side ) );
+		$this->assertFalse( SideValues::any_pending( $this->reload( $product ), ProductConfig::stored_on( $this->reload( $product ) ) ) );
+		$this->assertSame( self::set_id( self::TWO_PHOTOS . '@2' ), SideValues::sets_of( $this->reload( $product ), $side )[ self::TWO_PHOTOS ] ?? null );
+	}
+
 	/**
 	 * Sets the book side's values with the scripted maker.
 	 *
@@ -211,8 +298,12 @@ final class PageTemplateValuesTest extends WP_UnitTestCase {
 	 * @param array<string, array<string, mixed>> $values      The values.
 	 *
 	 * @throws ValueSetRefused For a template it refuses.
+	 * @throws ApiException    For a template it cannot be asked about.
 	 */
 	public function made( string $template_id, array $values ): string {
+		if ( in_array( $template_id, $this->unreachable, true ) ) {
+			throw new ApiException( 'templates.valueSets.create', self::UNAVAILABLE, 'service_unavailable', true );
+		}
 		if ( in_array( $template_id, $this->refusing, true ) ) {
 			throw new ValueSetRefused(
 				array(
@@ -257,8 +348,49 @@ final class PageTemplateValuesTest extends WP_UnitTestCase {
 		$product = new WC_Product_Simple();
 		$product->set_name( 'Photo book' );
 		$product->save();
+		( new ProductConfig( personalise: true, blank_id: 'blank_book', sides: array( self::book_side( $layouts ) ) ) )->save_to( $product );
+		return $this->reload( $product );
+	}
+
+	/**
+	 * A variable book whose product's side offers the layout of two photos,
+	 * and one variation of it with a setup of its own on the same template.
+	 *
+	 * @return array{0: WC_Product, 1: WC_Product}
+	 */
+	private function variable_book(): array {
+		$product = new WC_Product_Variable();
+		$product->set_name( 'Photo book' );
+		$product->save();
+		( new ProductConfig( personalise: true, blank_id: 'blank_book', sides: array( self::book_side( array( self::TWO_PHOTOS . '@2' ) ) ) ) )->save_to( $product );
+		$variation = new WC_Product_Variation();
+		$variation->set_parent_id( $product->get_id() );
+		$variation->set_regular_price( '10' );
+		$variation->save();
+		$this->own_setup( $variation, array( self::TWO_PHOTOS . '@2' ) );
+		return array( $this->reload( $product ), $this->reload( $variation ) );
+	}
+
+	/**
+	 * Gives a variation a setup of its own whose book side offers the layouts given.
+	 *
+	 * @param WC_Product $variation The variation.
+	 * @param string[]   $layouts   Each layout's version.
+	 * @phpstan-param list<string> $layouts
+	 */
+	private function own_setup( WC_Product $variation, array $layouts ): void {
+		( new ProductConfig( personalise: true, override: true, blank_id: 'blank_book', sides: array( self::book_side( $layouts ) ) ) )->save_to( $this->reload( $variation ) );
+	}
+
+	/**
+	 * The book's side, its pages, offering the layouts given.
+	 *
+	 * @param string[] $layouts Each layout's version.
+	 * @phpstan-param list<string> $layouts
+	 */
+	private static function book_side( array $layouts ): Side {
 		$side = new Side( 'pages', 'Pages', 'pages', 'Pages', self::TEMPLATE, 3, null, 'Mini book' );
-		$side = $side->with_page_templates(
+		return $side->with_page_templates(
 			array_map(
 				static function ( string $id ): PageTemplate {
 					list( $base, $version ) = explode( '@', $id );
@@ -267,8 +399,6 @@ final class PageTemplateValuesTest extends WP_UnitTestCase {
 				$layouts
 			)
 		);
-		( new ProductConfig( personalise: true, blank_id: 'blank_book', sides: array( $side ) ) )->save_to( $product );
-		return $this->reload( $product );
 	}
 
 	private function reload( WC_Product $product ): WC_Product {

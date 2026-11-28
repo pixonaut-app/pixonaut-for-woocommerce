@@ -696,7 +696,8 @@ final class ProductPanel {
 	 * raises or clears its notice. One Pixonaut could not check is checked
 	 * again in the background; one it refused to check for too many
 	 * requests keeps what is stored when nothing new was entered
-	 * (`SlowedCheck`), and is checked again as well.
+	 * (`SlowedCheck`), and is checked again as well, as is one with a page
+	 * layout left without its side's values (`LayoutValueSets`).
 	 *
 	 * @param WC_Product    $product The product or variation.
 	 * @param ProductConfig $config  The checked configuration.
@@ -705,15 +706,16 @@ final class ProductPanel {
 	public function store( WC_Product $product, ProductConfig $config ): ProductConfig {
 		$slowed = SlowedCheck::slowed( $config );
 		$config = SlowedCheck::kept( $product, $config );
+		$pending = false;
 		try {
 			$config->save_to( $product );
-			// The sides' own values reach the page layouts they offer now.
-			$this->layout_sets?->refresh( $product );
+			// The sides' own values reach the page layouts they offer now; a layout left without them is made again by a re-check.
+			$pending = false === $this->layout_sets?->refresh( $product );
 		} catch ( LogicException $e ) {
 			// A newer plugin version's configuration is kept as it is; the notice says why.
 			$config = ProductConfig::stored_on( $product );
 		}
-		if ( $slowed || InvalidReason::CHECK_FAILED === $config->invalid_reason ) {
+		if ( $slowed || $pending || InvalidReason::CHECK_FAILED === $config->invalid_reason ) {
 			// Asked again in the background, which clears the notice once Pixonaut answers.
 			ProductRecheck::queue_soon( array( $product->get_id() ) );
 		}

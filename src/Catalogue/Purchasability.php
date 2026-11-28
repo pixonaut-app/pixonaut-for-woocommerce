@@ -22,7 +22,9 @@ use WC_Product;
  * standing side printed from a design per row of its blank's print areas
  * sells only the variants of a row it has a design for: a size its template
  * cannot be printed at has none. A book sold at a page count its printshop
- * gives no price for, as its cost was last read, cannot be bought either.
+ * gives no price for, as its cost was last read, cannot be bought either,
+ * nor can a side with a page layout its values could not be given yet
+ * (`SideValues::pending_of()`): a page on it would print without them.
  */
 final class Purchasability {
 
@@ -48,7 +50,7 @@ final class Purchasability {
 		if ( ! $product->is_type( 'variable' ) || array() === $product->get_children() ) {
 			$config = ProductConfig::config_for( $product );
 			// A product sells one of its blank's variants: without one, or with a retired one, Pixonaut refuses its order.
-			return self::sellable( $config ) && ProductVariant::sellable( $product, $config ) && self::printed( $product, $config ) && ! ProductPricing::unpriced_pages( $product );
+			return self::sellable( $config ) && ProductVariant::sellable( $product, $config ) && self::printed( $product, $config ) && ! ProductPricing::unpriced_pages( $product ) && ! self::values_pending( $product, $config );
 		}
 		if ( 0 === $product->get_id() ) {
 			return self::any_variation( $product );
@@ -77,6 +79,17 @@ final class Purchasability {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Whether a personalised side's page layout waits for its set of the
+	 * side's values.
+	 *
+	 * @param WC_Product    $product The product or variation.
+	 * @param ProductConfig $config  Its configuration.
+	 */
+	private static function values_pending( WC_Product $product, ProductConfig $config ): bool {
+		return $config->personalise && SideValues::any_pending( $product, $config );
 	}
 
 	private static function sellable( ProductConfig $config ): bool {

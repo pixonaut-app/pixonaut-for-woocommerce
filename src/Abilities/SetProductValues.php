@@ -11,6 +11,8 @@ namespace Pixonaut\WooCommerce\Abilities;
 
 use Pixonaut\WooCommerce\Api\ValueSetRefused;
 use Pixonaut\WooCommerce\Api\ValueSets;
+use Pixonaut\WooCommerce\Api\WcLogger;
+use Pixonaut\WooCommerce\Catalogue\LayoutValueSets;
 use Pixonaut\WooCommerce\Catalogue\PostedSides;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\Side;
@@ -19,6 +21,7 @@ use Pixonaut\WooCommerce\Catalogue\SideValues;
 use Pixonaut\WooCommerce\Catalogue\TemplateId;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use WC_Product;
 use WP_Error;
 use WP_Http;
@@ -47,9 +50,17 @@ final class SetProductValues implements Ability {
 	public const REFUSED = 'pixonaut_wc_ability_values_refused';
 
 	/**
-	 * @param ValueSets $value_sets Makes each side's value set.
+	 * Gives the layouts of a product's variations with a setup of their own
+	 * the product's new values (`LayoutValueSets`).
 	 */
-	public function __construct( private readonly ValueSets $value_sets ) {
+	private readonly LayoutValueSets $layout_sets;
+
+	/**
+	 * @param ValueSets            $value_sets Makes each side's value set.
+	 * @param LoggerInterface|null $logger     Logs a variation's layout left without the new values; null for the store's log.
+	 */
+	public function __construct( private readonly ValueSets $value_sets, ?LoggerInterface $logger = null ) {
+		$this->layout_sets = new LayoutValueSets( $value_sets, $logger ?? new WcLogger() );
 	}
 
 	public function name(): string {
@@ -175,6 +186,11 @@ final class SetProductValues implements Ability {
 			return new WP_Error( 'pixonaut_wc_ability_changed_meanwhile', __( 'The product\'s values or its Pixonaut setup were changed while these were saved, so nothing was changed. Read the product again, then set them.', 'pixonaut-for-woocommerce' ), array( 'status' => WP_Http::CONFLICT ) );
 		}
 		$saved = wc_get_product( $target->get_id() );
+		if ( $saved instanceof WC_Product && ! $saved->is_type( 'variation' ) ) {
+			// The layouts its variations offer on a side sold with these values are given them too; one Pixonaut refuses is pending.
+			$this->layout_sets->refresh( $saved );
+			$saved = wc_get_product( $target->get_id() );
+		}
 		return self::answer( $product, $saved instanceof WC_Product ? $saved : $target );
 	}
 

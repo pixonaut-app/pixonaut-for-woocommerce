@@ -403,7 +403,7 @@ final class AddToCart {
 		$by_key = array_combine( array_map( static fn ( Side $side ): string => $side->key, $sides ), $sides );
 		foreach ( $line->sides as $held ) {
 			$design   = $this->read( $held->design_id );
-			$mismatch = DesignCheck::mismatch( $design, $by_key[ $held->key ], $config->blank_id, SideValues::set_of( $product, $by_key[ $held->key ] ), SideValues::sets_of( $product, $by_key[ $held->key ] ) )
+			$mismatch = DesignCheck::mismatch( $design, $by_key[ $held->key ], $config->blank_id, SideValues::set_of( $product, $by_key[ $held->key ] ), SideValues::sets_of( $product, $by_key[ $held->key ] ), SideValues::pending_of( $product, $by_key[ $held->key ] ) )
 				?? ( DesignCheck::pages_match( $design, $held->page, $line->page_count( $held->key ), $pages ) ? null : DesignCheck::PAGES );
 			if ( null !== $mismatch ) {
 				$this->personalised?->forget( $key );
@@ -694,7 +694,7 @@ final class AddToCart {
 						throw new AddRefused( Labels::DESIGN_ALREADY_USED );
 					}
 					$ours[]   = $design_id;
-					$mismatch = DesignCheck::mismatch( $design, $side, $config->blank_id, SideValues::set_of( $product, $side ), SideValues::sets_of( $product, $side ) )
+					$mismatch = DesignCheck::mismatch( $design, $side, $config->blank_id, SideValues::set_of( $product, $side ), SideValues::sets_of( $product, $side ), SideValues::pending_of( $product, $side ) )
 						?? ( DesignCheck::pages_match( $design, $page, $paged ? count( $ordered[ $side->key ] ) : 0, $book ) ? null : DesignCheck::PAGES );
 					if ( null !== $mismatch ) {
 						$this->logger->warning(

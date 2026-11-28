@@ -28,9 +28,12 @@ use WC_Product;
  * only while the side is on the template they were made for. A write replaces the document only while it is still the one read,
  * so a slow writer never overwrites values saved after it read.
  *
- * Stored as `{v: 1, sides: {<key>: {template, valueSet, values, layoutSets?}}}`,
+ * Stored as `{v: 1, sides: {<key>: {template, valueSet, values, layoutSets?, layoutsPending?}}}`,
  * `layoutSets` being the set of each of the side's page layouts by its base
- * id; a document without it reads as none.
+ * id, and `layoutsPending` the layouts whose set could not be made yet; a
+ * document without them reads as none. A product's values hold a set for
+ * each layout its own side offers, and for each one a variation with a
+ * setup of its own offers on a side sold with them (`LayoutValueSets`).
  */
 final class SideValues {
 
@@ -100,6 +103,45 @@ final class SideValues {
 			}
 		}
 		return $sets;
+	}
+
+	/**
+	 * The base ids of a side's page layouts whose set could not be made
+	 * (`SideValue::$layouts_pending`): while there is one, a page on it
+	 * would open without the side's values, so the side is not sold.
+	 *
+	 * @param WC_Product $product A product or variation.
+	 * @param Side       $side    One of the sides it is sold with.
+	 * @return list<string>
+	 */
+	public static function pending_of( WC_Product $product, Side $side ): array {
+		$value = self::of( $product, $side );
+		if ( null === $value ) {
+			return array();
+		}
+		$pending = array();
+		foreach ( $side->page_templates as $layout ) {
+			if ( $value->layout_pending( $layout->base_id ) ) {
+				$pending[] = $layout->base_id;
+			}
+		}
+		return $pending;
+	}
+
+	/**
+	 * Whether a side of the configuration a product or variation is sold
+	 * under has a page layout whose set could not be made (`pending_of()`).
+	 *
+	 * @param WC_Product    $product A product or variation.
+	 * @param ProductConfig $config  The configuration it is sold under.
+	 */
+	public static function any_pending( WC_Product $product, ProductConfig $config ): bool {
+		foreach ( $config->sides as $side ) {
+			if ( array() !== $side->page_templates && array() !== self::pending_of( $product, $side ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

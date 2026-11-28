@@ -78,6 +78,34 @@ final class DesignCheckTest extends TestCase {
 		$this->assertSame( DesignCheck::TEMPLATE, $check( array( 'page' => null ) ), 'only a page is made from a layout' );
 	}
 
+	public function test_a_page_on_a_layout_whose_set_is_pending_is_refused_as_made_without_the_sides_values(): void {
+		$side   = self::side()->with_page_templates( array( new PageTemplate( 'two-photos', 3 ) ) );
+		$design = static fn ( array $overrides ): Design => Design::from_answer(
+			DesignFixture::design(
+				$overrides + array(
+					'templateBaseId'  => 'two-photos',
+					'templateVersion' => 3,
+					'page'            => 4,
+					'pageCount'       => 24,
+					'valueSetId'      => null,
+				)
+			)
+		);
+
+		$this->assertNull( DesignCheck::mismatch( $design( array() ), $side, DesignFixture::BLANK_ID, self::VALUE_SET ), 'a layout that takes none of the values opens without a set' );
+		$this->assertSame( DesignCheck::VALUES, DesignCheck::mismatch( $design( array() ), $side, DesignFixture::BLANK_ID, self::VALUE_SET, array(), array( 'two-photos' ) ) );
+		$own = Design::from_answer(
+			DesignFixture::design(
+				array(
+					'page'       => 4,
+					'pageCount'  => 24,
+					'valueSetId' => self::VALUE_SET,
+				)
+			)
+		);
+		$this->assertNull( DesignCheck::mismatch( $own, $side, DesignFixture::BLANK_ID, self::VALUE_SET, array(), array( 'two-photos' ) ), 'a page on the side\'s own template is not on the pending layout' );
+	}
+
 	public function test_accepts_a_design_made_with_the_sides_value_set(): void {
 		$this->assertNull( self::mismatch( array( 'valueSetId' => self::VALUE_SET ), null, self::VALUE_SET ) );
 		$this->assertNull( self::mismatch( array( 'valueSetId' => null ) ) );
