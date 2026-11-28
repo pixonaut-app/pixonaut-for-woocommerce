@@ -734,6 +734,7 @@ export const REACH = {
 		'src/Catalogue/SharedPictures.php',
 		'src/Catalogue/SmallerImage.php',
 		'src/Catalogue/ShowcaseImages.php',
+		'src/Catalogue/SidePictures.php',
 		'src/Catalogue/TemplateShowcases.php',
 		'templates/admin/picture-view-choices.php',
 		'templates/admin/product-picture.php',
