@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.39.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.39.0...v1.39.1) (2026-11-28)
+
+
+### Bug Fixes
+
+* **e2e:** split-listings holds its poster's pictures; the grouped blank switch spec is slow ([#442](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/442)) ([4354b50](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/4354b504064ddfaf56d2c9e432e5e9f011fbdc4a))
+* **link:** a product linked to another template takes its own-setup variations along ([#438](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/438)) ([cb79758](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/cb79758f950424ff66118219bf6d90329f2358ce))
+
 ## [1.39.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.38.1...v1.39.0) (2026-11-28)
 
 
