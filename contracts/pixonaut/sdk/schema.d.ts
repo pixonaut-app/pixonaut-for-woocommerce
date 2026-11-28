@@ -556,7 +556,7 @@ export interface paths {
         };
         /**
          * Fetch an asset's preview
-         * @description The asset's preview when it has one, else the file as stored: what a thumbnail or a canvas shows. A publishable key reads a customer's upload only with the designer session header it was uploaded with, and a library asset only once it is public or shown or offered by a published version of a template; anything else answers 404, as a missing asset does. `width` serves it no larger than the box it is drawn in; each resize asked for with a key or through a link spends the tenant's render budget, and is refused `rate_limited` once it is spent. The etag names the stored bytes and the size asked for, so `If-None-Match` answers 304 for as long as a cached copy is good.
+         * @description The asset's preview when it has one, else the file as stored: what a thumbnail or a canvas shows. A publishable key reads a customer's upload only with the designer session header it was uploaded with, and a library asset only once it is public, shown or offered by a published version of a template, or a picture in a value set of a template; anything else answers 404, as a missing asset does. `width` serves it no larger than the box it is drawn in; each resize asked for with a key or through a link spends the tenant's render budget, and is refused `rate_limited` once it is spent. The etag names the stored bytes and the size asked for, so `If-None-Match` answers 304 for as long as a cached copy is good.
          */
         get: operations["assets.content.get"];
         put?: never;
@@ -2888,7 +2888,7 @@ export interface paths {
         put?: never;
         /**
          * Hand out a hosted designer for a template
-         * @description A designer share link for the template's live version that mounts the designer with what the store sells it on: the blank and placement every proof is fitted to, the store's size menu and its colourway photos, and which size and photo start selected, exactly as the SDK takes them on a store's own page. A front and a back are one link with `sides`: one hosted page with a step per side, each side its own menus and, when it names one, its own template. A link holds two to 10 sides; one with more than 4 is made, and answered with a `sides_over_recommended` warning, since each side is one more step on the page and one more designer in the shopper's browser. The sides of a garment each name a placement on its blank; the sides of an item with no blank, such as a sign or a coaster, name neither `blankId` nor `placementId`, and each is proofed on its template alone. Every side names a blank and its placement or neither, and either every side is on a blank or none is. With a `returnUrl`, approving makes a proof and sends the shopper back to `returnUrl?state=…&proofToken=…` (with `sides`, `returnUrl?state=…&proofToken[front]=…&proofToken[back]=…`), cancelling to `returnUrl?state=…`. `locale` shows the page and the designer in one of `en`, `sv`, `de`, `fr`, `es`, `nl`, `da`, `nb`, `fi`, and the returned `url` then carries `?lang=<locale>`; absent, they are shown in the workspace's default language. `layout` fixes how every side's form lays out its steps, `page` or `steps`; absent, each side's form follows its template's own `form.layout`, and is a page when the template names none. A link carrying `state`, which names one shopper's visit, works for 24 hours; one without it works for the `expiresInDays` it names, or until withdrawn. Every size a side offers is judged as the shopper's approval would judge it, against the side's template and placement, and one it would refuse is refused `print_size_illegal`, naming the side, the size's place in the menu and why. On a blank, the link holds a side for every placement its blank says an order must print: one leaving such a placement out could never be ordered, and is refused `422 placement_unfilled`, naming it. A link through a blank's panel layout is refused `unknown_layout` when the blank has no layout of that name, `layout_out_of_date` when the layout no longer fits the blank at the size the link sells, and `layout_wrong_ratio` when the template's shape is not the layout's canvas, which the template is drawn on. `name` names the link for the workspace, and `designLimit` limits the designs its page makes. The link's address is kept, and the share-link list answers it again as `url`. A member needs what handing out a designer needs; a connected store's integration key, `templates:read` and `designs:update`.
+         * @description A designer share link for the template's live version that mounts the designer with what the store sells it on: the blank and placement every proof is fitted to, the store's size menu and its colourway photos, and which size and photo start selected, exactly as the SDK takes them on a store's own page. A front and a back are one link with `sides`: one hosted page with a step per side, each side its own menus and, when it names one, its own template. A link holds two to 25 sides; one with more than 4 is made, and answered with a `sides_over_recommended` warning, since each side is one more step on the page and one more designer in the shopper's browser. The sides of a garment each name a placement on its blank; the sides of an item with no blank, such as a sign or a coaster, name neither `blankId` nor `placementId`, and each is proofed on its template alone. Every side names a blank and its placement or neither, and either every side is on a blank or none is. With a `returnUrl`, approving makes a proof and sends the shopper back to `returnUrl?state=…&proofToken=…` (with `sides`, `returnUrl?state=…&proofToken[front]=…&proofToken[back]=…`; with more than 10 sides, or a side printed as pages, `returnUrl?state=…&proofSet=…`, whose proofs `GET /v1/proof-sets/{proofSet}` reads), cancelling to `returnUrl?state=…`. `locale` shows the page and the designer in one of `en`, `sv`, `de`, `fr`, `es`, `nl`, `da`, `nb`, `fi`, and the returned `url` then carries `?lang=<locale>`; absent, they are shown in the workspace's default language. `layout` fixes how every side's form lays out its steps, `page` or `steps`; absent, each side's form follows its template's own `form.layout`, and is a page when the template names none. A link carrying `state`, which names one shopper's visit, works for 24 hours; one without it works for the `expiresInDays` it names, or until withdrawn. Every size a side offers is judged as the shopper's approval would judge it, against the side's template and placement, and one it would refuse is refused `print_size_illegal`, naming the side, the size's place in the menu and why. On a blank, the link holds a side for every placement its blank says an order must print: one leaving such a placement out could never be ordered, and is refused `422 placement_unfilled`, naming it. A side's `valueSet` opens the hosted designer on a store product's values, and its proofs and designs record it; one the side's template holds no set by is refused `422 value_set_not_found`. A link through a blank's panel layout is refused `unknown_layout` when the blank has no layout of that name, `layout_out_of_date` when the layout no longer fits the blank at the size the link sells, and `layout_wrong_ratio` when the template's shape is not the layout's canvas, which the template is drawn on. `name` names the link for the workspace, and `designLimit` limits the designs its page makes. The link's address is kept, and the share-link list answers it again as `url`. A member needs what handing out a designer needs; a connected store's integration key, `templates:read` and `designs:update`.
          */
         post: operations["templates.designerLinks.create"];
         delete?: never;
@@ -57966,7 +57966,7 @@ export interface operations {
                      * @enum {string}
                      */
                     layout?: "page" | "steps";
-                    /** @description Which of the sides' placements one design drives, such as a sweater's sleeves: a preset, or groups of the sides' placements, a group with a repeat of its own where it repeats apart from the link. The sides of one group print one template. Absent, the groups the blank suggests whose sides print one template; the link keeps the groups it was made with. */
+                    /** @description Which of the sides' placements one design drives, such as a sweater's sleeves: a preset, or groups of the sides' placements, a group with a repeat of its own where it repeats apart from the link. The sides of one group print one template, with one `valueSet` or none. Absent, the groups the blank suggests whose sides print one template with one value set; the link keeps the groups it was made with. */
                     linkedPlacements?: {
                         /** @description Whether the shopper may take a placement out of its group and design it on its own. Absent, no. */
                         designSeparately?: boolean;
@@ -58258,6 +58258,8 @@ export interface operations {
                         selectedPrintSizeIndex?: number;
                         /** @description The template's base id; the link's own when absent. */
                         templateId?: string;
+                        /** @description A value set of the side's template, by the id `POST /v1/templates/{id}/value-sets` answered: the hosted designer reads the template with its values written in as its layers' own, and the side's proofs and designs record it as their `valueSetId`. One the template holds no set by is refused `value_set_not_found`. Absent, the template's own values. */
+                        valueSet?: string;
                         /** @description The size the side sells, as a value of each option its blank's print areas change with (`{"Size": "XL"}`): its proofs and designs are made at that size, and a request naming another is refused. Only on a blank whose print areas change with its size; absent, the shopper's request names the size. */
                         variantRow?: {
                             [key: string]: string;
@@ -58271,6 +58273,8 @@ export interface operations {
                     state?: string | null;
                     /** @description A designer link's template, by base id: the one a link with one side opens, and a side naming none. Sent with what the page shows; absent, the link keeps its template. */
                     templateId?: string;
+                    /** @description A value set of the side's template, by the id `POST /v1/templates/{id}/value-sets` answered: the hosted designer reads the template with its values written in as its layers' own, and the side's proofs and designs record it as their `valueSetId`. One the template holds no set by is refused `value_set_not_found`. Absent, the template's own values. */
+                    valueSet?: string;
                     /** @description The size the side sells, as a value of each option its blank's print areas change with (`{"Size": "XL"}`): its proofs and designs are made at that size, and a request naming another is refused. Only on a blank whose print areas change with its size; absent, the shopper's request names the size. */
                     variantRow?: {
                         [key: string]: string;
@@ -58454,7 +58458,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: share_link_name_too_long, unknown_placement, print_size_illegal, link_pages_off_range, placement_unfilled, variant_row_invalid, unknown_layout, layout_wrong_ratio, linked_templates_differ, payload_too_large */
+            /** @description Refused: share_link_name_too_long, unknown_placement, print_size_illegal, link_pages_off_range, value_set_not_found, placement_unfilled, variant_row_invalid, unknown_layout, layout_wrong_ratio, linked_templates_differ, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -58547,7 +58551,7 @@ export interface operations {
                         initialView?: string;
                         /** @description How every side's form lays out its steps: `page`, every step on one page, or `steps`, one step at a time. Absent, each side's form follows its template's own `form.layout`, and is a page when the template names none. */
                         layout?: string;
-                        /** @description Which of the sides' placements one design drives, such as a sweater's sleeves: a preset, or groups of the sides' placements, a group with a repeat of its own where it repeats apart from the link. The sides of one group print one template. Absent, the groups the blank suggests whose sides print one template; the link keeps the groups it was made with. */
+                        /** @description Which of the sides' placements one design drives, such as a sweater's sleeves: a preset, or groups of the sides' placements, a group with a repeat of its own where it repeats apart from the link. The sides of one group print one template, with one `valueSet` or none. Absent, the groups the blank suggests whose sides print one template with one value set; the link keeps the groups it was made with. */
                         linkedPlacements?: {
                             /** @description Whether the shopper may take a placement out of its group and design it on its own. Absent, no. */
                             designSeparately?: boolean;
@@ -58840,6 +58844,8 @@ export interface operations {
                             selectedPrintSizeIndex?: number;
                             /** @description The template's base id; the link's own when absent. */
                             templateId?: string;
+                            /** @description A value set of the side's template, by the id `POST /v1/templates/{id}/value-sets` answered: the hosted designer reads the template with its values written in as its layers' own, and the side's proofs and designs record it as their `valueSetId`. One the template holds no set by is refused `value_set_not_found`. Absent, the template's own values. */
+                            valueSet?: string;
                             /** @description The size the side sells, as a value of each option its blank's print areas change with (`{"Size": "XL"}`): its proofs and designs are made at that size, and a request naming another is refused. Only on a blank whose print areas change with its size; absent, the shopper's request names the size. */
                             variantRow?: {
                                 [key: string]: string;
@@ -58853,6 +58859,8 @@ export interface operations {
                         state: string | null;
                         /** @description The template the link opens, by base id; a side naming none. */
                         templateId: string;
+                        /** @description A value set of the side's template, by the id `POST /v1/templates/{id}/value-sets` answered: the hosted designer reads the template with its values written in as its layers' own, and the side's proofs and designs record it as their `valueSetId`. One the template holds no set by is refused `value_set_not_found`. Absent, the template's own values. */
+                        valueSet?: string;
                         /** @description The size the side sells, as a value of each option its blank's print areas change with (`{"Size": "XL"}`): its proofs and designs are made at that size, and a request naming another is refused. Only on a blank whose print areas change with its size; absent, the shopper's request names the size. */
                         variantRow?: {
                             [key: string]: string;
@@ -60125,7 +60133,7 @@ export interface operations {
                      * @enum {string}
                      */
                     layout?: "page" | "steps";
-                    /** @description Which of the sides' placements one design drives, such as a sweater's sleeves: a preset, or groups of the sides' placements, a group with a repeat of its own where it repeats apart from the link. The sides of one group print one template. Absent, the groups the blank suggests whose sides print one template; the link keeps the groups it was made with. */
+                    /** @description Which of the sides' placements one design drives, such as a sweater's sleeves: a preset, or groups of the sides' placements, a group with a repeat of its own where it repeats apart from the link. The sides of one group print one template, with one `valueSet` or none. Absent, the groups the blank suggests whose sides print one template with one value set; the link keeps the groups it was made with. */
                     linkedPlacements?: {
                         /** @description Whether the shopper may take a placement out of its group and design it on its own. Absent, no. */
                         designSeparately?: boolean;
@@ -60417,6 +60425,8 @@ export interface operations {
                         selectedPrintSizeIndex?: number;
                         /** @description The template's base id; the link's own when absent. */
                         templateId?: string;
+                        /** @description A value set of the side's template, by the id `POST /v1/templates/{id}/value-sets` answered: the hosted designer reads the template with its values written in as its layers' own, and the side's proofs and designs record it as their `valueSetId`. One the template holds no set by is refused `value_set_not_found`. Absent, the template's own values. */
+                        valueSet?: string;
                         /** @description The size the side sells, as a value of each option its blank's print areas change with (`{"Size": "XL"}`): its proofs and designs are made at that size, and a request naming another is refused. Only on a blank whose print areas change with its size; absent, the shopper's request names the size. */
                         variantRow?: {
                             [key: string]: string;
@@ -60428,6 +60438,8 @@ export interface operations {
                     }[];
                     /** @description Carried back to `returnUrl` untouched, for the store to match the customer to its own session. Only with `returnUrl`. */
                     state?: string;
+                    /** @description A value set of the side's template, by the id `POST /v1/templates/{id}/value-sets` answered: the hosted designer reads the template with its values written in as its layers' own, and the side's proofs and designs record it as their `valueSetId`. One the template holds no set by is refused `value_set_not_found`. Absent, the template's own values. */
+                    valueSet?: string;
                     /** @description The size the side sells, as a value of each option its blank's print areas change with (`{"Size": "XL"}`): its proofs and designs are made at that size, and a request naming another is refused. Only on a blank whose print areas change with its size; absent, the shopper's request names the size. */
                     variantRow?: {
                         [key: string]: string;
@@ -60577,7 +60589,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: unknown_placement, print_size_illegal, link_pages_off_range, design_not_stitchable, design_unreadable, placement_unfilled, variant_row_invalid, unknown_layout, layout_wrong_ratio, linked_templates_differ, share_link_name_too_long, payload_too_large */
+            /** @description Refused: unknown_placement, print_size_illegal, link_pages_off_range, value_set_not_found, design_not_stitchable, design_unreadable, placement_unfilled, variant_row_invalid, unknown_layout, layout_wrong_ratio, linked_templates_differ, share_link_name_too_long, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -61038,7 +61050,7 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @description Values for the template's layers, by layer id and then prop, as a design's values are: a text's `content`, an image's `src` (an asset id), a colour, a layer's `opacity`, or the artwork's own under its reserved key. Any prop the layer has, offered or not. */
+                    /** @description Values for the template's layers, by layer id and then prop, as a design's values are: a text's `content`, an image's `src` (an asset id), a colour, a layer's `opacity`. The template's background is not a layer: its values go under `$artwork`, as the template's `background` holds them: `imageAssetId` (a library asset id) for a picture background, `color` for a colour one, and a picture's `fit`, `crop` and `tileScale` where the template's background has them, e.g. `{"$artwork": {"imageAssetId": "<asset id>"}}`. It cannot change which of the two the background is. Any prop the layer has, offered or not. A layer its customer can neither move nor resize may also be placed and sized: its `offsetFrac`, `wFrac` and `hFrac`, as the template stores them, kept on the artwork. */
                     values: {
                         [key: string]: {
                             [key: string]: unknown;
@@ -61157,7 +61169,7 @@ export interface operations {
                             layerId: string;
                             /** @description The prop, or empty for the whole layer. */
                             prop: string;
-                            /** @description Why: `unknown_layer`, `unknown_prop`, `value_kind` (another kind of value than the prop holds), or the rule a publish holds the layer to. */
+                            /** @description Why: `unknown_layer`, `unknown_prop`, `value_kind` (another kind of value than the prop holds), `box_offered` (a box the customer may move or resize), `outside_artwork` (a box carrying the layer off the artwork), or the rule a publish holds the layer to. */
                             rule: string;
                         }[];
                         /** @description Always sent with `payload_too_large`. */
