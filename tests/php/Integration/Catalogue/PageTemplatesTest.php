@@ -64,6 +64,21 @@ final class PageTemplatesTest extends ProductPanelTestCase {
 		$this->assertSame( array( $product->get_id() ), ProductIndex::using_template( self::FOUR_PHOTOS, 0, 10 ) );
 	}
 
+	public function test_a_side_saved_from_a_form_without_the_field_keeps_its_layouts_and_one_saved_empty_has_none(): void {
+		$product = $this->linked_book_product();
+		$this->script_paged_link();
+		$this->script_read( self::TWO_PHOTOS . '@2', 'Two photos' );
+
+		$this->save( $product->get_id() );
+
+		$this->assertSame( self::TWO_PHOTOS, ProductConfig::stored_on( $this->reload( $product->get_id() ) )->sides[0]->page_templates[0]->base_id ?? null );
+
+		$this->script_paged_link();
+		$this->save( $product->get_id(), array(), array( PostedSides::PAGE_TEMPLATES => array( '' ) ) );
+
+		$this->assertSame( array(), ProductConfig::stored_on( $this->reload( $product->get_id() ) )->sides[0]->page_templates );
+	}
+
 	public function test_page_layouts_on_a_placement_not_printed_as_pages_cannot_be_sold(): void {
 		$product = $this->product();
 		$this->script_blank( $this->blank() );
@@ -134,9 +149,16 @@ final class PageTemplatesTest extends ProductPanelTestCase {
 	}
 
 	/**
-	 * A book saved with one page layout, two photos at version 2.
+	 * The configuration of a book saved with one page layout, two photos at version 2.
 	 */
 	private function linked_book(): ProductConfig {
+		return ProductConfig::stored_on( $this->reload( $this->linked_book_product()->get_id() ) );
+	}
+
+	/**
+	 * A book product saved with one page layout, two photos at version 2.
+	 */
+	private function linked_book_product(): \WC_Product_Simple {
 		$product = $this->product();
 		$this->script_paged_link();
 		$this->script_read( self::TWO_PHOTOS . '@2', 'Two photos' );
@@ -144,7 +166,7 @@ final class PageTemplatesTest extends ProductPanelTestCase {
 		$this->recorder->requests = array();
 		$stored                   = ProductConfig::stored_on( $this->reload( $product->get_id() ) );
 		$this->assertTrue( $stored->valid, (string) $stored->invalid_reason );
-		return $stored;
+		return $product;
 	}
 
 	/**

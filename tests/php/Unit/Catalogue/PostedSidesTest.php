@@ -416,7 +416,10 @@ final class PostedSidesTest extends TestCase {
 
 		$this->assertNull( $posted->problem );
 		$this->assertSame( array( 'two-photos@2', 'four-photos@1' ), $posted->sides[0]->page_templates );
-		$this->assertSame( array(), PostedSides::parse( array( self::side( 'front', 'Front' ) ) )->sides[0]->page_templates );
+		// A form without the field keeps the side's; one with it empty has none.
+		$this->assertNull( PostedSides::parse( array( self::side( 'front', 'Front' ) ) )->sides[0]->page_templates );
+		$side[ PostedSides::PAGE_TEMPLATES ] = array( '' );
+		$this->assertSame( array(), PostedSides::parse( array( $side ) )->sides[0]->page_templates );
 	}
 
 	public function test_a_page_layout_named_twice_or_the_sides_own_template_is_a_problem_never_dropped_quietly(): void {
@@ -437,7 +440,7 @@ final class PostedSidesTest extends TestCase {
 		$posted = PostedSides::parse( array( $side ) );
 
 		$this->assertSame( InvalidReason::TOO_MANY_PAGE_TEMPLATES, $posted->problem );
-		$this->assertCount( PageTemplate::MAX + 1, $posted->sides[0]->page_templates );
+		$this->assertCount( PageTemplate::MAX + 1, $posted->sides[0]->page_templates ?? array() );
 		$side[ PostedSides::PAGE_TEMPLATES ] = array_slice( $side[ PostedSides::PAGE_TEMPLATES ], 0, PageTemplate::MAX );
 		$this->assertNull( PostedSides::parse( array( $side ) )->problem );
 	}

@@ -122,7 +122,7 @@ final class ProductLinker {
 	private static function with_layouts( ProductConfig $linked, array $inputs ): ProductConfig {
 		$entered = array();
 		foreach ( $inputs as $input ) {
-			$entered[ $input->key ] = $input->page_templates;
+			$entered[ $input->key ] = $input->page_templates ?? array();
 		}
 		if ( array() === array_filter( $entered ) ) {
 			return $linked;
@@ -250,9 +250,27 @@ final class ProductLinker {
 			$input    = $input->pinned || null === $template || null === $latest || $latest <= $template->version
 				? $input
 				: $input->with_template_id( (string) new TemplateId( $template->base_id, $latest ) );
-			$inputs[] = $input->pinned ? $input : $input->with_page_templates( array_map( static fn ( string $id ): string => self::followed( $current, $id ), $input->page_templates ) );
+			$layouts  = $input->page_templates ?? self::layouts_of( $current, $input->key );
+			$inputs[] = $input->with_page_templates( $input->pinned ? $layouts : array_map( static fn ( string $id ): string => self::followed( $current, $id ), $layouts ) );
 		}
 		return $posted->with_sides( $inputs );
+	}
+
+	/**
+	 * The page layouts the side of a key has, each as its version; none
+	 * without such a side.
+	 *
+	 * @param ProductConfig $config The configuration.
+	 * @param string        $key    The side's key.
+	 * @return list<string>
+	 */
+	private static function layouts_of( ProductConfig $config, string $key ): array {
+		foreach ( $config->sides as $side ) {
+			if ( $side->key === $key ) {
+				return array_map( static fn ( PageTemplate $layout ): string => (string) $layout->id(), $side->page_templates );
+			}
+		}
+		return array();
 	}
 
 	/**
@@ -642,7 +660,7 @@ final class ProductLinker {
 		// Only a placement printed as pages designs its pages one by one, each on a layout of its own.
 		$paged = self::paged_placements( $blank );
 		foreach ( $inputs as $i => $input ) {
-			if ( array() !== $input->page_templates && ! in_array( $input->placement_id, $paged, true ) ) {
+			if ( array() !== ( $input->page_templates ?? array() ) && ! in_array( $input->placement_id, $paged, true ) ) {
 				$reasons[] = InvalidReason::PAGE_TEMPLATES_NOT_PAGED;
 				$details[] = InvalidDetail::of( count( $inputs ) > 1 ? $sides[ $i ]->label : null );
 			}
@@ -693,7 +711,7 @@ final class ProductLinker {
 			return $this->config( $current, true, null, null, array(), InvalidReason::MISSING_TEMPLATE );
 		}
 		// Without a blank no placement is printed as pages.
-		$problem ??= array() === $input->page_templates ? null : InvalidReason::PAGE_TEMPLATES_NOT_PAGED;
+		$problem ??= array() === ( $input->page_templates ?? array() ) ? null : InvalidReason::PAGE_TEMPLATES_NOT_PAGED;
 		$name      = '' === $input->template_name ? null : $input->template_name;
 		$entered   = array();
 		// Where each size entered landed in `$entered`, by its index in the menu.

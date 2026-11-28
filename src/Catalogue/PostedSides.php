@@ -239,15 +239,19 @@ final class PostedSides {
 	 * is a problem kept with the side, never one dropped quietly; an id that
 	 * names no version is one too.
 	 *
-	 * @param mixed           $posted   The ids, in order.
+	 * @param mixed           $posted   The ids, in order; not an array when the side's form had no such field, as a
+	 *                                  product screen overridden from before layouts, which keeps the side's.
 	 * @param TemplateId|null $template The side's own template.
 	 * @param string[]        $problems Problems found so far; appended to.
-	 * @return list<string>
+	 * @return list<string>|null Null when not entered.
 	 */
-	private static function page_templates( mixed $posted, ?TemplateId $template, array &$problems ): array {
+	private static function page_templates( mixed $posted, ?TemplateId $template, array &$problems ): ?array {
+		if ( ! is_array( $posted ) ) {
+			return null;
+		}
 		$ids   = array();
 		$bases = null === $template ? array() : array( $template->base_id );
-		foreach ( is_array( $posted ) ? $posted : array() as $id ) {
+		foreach ( $posted as $id ) {
 			$id = is_string( $id ) ? trim( $id ) : '';
 			if ( '' === $id ) {
 				continue;
