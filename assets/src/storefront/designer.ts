@@ -118,6 +118,7 @@ import {
 	NO_VARIATION,
 	readVariations,
 	selectAttributes,
+	sideLabels,
 	type Variation,
 	type VariationSide,
 	type Variations,
@@ -1356,6 +1357,7 @@ export class ProductDesigner {
 		}
 		this.approval?.setEnabled(variation.approvalMode === CHECKBOX_MODE);
 		this.tabs?.limit(this.activeSides());
+		this.tabs?.rename(sideLabels(variation.sides));
 		// A side mounting now would mount with the options it read before.
 		await this.mounting;
 		for (const [side, target] of Object.entries(variation.sides)) {

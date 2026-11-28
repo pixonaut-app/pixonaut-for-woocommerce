@@ -53,7 +53,8 @@ final class VariationSwitches {
 	private array $order = array();
 
 	/**
-	 * Each side's name, by side key, from the first configuration that has it.
+	 * Each side's name, by side key: the opening variation's, else the first
+	 * configuration's that has it.
 	 *
 	 * @var array<string, string>
 	 */
@@ -89,9 +90,7 @@ final class VariationSwitches {
 	 * @param ProductConfig                       $config The configuration they mount.
 	 */
 	public function add_mounts( array $mounts, ProductConfig $config ): void {
-		foreach ( $config->sides as $side ) {
-			$this->labels[ $side->key ] ??= $side->label;
-		}
+		self::name_sides( $this->labels, $config );
 		foreach ( $mounts as $key => $options ) {
 			if ( ! in_array( (string) $key, $this->order, true ) ) {
 				$this->order[] = (string) $key;
@@ -112,12 +111,16 @@ final class VariationSwitches {
 	 * template, form and preview, and nothing mounts again when the script
 	 * finds the variation chosen. Add the variation as any other afterwards.
 	 *
+	 * Its sides' names name the tabs the page prints.
+	 *
 	 * @param array<string, array<string, mixed>> $mounts The opening variation's mount options by side key.
+	 * @param ProductConfig                       $config Its configuration.
 	 */
-	public function open_on( array $mounts ): void {
+	public function open_on( array $mounts, ProductConfig $config ): void {
 		foreach ( $mounts as $key => $options ) {
 			$this->mounts[ $key ] ??= $options;
 		}
+		self::name_sides( $this->labels, $config );
 	}
 
 	/**
@@ -129,8 +132,13 @@ final class VariationSwitches {
 	 * @param string                              $approval_mode Its approval mode.
 	 * @param string|null                         $variant       The ref of the blank variant it sells; null for none.
 	 * @param int|null                            $page_count    The pages an item of it has, on a book; null for none.
+	 * @param ProductConfig|null                  $config        Its configuration, whose sides' names its tabs take; null to keep the tabs' names.
 	 */
-	public function add_personalised( int $variation_id, array $attributes, array $mounts, string $approval_mode, ?string $variant = null, ?int $page_count = null ): void {
+	public function add_personalised( int $variation_id, array $attributes, array $mounts, string $approval_mode, ?string $variant = null, ?int $page_count = null, ?ProductConfig $config = null ): void {
+		$labels = array();
+		if ( null !== $config ) {
+			self::name_sides( $labels, $config );
+		}
 		$sides = array();
 		foreach ( $mounts as $key => $options ) {
 			$sizes = array_map( fn ( array $size ): int => $this->size_index( $key, $size ), self::print_sizes( $options ) );
@@ -162,6 +170,10 @@ final class VariationSwitches {
 			if ( null !== $value_set ) {
 				// A variation on another set mounts the side again on it.
 				$side['valueSet'] = $value_set;
+			}
+			if ( isset( $labels[ $key ] ) ) {
+				// A variation set up apart may name the side otherwise; the tab follows it.
+				$side['label'] = $labels[ $key ];
 			}
 			$sides[ $key ]       = $side;
 			$this->sized[ $key ] = ( $this->sized[ $key ] ?? true ) && count( $sizes ) <= 1;
@@ -262,6 +274,18 @@ final class VariationSwitches {
 	 */
 	public function side_labels(): array {
 		return $this->labels;
+	}
+
+	/**
+	 * Names each side of the configuration not named yet.
+	 *
+	 * @param array<string, string> $labels Each side's name, by side key.
+	 * @param ProductConfig         $config A configuration.
+	 */
+	private static function name_sides( array &$labels, ProductConfig $config ): void {
+		foreach ( $config->sides as $side ) {
+			$labels[ $side->key ] ??= $side->label;
+		}
 	}
 
 	/**

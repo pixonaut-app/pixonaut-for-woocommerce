@@ -104,6 +104,17 @@ export class SideTabs {
 		}
 	}
 
+	/** Names each side's tab as `labels` names it; a side it names not keeps
+	 *  its name. */
+	rename(labels: Readonly<Record<string, string>>): void {
+		for (const tab of this.tabs) {
+			const label = labels[sideOf(tab)];
+			if (label !== undefined && tab.textContent !== label) {
+				tab.textContent = label;
+			}
+		}
+	}
+
 	/** Shows the selected side's parts and hides the others', including parts
 	 *  made after the tabs started (a preview made above the form). */
 	sync(): void {

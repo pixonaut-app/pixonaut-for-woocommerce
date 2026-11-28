@@ -140,4 +140,13 @@ describe('SideTabs', () => {
 			false,
 		);
 	});
+
+	it('names each tab as the chosen variation names its side, and keeps a name it gives none', () => {
+		const { tabs } = start();
+
+		tabs?.rename({ front: 'Omslag' });
+
+		expect(tab('front').textContent).toBe('Omslag');
+		expect(tab('back').textContent).toBe('back');
+	});
 });

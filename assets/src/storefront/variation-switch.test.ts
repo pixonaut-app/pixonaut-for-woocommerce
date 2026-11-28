@@ -1685,6 +1685,34 @@ describe('ProductDesigner on a variable product', () => {
 		expect(tab('back')?.hidden).toBe(false);
 	});
 
+	it('names the tabs as the chosen variation names its sides', async () => {
+		const { form, container } = start({
+			mounts: TWO_SIDES,
+			variations: {
+				'11': personalised('S', {
+					front: { ...FRONT, label: 'Omslag' },
+					back: { ...FRONT, placementId: 'back', label: 'Januari' },
+				}),
+				'12': personalised('L', {
+					front: { ...FRONT, label: 'Cover' },
+					back: { ...FRONT, placementId: 'back' },
+				}),
+			},
+		});
+		await settle();
+		const names = () =>
+			Array.from(
+				container.querySelectorAll<HTMLElement>('.pixonaut-tabs__tab'),
+				(tab) => tab.textContent,
+			);
+
+		await choose(form, '11');
+		expect(names()).toEqual(['Omslag', 'Januari']);
+
+		await choose(form, '12');
+		expect(names()).toEqual(['Cover', 'Januari']);
+	});
+
 	it('shows the variation’s variant on each side it has, and not on a side it lacks', async () => {
 		const sdk = fakeSdk();
 		const front = fakeDesigner();

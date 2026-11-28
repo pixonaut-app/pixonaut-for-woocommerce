@@ -6,6 +6,9 @@ import type { ArrangedGroups } from './form-groups';
  *  on a blank also names the placements and views the product sells. */
 export type VariationSide = {
 	templateId: string;
+	/** The side's name, which its tab shows while the variation is chosen;
+	 *  absent to keep the tab's name. */
+	label?: string;
 	blankId?: string;
 	placementId?: string;
 	placements?: ProductPlacement[];
@@ -145,6 +148,20 @@ export function followChoices(
 	}
 	settle();
 	return now;
+}
+
+/** The name each of a variation's sides gives its tab, by side key; a
+ *  side that names none is left out. */
+export function sideLabels(
+	sides: Readonly<Record<string, VariationSide>>,
+): Record<string, string> {
+	const labels: Record<string, string> = {};
+	for (const [side, target] of Object.entries(sides)) {
+		if (target.label !== undefined) {
+			labels[side] = target.label;
+		}
+	}
+	return labels;
 }
 
 /**
