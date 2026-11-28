@@ -23,7 +23,8 @@ use WP_UnitTestCase;
 /**
  * A side's own values are kept on the product or variation that holds its
  * setup, apart from the side, and hold only while the side is on the
- * template they were made for.
+ * template they were made for; a variation of its own without values for a
+ * side on its product's template is sold with its product's.
  */
 final class SideValuesTest extends WP_UnitTestCase {
 
@@ -78,6 +79,52 @@ final class SideValuesTest extends WP_UnitTestCase {
 
 		$this->assertSame( self::SET, SideValues::set_of( $this->reload( $following ), self::side( self::TEMPLATE ) ) );
 		$this->assertSame( self::OTHER_SET, SideValues::set_of( $this->reload( $own ), self::side( self::TEMPLATE ) ) );
+	}
+
+	public function test_a_variation_with_its_own_setup_on_its_products_template_and_no_values_of_its_own_is_sold_with_its_products(): void {
+		list( $parent, $following, $own ) = $this->variable();
+		SideValues::replace_on( $parent, array( 'front' => new SideValue( self::TEMPLATE, self::SET, self::VALUES ) ), null );
+
+		$sold = SideValues::sold_with( $this->reload( $own ), self::side( self::TEMPLATE ) );
+		$this->assertSame( self::SET, $sold['value']?->value_set_id );
+		$this->assertSame( SideValues::FROM_PRODUCT, $sold['from'] );
+		$this->assertSame( SideValues::FROM_PRODUCT, SideValues::sold_with( $this->reload( $following ), self::side( self::TEMPLATE ) )['from'] );
+		$this->assertSame( SideValues::FROM_OWN, SideValues::sold_with( $this->reload( $parent ), self::side( self::TEMPLATE ) )['from'] );
+		$this->assertNull( SideValues::sold_with( $this->reload( $own ), self::side( self::TEMPLATE, 'back' ) )['from'], 'a side the product has no values for has none' );
+	}
+
+	public function test_a_variation_with_its_own_values_is_sold_with_them(): void {
+		list( $parent, , $own ) = $this->variable();
+		SideValues::replace_on( $parent, array( 'front' => new SideValue( self::TEMPLATE, self::SET, self::VALUES ) ), null );
+		SideValues::replace_on( $own, array( 'front' => new SideValue( self::TEMPLATE, self::OTHER_SET, self::VALUES ) ), null );
+
+		$sold = SideValues::sold_with( $this->reload( $own ), self::side( self::TEMPLATE ) );
+		$this->assertSame( self::OTHER_SET, $sold['value']?->value_set_id );
+		$this->assertSame( SideValues::FROM_OWN, $sold['from'] );
+	}
+
+	public function test_a_variation_with_its_own_setup_on_another_template_takes_none_of_its_products_values(): void {
+		list( $parent, , $own ) = $this->variable( self::OTHER_TEMPLATE );
+		SideValues::replace_on( $parent, array( 'front' => new SideValue( self::TEMPLATE, self::SET, self::VALUES ) ), null );
+
+		$this->assertNull( SideValues::set_of( $this->reload( $own ), self::side( self::OTHER_TEMPLATE ) ) );
+	}
+
+	public function test_values_left_behind_on_a_product_moved_to_another_template_reach_none_of_its_variations(): void {
+		list( $parent, , $own ) = $this->variable();
+		SideValues::replace_on( $parent, array( 'front' => new SideValue( self::TEMPLATE, self::SET, self::VALUES ) ), null );
+		self::config( self::OTHER_TEMPLATE )->save_to( $parent );
+
+		$this->assertNull( SideValues::set_of( $this->reload( $own ), self::side( self::TEMPLATE ) ) );
+	}
+
+	public function test_changing_a_products_values_changes_what_a_variation_of_its_own_is_drawn_from(): void {
+		list( $parent, , $own ) = $this->variable();
+		$before = ProductPictures::basis( $this->reload( $own ) );
+
+		SideValues::replace_on( $parent, array( 'front' => new SideValue( self::TEMPLATE, self::SET, self::VALUES ) ), null );
+
+		$this->assertNotSame( $before, ProductPictures::basis( $this->reload( $own ) ) );
 	}
 
 	public function test_a_write_over_values_saved_meanwhile_is_refused_and_none_takes_them_off(): void {
@@ -192,9 +239,10 @@ final class SideValuesTest extends WP_UnitTestCase {
 	/**
 	 * A variable product with a variation following it and one with a setup of its own.
 	 *
+	 * @param string $own_template The template the variation of its own is on.
 	 * @return array{0: WC_Product, 1: WC_Product, 2: WC_Product}
 	 */
-	private function variable(): array {
+	private function variable( string $own_template = self::TEMPLATE ): array {
 		$parent = new WC_Product_Variable();
 		$parent->set_name( 'Mug' );
 		$parent->save();
@@ -206,7 +254,7 @@ final class SideValuesTest extends WP_UnitTestCase {
 			$variation->set_regular_price( '10' );
 			$variation->save();
 			if ( $override ) {
-				self::config( self::TEMPLATE, true )->save_to( $variation );
+				self::config( $own_template, true )->save_to( $variation );
 			}
 			$variations[] = $this->reload( $variation );
 		}

@@ -410,22 +410,29 @@ final class ProductSetup {
 				'type'        => array( 'object', 'null' ),
 				'description' => __( 'The side\'s own values for its template\'s layers, by layer id and prop, set with `set-product-values`; null for none.', 'pixonaut-for-woocommerce' ),
 			),
+			'values_from'  => array(
+				'type'        => array( 'string', 'null' ),
+				'enum'        => array( SideValues::FROM_OWN, SideValues::FROM_PRODUCT, null ),
+				'description' => __( 'Whose values the side is sold with: `own`, those set on this product or variation; `product`, a variation\'s product\'s, which a variation with a setup of its own is sold with for a side on the same template that has none of its own; null without values.', 'pixonaut-for-woocommerce' ),
+			),
 		);
 	}
 
 	/**
-	 * A side's own values as a read gives them: none while the side is on
-	 * another template than they were made for.
+	 * The values a side is sold with as a read gives them, and whose they
+	 * are: none while the side is on another template than they were made
+	 * for.
 	 *
 	 * @param WC_Product $product The product or variation sold with the side.
 	 * @param Side       $side    The side.
-	 * @return array{value_set_id: string|null, values: array<string, array<string, mixed>>|null}
+	 * @return array{value_set_id: string|null, values: array<string, array<string, mixed>>|null, values_from: string|null}
 	 */
 	public static function side_values( WC_Product $product, Side $side ): array {
-		$value = SideValues::of( $product, $side );
+		$sold = SideValues::sold_with( $product, $side );
 		return array(
-			'value_set_id' => $value?->value_set_id,
-			'values'       => $value?->values,
+			'value_set_id' => $sold['value']?->value_set_id,
+			'values'       => $sold['value']?->values,
+			'values_from'  => $sold['from'],
 		);
 	}
 

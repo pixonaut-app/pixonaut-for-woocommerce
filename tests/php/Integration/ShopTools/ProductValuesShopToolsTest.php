@@ -199,12 +199,14 @@ final class ProductValuesShopToolsTest extends WP_UnitTestCase {
 					'template_id'  => self::TEMPLATE . '@' . self::VERSION,
 					'value_set_id' => self::SET,
 					'values'       => self::FARMOR,
+					'values_from'  => 'own',
 				),
 				array(
 					'key'          => 'back',
 					'template_id'  => self::TEMPLATE . '@' . self::VERSION,
 					'value_set_id' => null,
 					'values'       => null,
+					'values_from'  => null,
 				),
 			),
 			$answer['sides']
@@ -403,8 +405,29 @@ final class ProductValuesShopToolsTest extends WP_UnitTestCase {
 		$this->assertSame( 'front', $following_read['key'] );
 		$this->assertSame( self::SET, $following_read['value_set_id'] );
 		$this->assertSame( self::FARMOR, $following_read['values'] );
+		$this->assertSame( 'product', $following_read['values_from'] );
 		$this->assertSame( self::OTHER_SET, $own_read['value_set_id'] );
 		$this->assertSame( self::MORMOR, $own_read['values'] );
+		$this->assertSame( 'own', $own_read['values_from'] );
+	}
+
+	public function test_a_variation_with_its_own_setup_and_no_values_of_its_own_reads_its_products(): void {
+		list( $mugs, , $own ) = $this->variable_mug();
+		$this->answers        = array( self::SET );
+
+		$answer = $this->set( self::front_values( $mugs->get_id() ) );
+
+		$this->assertSame( array( 'own' ), array_column( $answer['sides'], 'values_from' ) );
+		$own_read = $this->succeed(
+			'get-product-variation',
+			array(
+				'product_id' => $mugs->get_id(),
+				'id'         => $own->get_id(),
+			)
+		)['pixonaut_setup']['sides'][0];
+		$this->assertSame( self::SET, $own_read['value_set_id'] );
+		$this->assertSame( self::FARMOR, $own_read['values'] );
+		$this->assertSame( 'product', $own_read['values_from'] );
 	}
 
 	/**

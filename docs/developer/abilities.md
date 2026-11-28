@@ -134,8 +134,9 @@ the setup the variation is sold under: `{own_setup, blank_id, sides}`,
 `own_setup` false when it follows its product, whose `blank_id` and `sides`
 it then gives; each side as `set-product-setup` takes it, with only
 `key`, `template_id`, `template_pinned`, `placement_id`, `label` and `mode`,
-and the side's own `value_set_id` and `values` (null for none) as
-`set-product-values` sets them. `get-product` and `list-products` add
+and the `value_set_id` and `values` (null for none) the side is sold
+with, as `set-product-values` sets them, with `values_from`: `own` for
+the variation's own, `product` for its product's, null for none. `get-product` and `list-products` add
 `pixonaut_setup` to each product too, `{blank_id, sides}`, its sides in the
 same terms. Dates in an answer are RFC 3339 with their offset: a field
 ending in `_gmt` in UTC, any other in the site's timezone, where the route
@@ -474,13 +475,17 @@ it; the product's pictures are drawn with it, and the cart refuses a design
 made without it. Values are kept while the side stays on that template; a
 side moved to another template has none. A variation that follows its
 product is sold with its product's values, and a call naming one is
-refused. So is a product without a Pixonaut setup, a side it does not have,
+refused. One with a setup of its own, most often only for another print
+size or blank, is sold with its own values for a side, and with its
+product's for a side it has none for while both sides are on the same
+template. So is a product without a Pixonaut setup, a side it does not have,
 a side given twice, a side without a template, values in another shape,
 and any value Pixonaut refuses, named by side, layer and prop: the call
 says every problem and saves nothing. When Pixonaut cannot be asked,
 nothing is saved either. The
 answer is every side of the product or variation, with its `template_id`,
-`value_set_id` and `values`, null where it has none.
+the `value_set_id` and `values` it is sold with, null where it has none,
+and `values_from`, whose they are.
 
 `get-product-split-listing` reads what the product's Attributes tab shows
 for [listing each value as its own product](../../merchant/split-listings/):

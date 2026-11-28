@@ -205,6 +205,7 @@ final class VariationSetupShopToolsTest extends WP_UnitTestCase {
 					'placement_id'    => 'front',
 					'value_set_id'    => null,
 					'values'          => null,
+					'values_from'     => null,
 				),
 			),
 		);
@@ -221,6 +222,7 @@ final class VariationSetupShopToolsTest extends WP_UnitTestCase {
 					'placement_id'    => null,
 					'value_set_id'    => null,
 					'values'          => null,
+					'values_from'     => null,
 				),
 			),
 		);

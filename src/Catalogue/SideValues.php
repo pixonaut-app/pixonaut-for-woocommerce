@@ -20,9 +20,12 @@ use WC_Product;
  * apart from the configuration, which the product screen, `set-product-setup`
  * and variation generation each build anew, so none of them drops them.
  *
- * A variation that follows its product is sold with its product's values; a
- * side's values hold only while the side is on the template they were made
- * for. A write replaces the document only while it is still the one read,
+ * A variation that follows its product is sold with its product's values.
+ * One with a setup of its own is sold with its own values for a side, and,
+ * for a side it has none for, with its product's for the side of that key
+ * while both sides are on the template those were made for: a setup of its
+ * own is most often only another print size or blank. A side's values hold
+ * only while the side is on the template they were made for. A write replaces the document only while it is still the one read,
  * so a slow writer never overwrites values saved after it read.
  *
  * Stored as `{v: 1, sides: {<key>: {template, valueSet, values}}}`.
@@ -42,17 +45,25 @@ final class SideValues {
 	private const LOCK_PREFIX = 'pixonaut_side_values_';
 
 	/**
-	 * The values a side is sold with, under the configuration it is sold
-	 * under: a variation's own when it has a setup of its own, else its
-	 * product's; null when the side has none, or its values are for another
-	 * template than it is on now.
+	 * Where the values a side is sold with come from: the product or
+	 * variation's own.
+	 */
+	public const FROM_OWN = 'own';
+
+	/**
+	 * Where the values a side is sold with come from: a variation's product.
+	 */
+	public const FROM_PRODUCT = 'product';
+
+	/**
+	 * The values a side is sold with (see the class): null when the side has
+	 * none, or its values are for another template than it is on now.
 	 *
 	 * @param WC_Product $product A product or variation.
 	 * @param Side       $side    One of the sides it is sold with.
 	 */
 	public static function of( WC_Product $product, Side $side ): ?SideValue {
-		$value = self::stored_on( self::holder( $product ) )[ $side->key ] ?? null;
-		return null !== $value && $value->applies_to( $side ) ? $value : null;
+		return self::sold_with( $product, $side )['value'];
 	}
 
 	/**
@@ -66,16 +77,60 @@ final class SideValues {
 	}
 
 	/**
-	 * Where the values a product or variation is sold with are kept: a
-	 * variation's own when it has a setup of its own, else its product's.
+	 * The values a side is sold with and where they come from:
+	 * `FROM_OWN`, `FROM_PRODUCT`, or null with none.
 	 *
 	 * @param WC_Product $product A product or variation.
+	 * @param Side       $side    One of the sides it is sold with.
+	 * @return array{value: SideValue|null, from: string|null}
 	 */
-	public static function holder( WC_Product $product ): WC_Product {
-		if ( ! $product->is_type( 'variation' ) || ProductConfig::stored_on( $product )->override ) {
-			return $product;
+	public static function sold_with( WC_Product $product, Side $side ): array {
+		$parent = $product->is_type( 'variation' ) ? ProductVariants::parent_of( $product ) : null;
+		if ( null === $parent ) {
+			return self::found( self::applying( $product, $side ), self::FROM_OWN );
 		}
-		return ProductVariants::parent_of( $product ) ?? $product;
+		if ( ! ProductConfig::stored_on( $product )->override ) {
+			return self::found( self::applying( $parent, $side ), self::FROM_PRODUCT );
+		}
+		$own = self::applying( $product, $side );
+		if ( null !== $own ) {
+			return self::found( $own, self::FROM_OWN );
+		}
+		$value = self::applying( $parent, $side );
+		if ( null === $value ) {
+			return self::found( null, null );
+		}
+		// The product's values hold for the variation's side only while the product's own side of that key is on their template too.
+		foreach ( ProductConfig::stored_on( $parent )->sides as $parent_side ) {
+			if ( $parent_side->key === $side->key && $value->applies_to( $parent_side ) ) {
+				return self::found( $value, self::FROM_PRODUCT );
+			}
+		}
+		return self::found( null, null );
+	}
+
+	/**
+	 * The values a product or variation itself keeps for a side, while they
+	 * are for the template the side is on.
+	 *
+	 * @param WC_Product $product A product or variation.
+	 * @param Side       $side    The side.
+	 */
+	private static function applying( WC_Product $product, Side $side ): ?SideValue {
+		$value = self::stored_on( $product )[ $side->key ] ?? null;
+		return null !== $value && $value->applies_to( $side ) ? $value : null;
+	}
+
+	/**
+	 * @param SideValue|null $value The values found.
+	 * @param string|null    $from  Where they come from.
+	 * @return array{value: SideValue|null, from: string|null}
+	 */
+	private static function found( ?SideValue $value, ?string $from ): array {
+		return array(
+			'value' => $value,
+			'from'  => null === $value ? null : $from,
+		);
 	}
 
 	/**
