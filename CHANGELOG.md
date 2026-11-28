@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.39.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.38.1...v1.39.0) (2026-11-28)
+
+
+### Features
+
+* **storefront:** a designer link opens on its product's values ([#444](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/444)) ([e17e892](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/e17e89222b26e407e5cfd753ff69d6ad01a2e7d7))
+
+
+### Bug Fixes
+
+* **contracts:** pin Pixonaut API 16.0.0 and SDK 0.51.0 ([#449](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/449)) ([8344619](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/8344619c44c518a7de523b55b7e780fe96860fc7))
+* **contracts:** pin Pixonaut SDK 0.50.0 ([#447](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/447)) ([459ac7e](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/459ac7ec7f0c75bd96ac2a786017ab414e853184))
+
 ## [1.38.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.38.0...v1.38.1) (2026-11-28)
 
 
