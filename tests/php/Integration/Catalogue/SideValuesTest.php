@@ -134,7 +134,7 @@ final class SideValuesTest extends WP_UnitTestCase {
 
 	public function test_changing_a_products_values_changes_what_a_variation_of_its_own_is_drawn_from(): void {
 		list( $parent, , $own ) = $this->variable();
-		$before = ProductPictures::basis( $this->reload( $own ) );
+		$before                 = ProductPictures::basis( $this->reload( $own ) );
 
 		SideValues::replace_on( $parent, array( 'front' => new SideValue( self::TEMPLATE, self::SET, self::VALUES ) ), null );
 
