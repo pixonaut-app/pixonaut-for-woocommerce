@@ -331,6 +331,30 @@ final class ShowcaseShopToolsTest extends WP_UnitTestCase {
 		$this->assertSame( array(), ShowcaseImages::on( $this->reload( $product ) ), 'the sets are not saved either' );
 	}
 
+	public function test_more_pictures_than_a_product_shows_with_the_side_pictures_it_keeps_is_invalid_input(): void {
+		$product = $this->two_sided();
+		SidePictures::save( $product, array( array( 'side' => 'back' ) ) );
+		$sets = array();
+		for ( $set = 0; $set < ShowcaseImages::MAX_IMAGES; $set++ ) {
+			$sets[] = array(
+				'id'   => 'sc_' . $set,
+				'name' => 'Set ' . $set,
+			);
+		}
+		$this->answer_sets( $sets );
+
+		$answer = $this->call(
+			self::SET,
+			array(
+				'product_id' => $product->get_id(),
+				'images'     => array_map( static fn ( array $set ): array => array( 'id' => $set['id'] ), $sets ),
+			)
+		);
+
+		$this->assert_invalid_input( $answer );
+		$this->assertSame( array(), ShowcaseImages::on( $this->reload( $product ) ) );
+	}
+
 	/**
 	 * Answers the next `GET /v1/templates/{id}` with the sets.
 	 *

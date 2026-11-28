@@ -640,7 +640,8 @@ the values that side is sold with, on the first view of the side's
 placement the product is shown in, or flat. It replaces the ones the
 product has; left out, they are kept. It refuses a side the product does
 not have, naming those it has: the sides of the variation a variable
-product is pictured as. The answer gives them in `side_pictures`.
+product is pictured as; and more than 10 pictures in all, the side pictures
+it keeps counted. The answer gives them in `side_pictures`.
 
 `get-product-picture-views` reads what a product's or variation's images are
 drawn on: `picture_view`, the image drawn while no set is chosen (on a

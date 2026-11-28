@@ -11,6 +11,7 @@ namespace Pixonaut\WooCommerce\Abilities;
 
 use Pixonaut\WooCommerce\Admin\ShowcaseField;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Catalogue\PicturedVariation;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ShowcaseImages;
 use Pixonaut\WooCommerce\Catalogue\Side;
@@ -183,10 +184,23 @@ final class SetProductShowcase implements Ability {
 		}
 		$sides = null;
 		if ( is_array( $input['side_pictures'] ?? null ) ) {
-			$sides = self::side_pictures( $product, $input['side_pictures'], $on_flat );
+			$sides = self::side_pictures( $product, $input['side_pictures'] );
 			if ( $sides instanceof WP_Error ) {
 				return $sides;
 			}
+		}
+		// Without a set, the product still shows its first side's picture.
+		$shown = max( count( $images ), 1 ) + count( $sides ?? SidePictures::on( $product ) );
+		if ( $shown > ShowcaseImages::MAX_IMAGES ) {
+			return new WP_Error(
+				'pixonaut_wc_ability_too_many_pictures',
+				sprintf(
+					/* translators: 1: how many pictures were asked for, e.g. 12; 2: how many a product shows at most, e.g. 10. */
+					__( 'That is %1$d pictures, and a product shows at most %2$d: its showcase sets, or its first side\'s picture, and the pictures of its other sides. Name fewer, or take side pictures off with `side_pictures`.', 'pixonaut-for-woocommerce' ),
+					$shown,
+					ShowcaseImages::MAX_IMAGES
+				)
+			);
 		}
 		ShowcaseImages::save( $product, $images );
 		if ( null !== $sides ) {
@@ -199,17 +213,18 @@ final class SetProductShowcase implements Ability {
 	}
 
 	/**
-	 * The side pictures posted, each a side the product's gallery can show.
+	 * The side pictures posted, each a side the product's gallery can show:
+	 * flat when what it is pictured as has no blank.
 	 *
 	 * @param WC_Product   $product The product.
 	 * @param array<mixed> $posted  The side pictures as posted.
-	 * @param bool         $on_flat Whether the product has no blank, so each is drawn flat.
 	 *
 	 * @return list<array{side: string, kind: string}>|WP_Error
 	 */
-	private static function side_pictures( WC_Product $product, array $posted, bool $on_flat ): array|WP_Error {
-		$keys   = array_map( static fn ( Side $side ): string => $side->key, SidePictures::sides_of( $product ) );
-		$chosen = array();
+	private static function side_pictures( WC_Product $product, array $posted ): array|WP_Error {
+		$on_flat = null === ProductConfig::config_for( PicturedVariation::of( $product ) ?? $product )->blank_id;
+		$keys    = array_map( static fn ( Side $side ): string => $side->key, SidePictures::sides_of( $product ) );
+		$chosen  = array();
 		foreach ( $posted as $row ) {
 			$side = is_array( $row ) && is_string( $row['side'] ?? null ) ? $row['side'] : '';
 			if ( ! in_array( $side, $keys, true ) ) {

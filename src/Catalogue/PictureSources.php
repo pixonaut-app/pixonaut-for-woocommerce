@@ -106,25 +106,27 @@ final class PictureSources {
 		}
 		$sources = self::with_value_set( $product, $sources );
 		if ( ! $chooser->is_type( 'variation' ) ) {
-			$sources = array_merge( $sources, $this->of_sides( $product, SidePictures::on( $chooser ) ) );
+			$sources = array_merge( $sources, $this->of_sides( $product, SidePictures::on( $chooser ), ShowcaseImages::MAX_IMAGES - count( $sources ) ) );
 		}
-		return array_slice( $sources, 0, ShowcaseImages::MAX_IMAGES );
+		return $sources;
 	}
 
 	/**
 	 * What the pictures of the product's other sides are drawn from, each
-	 * with the value set of its side; a side the product no longer has, or
-	 * one with no template, draws none.
+	 * with the value set of its side, as many as there are slots for; a side
+	 * the product no longer has, or one with no template, draws none, and
+	 * one past the slots is not read.
 	 *
 	 * @param WC_Product                              $product The product, or the variation a variable product is drawn as.
 	 * @param list<array{side: string, kind: string}> $chosen  The sides chosen (`SidePictures`).
+	 * @param int                                     $slots   How many pictures the product has left room for.
 	 *
 	 * @return list<array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, value_set?: string}>
 	 *
 	 * @throws ApiException When the blank's views cannot be read.
 	 */
-	private function of_sides( WC_Product $product, array $chosen ): array {
-		if ( array() === $chosen ) {
+	private function of_sides( WC_Product $product, array $chosen, int $slots ): array {
+		if ( array() === $chosen || $slots <= 0 ) {
 			return array();
 		}
 		$by_key = array();
@@ -143,6 +145,9 @@ final class PictureSources {
 			}
 			$set       = SideValues::set_of( $product, $side );
 			$sources[] = $source + ( null === $set ? array() : array( 'value_set' => $set ) );
+			if ( count( $sources ) === $slots ) {
+				break;
+			}
 		}
 		return $sources;
 	}

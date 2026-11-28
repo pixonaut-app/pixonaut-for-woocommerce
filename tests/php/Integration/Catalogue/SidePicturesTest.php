@@ -130,6 +130,40 @@ final class SidePicturesTest extends WP_UnitTestCase {
 		$this->assertCount( 1, ActionSchedulerRunner::pending( ProductPictures::ACTION ) );
 	}
 
+	public function test_new_values_on_a_chosen_side_draw_the_pictures_again(): void {
+		$product = $this->product( self::two_sided() );
+		SidePictures::save( $product, array( array( 'side' => 'back' ) ) );
+		$this->recorder->raw( 200, self::png(), 'image/png' );
+		$this->recorder->raw( 200, self::png(), 'image/png' );
+		ActionSchedulerRunner::run_pending( ProductPictures::ACTION );
+		$this->assertSame( array(), ActionSchedulerRunner::pending( ProductPictures::ACTION ) );
+
+		SideValues::replace_on( $this->reload( $product ), array( 'back' => self::back_values() ), null );
+
+		$this->assertCount( 1, ActionSchedulerRunner::pending( ProductPictures::ACTION ) );
+	}
+
+	public function test_a_side_past_a_full_gallery_is_not_read(): void {
+		$product = $this->product( self::two_sided() );
+		$sets    = array();
+		for ( $set = 0; $set < ShowcaseImages::MAX_IMAGES; $set++ ) {
+			$sets[] = array(
+				'id'   => 'showcase-' . $set,
+				'name' => 'Set ' . $set,
+				'kind' => ShowcaseImages::PREVIEW,
+			);
+			$this->recorder->raw( 200, self::png(), 'image/png' );
+		}
+		ShowcaseImages::save( $product, $sets );
+		SidePictures::save( $product, array( array( 'side' => 'back' ) ) );
+
+		ActionSchedulerRunner::run_pending( ProductPictures::ACTION );
+
+		$urls = array_column( $this->recorder->requests, 'url' );
+		$this->assertCount( ShowcaseImages::MAX_IMAGES, $urls );
+		$this->assertSame( array(), array_filter( $urls, static fn ( string $url ): bool => str_contains( $url, self::BACK_TEMPLATE ) ) );
+	}
+
 	public function test_a_variable_products_sides_are_those_of_the_variation_it_is_pictured_as_with_its_values(): void {
 		$product   = new WC_Product_Variable();
 		$attribute = new WC_Product_Attribute();
