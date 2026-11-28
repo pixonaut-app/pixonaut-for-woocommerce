@@ -24,7 +24,6 @@ use Pixonaut\WooCommerce\Abilities\SetShippingMethod;
 use Pixonaut\WooCommerce\Abilities\SetAttributeChoicePrice;
 use Pixonaut\WooCommerce\Abilities\SetAttributeQueryName;
 use Pixonaut\WooCommerce\Abilities\SetProductPictureView;
-use Pixonaut\WooCommerce\Abilities\SetProductSetup;
 use Pixonaut\WooCommerce\Abilities\SetProductShowcase;
 use Pixonaut\WooCommerce\Abilities\SetProductSplitListing;
 use Pixonaut\WooCommerce\Abilities\SetVariationPrintSize;
@@ -62,7 +61,7 @@ final class ShopTools {
 	 * @param Closure $showcases Makes what lists a template's showcase sets, once a call needs it.
 	 * @param Closure $views     Makes the ability that reads what a product's images are drawn on, which the one that sets it and the one that chooses showcase sets check views with, once a call needs it.
 	 * @param Closure $print_size Makes the ability that sets a variation's print size, once a call needs it.
-	 * @param Closure $setup      Makes the ability that sets up a product or variation, once a call needs it.
+	 * @param Closure $setup      Makes the abilities that set up a product or variation, and many variations alike, once a call needs them.
 	 * @param Closure $pricing    Makes the abilities that read and change the pricing settings and a product's prices, once a call needs them.
 	 * @param Closure $settings   Makes the abilities that read and change the plugin's settings and the active theme's, once a call needs them.
 	 * @param Closure $form       Makes the abilities that read and arrange a product's designer form and set its own values, once a call needs them.
@@ -73,7 +72,7 @@ final class ShopTools {
 	 * @phpstan-param Closure(): ShowcaseField $showcases
 	 * @phpstan-param Closure(): GetProductPictureViews $views
 	 * @phpstan-param Closure(): SetVariationPrintSize $print_size
-	 * @phpstan-param Closure(): SetProductSetup $setup
+	 * @phpstan-param Closure(): list<Ability> $setup
 	 * @phpstan-param Closure(): list<Ability> $pricing
 	 * @phpstan-param Closure(): list<Ability> $settings
 	 * @phpstan-param Closure(): list<Ability> $form
@@ -110,7 +109,7 @@ final class ShopTools {
 		}
 		$links = ( $this->links )();
 		$views = ( $this->views )();
-		foreach ( array( new LinkProduct( $links ), new SetVariationVariants( $links, ( $this->variants )() ), new SetProductShowcase( $links, ( $this->showcases )(), $views ), $views, new SetProductPictureView( $views ), ( $this->print_size )(), ( $this->setup )(), new GetProductSplitListing(), new SetProductSplitListing(), new SetAttributeSplitListing(), new GetAttributeQueryNames(), new SetAttributeQueryName(), new GetAttributeChoicePrices(), new SetAttributeChoicePrice(), new GetShipping(), new SetShippingMethod(), ...( $this->pricing )(), ...( $this->settings )(), ...( $this->form )(), ...( $this->variations )(), ( $this->pictures )() ) as $tool ) {
+		foreach ( array( new LinkProduct( $links ), new SetVariationVariants( $links, ( $this->variants )() ), new SetProductShowcase( $links, ( $this->showcases )(), $views ), $views, new SetProductPictureView( $views ), ( $this->print_size )(), ...( $this->setup )(), new GetProductSplitListing(), new SetProductSplitListing(), new SetAttributeSplitListing(), new GetAttributeQueryNames(), new SetAttributeQueryName(), new GetAttributeChoicePrices(), new SetAttributeChoicePrice(), new GetShipping(), new SetShippingMethod(), ...( $this->pricing )(), ...( $this->settings )(), ...( $this->form )(), ...( $this->variations )(), ( $this->pictures )() ) as $tool ) {
 			$tools[ $tool->name() ] = $tool;
 		}
 		return $tools;

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-28T13:24:16+00:00\n"
+"POT-Creation-Date: 2026-11-28T16:54:54+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: sv_SE\n"
@@ -2512,8 +2512,8 @@ msgid ""
 msgstr ""
 "På en sida med sidlayouter: den värdeuppsättning som Pixonaut gjort av "
 "värdena för varje layouts lager, per layoutens mall-id utan version; en "
-"layout utan något av lagren har ingen, och det har inte heller någon "
-"layout utan värden. Saknas på en sida utan layouter."
+"layout utan något av lagren har ingen, och det har inte heller någon layout "
+"utan värden. Saknas på en sida utan layouter."
 
 #: src/Abilities/ProductSetup.php:421
 msgid ""
@@ -3304,8 +3304,8 @@ msgstr "`price_changes` är ett av %1$s för #%2$d."
 msgid "Set up a product for Pixonaut"
 msgstr "Ställ in en produkt för Pixonaut"
 
-#: src/Abilities/SetProductSetup.php:63
 #
+#: src/Abilities/SetProductSetup.php:63
 msgid ""
 "Sets up a simple or variable product, or one variation, as its Pixonaut tab "
 "does: the blank, every side (template, placement, print sizes, start size, "
@@ -3318,18 +3318,17 @@ msgid ""
 "bought, and the answer says why. Page layouts that cannot be offered refuse "
 "the call instead, and nothing is saved."
 msgstr ""
-"Ställer in en enkel eller variabel produkt, eller en enskild variant, så "
-"som dess Pixonaut-flik gör: grundprodukten, varje sida (mall, placering, "
-"tryckstorlekar, startstorlek, formulärordning, personaliserad eller "
-"fast), layout, formulärlayout, godkännandesätt, designytans form, "
-"designverktygets vyer, tryckeriet och grundproduktvarianten. Ett fält som "
-"utelämnas behåller sitt värde, så läs inställningarna med `list-products` "
-"och skicka det som ändras. En variant som får något inställningsfält får "
-"egna inställningar; `own_setup` false gör att den åter följer produktens. "
-"Pixonaut kontrollerar inställningarna; en produkt som inte klarar en "
-"kontroll sparas men går inte att köpa, och svaret anger varför. "
-"Sidlayouter som inte kan erbjudas avvisar i stället anropet, och inget "
-"sparas."
+"Ställer in en enkel eller variabel produkt, eller en enskild variant, så som "
+"dess Pixonaut-flik gör: grundprodukten, varje sida (mall, placering, "
+"tryckstorlekar, startstorlek, formulärordning, personaliserad eller fast), "
+"layout, formulärlayout, godkännandesätt, designytans form, designverktygets "
+"vyer, tryckeriet och grundproduktvarianten. Ett fält som utelämnas behåller "
+"sitt värde, så läs inställningarna med `list-products` och skicka det som "
+"ändras. En variant som får något inställningsfält får egna inställningar; "
+"`own_setup` false gör att den åter följer produktens. Pixonaut kontrollerar "
+"inställningarna; en produkt som inte klarar en kontroll sparas men går inte "
+"att köpa, och svaret anger varför. Sidlayouter som inte kan erbjudas avvisar "
+"i stället anropet, och inget sparas."
 
 #: src/Abilities/SetProductSetup.php:74
 msgid ""
@@ -3404,7 +3403,7 @@ msgstr ""
 "grundproduktvarianten som den säljer, angiven med dess `v_…`-id; tom för att "
 "matcha den mot produktens attribut."
 
-#: src/Abilities/SetProductSetup.php:152
+#: src/Abilities/SetProductSetup.php:166
 msgid ""
 "A variation follows its product for option_groups and group_numbers: set "
 "them on the product."
@@ -3692,8 +3691,8 @@ msgstr "Bilden för kort %s är ingen offentlig URL."
 msgid "Set a product's own values for its template"
 msgstr "Ange en produkts egna värden för dess mall"
 
-#: src/Abilities/SetProductValues.php:76
 #
+#: src/Abilities/SetProductValues.php:76
 msgid ""
 "Sets the values a simple or variable product, or a variation with a setup of "
 "its own (`variation_id`), gives its sides' template layers, by layer id and "
@@ -3719,25 +3718,24 @@ msgstr ""
 "Anger de värden som en enkel eller variabel produkt, eller en variant med "
 "egna inställningar (`variation_id`), ger mallens lager på sina sidor, per "
 "lager-id och egenskap, t.ex. `{\"title\": {\"content\": \"farmor\"}}`: en "
-"och samma mall säljer då lika många produkter, var och en i sitt eget "
-"tema eller till sin egen mottagare. Ett värde på en egenskap som kunden "
-"får ändra är där designverktyget börjar; ett på en fast egenskap trycks "
-"som det är angivet. Varje sida som anges med sin `key` får sina `values`, "
-"eller null (eller ett tomt objekt) för att ta bort dem; en sida som "
-"utelämnas behåller sina egna. På en sida med sidlayouter gäller värdena "
-"för varje layout: varje layout får de värden som gäller de lager den har, "
-"och ett lager som varken sidans mall eller någon layout har avvisar "
-"anropet. Pixonaut bedömer värdena mot sidans malversion: ett lager eller "
-"en egenskap som mallen inte har, eller ett värde som dess regler avvisar, "
-"gör att hela anropet avvisas, och svaret anger varje sådan per sida, "
-"lager och egenskap. Detsamma gäller en sida som produkten inte har, en "
-"sida utan mall, en produkt utan Pixonaut-inställning och en variant som "
-"följer sin produkt. En produkts värden når dess varianter: de som följer "
-"den och, för en sida de saknar egna värden för, de med egna inställningar "
-"vars sida finns på samma mall som produktens. Svaret är varje sida med "
-"dess `template_id`, det `value_set_id` som Pixonaut har gjort av värdena "
-"den säljs med, dess `values`, null där den inte har några, och "
-"`values_from`, vems de är."
+"och samma mall säljer då lika många produkter, var och en i sitt eget tema "
+"eller till sin egen mottagare. Ett värde på en egenskap som kunden får ändra "
+"är där designverktyget börjar; ett på en fast egenskap trycks som det är "
+"angivet. Varje sida som anges med sin `key` får sina `values`, eller null "
+"(eller ett tomt objekt) för att ta bort dem; en sida som utelämnas behåller "
+"sina egna. På en sida med sidlayouter gäller värdena för varje layout: varje "
+"layout får de värden som gäller de lager den har, och ett lager som varken "
+"sidans mall eller någon layout har avvisar anropet. Pixonaut bedömer värdena "
+"mot sidans malversion: ett lager eller en egenskap som mallen inte har, "
+"eller ett värde som dess regler avvisar, gör att hela anropet avvisas, och "
+"svaret anger varje sådan per sida, lager och egenskap. Detsamma gäller en "
+"sida som produkten inte har, en sida utan mall, en produkt utan Pixonaut-"
+"inställning och en variant som följer sin produkt. En produkts värden når "
+"dess varianter: de som följer den och, för en sida de saknar egna värden "
+"för, de med egna inställningar vars sida finns på samma mall som produktens. "
+"Svaret är varje sida med dess `template_id`, det `value_set_id` som Pixonaut "
+"har gjort av värdena den säljs med, dess `values`, null där den inte har "
+"några, och `values_from`, vems de är."
 
 #: src/Abilities/SetProductValues.php:87
 msgid ""
@@ -4090,13 +4088,13 @@ msgid ""
 "`template_id` itself; any other is refused. Empty or left out for none."
 msgstr ""
 "På en sida vars tryckposition trycks som sidor, till exempel en fotoboks "
-"inlaga: de andra mallar som en sida får designas på (layouter som två "
-"eller fyra foton), så som `template_id` tar dem, i den ordning kunden ser "
-"dem; varje sida börjar på `template_id`. Var och en följer sin senaste "
+"inlaga: de andra mallar som en sida får designas på (layouter som två eller "
+"fyra foton), så som `template_id` tar dem, i den ordning kunden ser dem; "
+"varje sida börjar på `template_id`. Var och en följer sin senaste "
 "publicerade version, eller stannar på den angivna versionen när "
 "`template_pinned` är true. Högst %d, var och en i `template_id`s "
-"bildförhållande, ingen två gånger och inte `template_id` själv; alla "
-"andra avvisas. Tom eller utelämnad för inga."
+"bildförhållande, ingen två gånger och inte `template_id` själv; alla andra "
+"avvisas. Tom eller utelämnad för inga."
 
 #. translators: %s: what the empty choice follows, e.g. "empty for the template's own setting".
 #: src/Abilities/SetupFields.php:254
@@ -4254,6 +4252,41 @@ msgstr ""
 "Varianten har egna inställningar utan grundprodukt, så det finns ingen "
 "placering vars storlek den kan få: ge den en storlek, eller låt den följa "
 "sin produkt igen med set-product-setup."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/SetVariationsSetup.php:58
+msgid "Set up many variations for Pixonaut"
+msgstr "Ställ in många varianter för Pixonaut"
+
+#: src/Abilities/SetVariationsSetup.php:59
+msgid ""
+"Sets the same setup on many variations of one variable product, each as `set-"
+"product-setup` sets one variation: a field left out keeps what that "
+"variation has, so each keeps its own blank variant, and its own blank unless "
+"`blank_id` is given. Every id must be a variation of the product, or nothing "
+"is saved. The answer lists each variation's setup, or why it was refused, in "
+"the order given."
+msgstr "Ger många varianter av en variabel produkt samma inställning, var och en som `set-product-setup` ställer in en variant: ett fält som utelämnas behåller det varianten har, så varje variant behåller sin egen blankvariant, och sin egen blank om inte `blank_id` anges. Varje id måste vara en variant av produkten, annars sparas ingenting. Svaret visar varje variants inställning, eller varför den avvisades, i angiven ordning."
+
+#: src/Abilities/SetVariationsSetup.php:65
+msgid "The variable product."
+msgstr "Den variabla produkten."
+
+#: src/Abilities/SetVariationsSetup.php:70
+msgid "Its variations to set up, each once."
+msgstr "Dess varianter att ställa in, var och en en gång."
+
+#. translators: %s: the ids given, comma-separated.
+#: src/Abilities/SetVariationsSetup.php:114
+#, php-format
+msgid "These are not variations of the product: %s. Nothing was saved."
+msgstr "Detta är inte varianter av produkten: %s. Ingenting sparades."
+
+#: src/Abilities/SetVariationsSetup.php:166
+msgid ""
+"Why this variation was refused, which leaves it as it was; absent once it is "
+"set up."
+msgstr "Varför varianten avvisades, vilket lämnar den som den var; saknas när den är inställd."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetVariationVariants.php:56
@@ -13145,15 +13178,15 @@ msgstr "Mall"
 msgid "Search for a template"
 msgstr "Sök efter en mall"
 
+#
 #. translators: Label of the field picking the other templates (layouts, such as two or four photos) a page of a book may be designed on. Admin product page.
 #: templates/admin/product-side.php:128
-#
 msgid "Page layouts"
 msgstr "Sidlayouter"
 
+#
 #. translators: Placeholder of the search dropdown picking a book page's other layouts. Admin product page.
 #: templates/admin/product-side.php:132
-#
 msgid "Search for templates"
 msgstr "Sök efter mallar"
 

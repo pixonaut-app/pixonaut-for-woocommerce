@@ -148,6 +148,20 @@ final class SetProductSetup implements Ability {
 			return self::layouts_refused( $checked, false ) ?? $this->links->save_checked( $product, $checked, $variant );
 		}
 
+		return $this->set_variation( $product, $input, $variant );
+	}
+
+	/**
+	 * Sets one variation's setup from the ability's input, as `execute()`
+	 * does for a variation: its own, made from the fields given over what
+	 * its panel shows, or its product's again.
+	 *
+	 * @param WC_Product           $product The variation.
+	 * @param array<string, mixed> $input   As the input schema, without `product_id`.
+	 * @param string|null          $variant Its blank variant, `''` to match it by options; null keeps what it has.
+	 * @return array<string, mixed>|WP_Error As `ProductLinks::summary()`.
+	 */
+	public function set_variation( WC_Product $product, array $input, ?string $variant = null ): array|WP_Error {
 		if ( array() !== array_intersect_key( $input, array_flip( SetupFields::PRODUCT_KEYS ) ) ) {
 			return new WP_Error( 'pixonaut_wc_ability_product_only', __( 'A variation follows its product for option_groups and group_numbers: set them on the product.', 'pixonaut-for-woocommerce' ) );
 		}

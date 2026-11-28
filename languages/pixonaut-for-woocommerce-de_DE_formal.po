@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-28T13:24:16+00:00\n"
+"POT-Creation-Date: 2026-11-28T16:54:54+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -2622,10 +2622,9 @@ msgid ""
 "on a side without layouts."
 msgstr ""
 "Bei einer Seite mit Seitenlayouts: die Layouts, nach Vorlagen-ID ohne "
-"Version, deren Wertesatz Pixonaut abgelehnt hat oder nicht anfragen "
-"konnte. Solange eines aufgeführt ist, kann das Produkt nicht gekauft "
-"werden; eine erneute Prüfung erstellt den Satz neu. Fehlt bei einer Seite "
-"ohne Layouts."
+"Version, deren Wertesatz Pixonaut abgelehnt hat oder nicht anfragen konnte. "
+"Solange eines aufgeführt ist, kann das Produkt nicht gekauft werden; eine "
+"erneute Prüfung erstellt den Satz neu. Fehlt bei einer Seite ohne Layouts."
 
 #: src/Abilities/ProductSetup.php:426
 msgid ""
@@ -3434,8 +3433,8 @@ msgstr "`price_changes` ist für #%2$d einer der Werte %1$s."
 msgid "Set up a product for Pixonaut"
 msgstr "Produkt für Pixonaut einrichten"
 
-#: src/Abilities/SetProductSetup.php:63
 #
+#: src/Abilities/SetProductSetup.php:63
 msgid ""
 "Sets up a simple or variable product, or one variation, as its Pixonaut tab "
 "does: the blank, every side (template, placement, print sizes, start size, "
@@ -3448,19 +3447,19 @@ msgid ""
 "bought, and the answer says why. Page layouts that cannot be offered refuse "
 "the call instead, and nothing is saved."
 msgstr ""
-"Richtet ein einfaches oder variables Produkt oder eine einzelne Variante "
-"so ein wie sein Pixonaut-Tab: den Rohling, jede Seite (Vorlage, "
-"Druckposition, Druckgrößen, Startgröße, Formularanordnung, personalisiert "
-"oder fest), Layout, Formular-Layout, Freigabeart, Form der "
-"Gestaltungsfläche, die Ansichten des Designers, die Druckerei und die "
-"Rohling-Variante. Ein weggelassenes Feld behält seinen Wert; daher die "
-"Einrichtung mit `list-products` lesen und senden, was sich ändert. Eine "
-"Variante, die irgendein Einrichtungsfeld erhält, bekommt eine eigene "
-"Einrichtung; `own_setup` false lässt sie wieder ihrem Produkt folgen. "
-"Pixonaut prüft die Einrichtung; ein Produkt, das eine Prüfung nicht "
-"besteht, wird gespeichert, kann aber nicht gekauft werden, und die "
-"Antwort nennt den Grund. Seitenlayouts, die nicht angeboten werden "
-"können, lehnen stattdessen den Aufruf ab, und nichts wird gespeichert."
+"Richtet ein einfaches oder variables Produkt oder eine einzelne Variante so "
+"ein wie sein Pixonaut-Tab: den Rohling, jede Seite (Vorlage, Druckposition, "
+"Druckgrößen, Startgröße, Formularanordnung, personalisiert oder fest), "
+"Layout, Formular-Layout, Freigabeart, Form der Gestaltungsfläche, die "
+"Ansichten des Designers, die Druckerei und die Rohling-Variante. Ein "
+"weggelassenes Feld behält seinen Wert; daher die Einrichtung mit `list-"
+"products` lesen und senden, was sich ändert. Eine Variante, die irgendein "
+"Einrichtungsfeld erhält, bekommt eine eigene Einrichtung; `own_setup` false "
+"lässt sie wieder ihrem Produkt folgen. Pixonaut prüft die Einrichtung; ein "
+"Produkt, das eine Prüfung nicht besteht, wird gespeichert, kann aber nicht "
+"gekauft werden, und die Antwort nennt den Grund. Seitenlayouts, die nicht "
+"angeboten werden können, lehnen stattdessen den Aufruf ab, und nichts wird "
+"gespeichert."
 
 #: src/Abilities/SetProductSetup.php:74
 msgid ""
@@ -3540,7 +3539,7 @@ msgstr ""
 "Rohling-Variante, die es verkauft, über ihre `v_…`-ID; leer, um sie anhand "
 "der Attribute des Produkts zuzuordnen."
 
-#: src/Abilities/SetProductSetup.php:152
+#: src/Abilities/SetProductSetup.php:166
 msgid ""
 "A variation follows its product for option_groups and group_numbers: set "
 "them on the product."
@@ -3839,8 +3838,8 @@ msgstr "Das Bild von Karte %s ist keine öffentliche URL."
 msgid "Set a product's own values for its template"
 msgstr "Die eigenen Werte eines Produkts für seine Vorlage festlegen"
 
-#: src/Abilities/SetProductValues.php:76
 #
+#: src/Abilities/SetProductValues.php:76
 msgid ""
 "Sets the values a simple or variable product, or a variation with a setup of "
 "its own (`variation_id`), gives its sides' template layers, by layer id and "
@@ -3866,29 +3865,27 @@ msgstr ""
 "Legt die Werte fest, die ein einfaches oder variables Produkt oder eine "
 "Variante mit eigener Einrichtung (`variation_id`) den Ebenen der Vorlagen "
 "seiner Seiten gibt, nach Ebenen-ID und Eigenschaft, z. B. `{\"title\": "
-"{\"content\": \"farmor\"}}`: Eine Vorlage verkauft dann so viele "
-"Produkte, jedes in seinem eigenen Thema oder für seinen eigenen "
-"Empfänger. Ein Wert auf einer Eigenschaft, die der Kunde ändern darf, ist "
-"der Ausgangspunkt im Designer; ein Wert auf einer festen Eigenschaft wird "
-"wie angegeben gedruckt. Jede Seite, die mit ihrem `key` genannt wird, "
-"erhält ihre `values`, oder null (oder ein leeres Objekt), um sie zu "
-"entfernen; eine ausgelassene Seite behält ihre eigenen. Bei einer Seite "
-"mit Seitenlayouts gelten die Werte für jedes Layout: Jedes Layout erhält "
-"die Werte für die Ebenen, die es hat, und eine Ebene, die weder die "
-"Vorlage der Seite noch ein Layout hat, lehnt den Aufruf ab. Pixonaut "
-"prüft die Werte gegen die Vorlagenversion der Seite: Eine Ebene oder "
-"Eigenschaft, die die Vorlage nicht hat, oder ein Wert, den ihre Regeln "
-"ablehnen, lässt den ganzen Aufruf scheitern, und die Antwort nennt jede "
-"nach Seite, Ebene und Eigenschaft. Das Gleiche gilt für eine Seite, die "
-"das Produkt nicht hat, eine Seite ohne Vorlage, ein Produkt ohne "
-"Pixonaut-Einrichtung und eine Variante, die ihrem Produkt folgt. Die "
-"Werte eines Produkts erreichen seine Varianten: die, die ihm folgen, und, "
-"für eine Seite, für die sie keine eigenen Werte haben, die mit eigener "
-"Einrichtung, deren Seite auf derselben Vorlage liegt wie die des "
-"Produkts. Die Antwort enthält jede Seite mit ihrer `template_id`, der "
-"`value_set_id`, die Pixonaut aus den Werten gebildet hat, mit denen sie "
-"verkauft wird, ihren `values`, null, wo sie keine hat, und `values_from`, "
-"wessen sie sind."
+"{\"content\": \"farmor\"}}`: Eine Vorlage verkauft dann so viele Produkte, "
+"jedes in seinem eigenen Thema oder für seinen eigenen Empfänger. Ein Wert "
+"auf einer Eigenschaft, die der Kunde ändern darf, ist der Ausgangspunkt im "
+"Designer; ein Wert auf einer festen Eigenschaft wird wie angegeben gedruckt. "
+"Jede Seite, die mit ihrem `key` genannt wird, erhält ihre `values`, oder "
+"null (oder ein leeres Objekt), um sie zu entfernen; eine ausgelassene Seite "
+"behält ihre eigenen. Bei einer Seite mit Seitenlayouts gelten die Werte für "
+"jedes Layout: Jedes Layout erhält die Werte für die Ebenen, die es hat, und "
+"eine Ebene, die weder die Vorlage der Seite noch ein Layout hat, lehnt den "
+"Aufruf ab. Pixonaut prüft die Werte gegen die Vorlagenversion der Seite: "
+"Eine Ebene oder Eigenschaft, die die Vorlage nicht hat, oder ein Wert, den "
+"ihre Regeln ablehnen, lässt den ganzen Aufruf scheitern, und die Antwort "
+"nennt jede nach Seite, Ebene und Eigenschaft. Das Gleiche gilt für eine "
+"Seite, die das Produkt nicht hat, eine Seite ohne Vorlage, ein Produkt ohne "
+"Pixonaut-Einrichtung und eine Variante, die ihrem Produkt folgt. Die Werte "
+"eines Produkts erreichen seine Varianten: die, die ihm folgen, und, für eine "
+"Seite, für die sie keine eigenen Werte haben, die mit eigener Einrichtung, "
+"deren Seite auf derselben Vorlage liegt wie die des Produkts. Die Antwort "
+"enthält jede Seite mit ihrer `template_id`, der `value_set_id`, die Pixonaut "
+"aus den Werten gebildet hat, mit denen sie verkauft wird, ihren `values`, "
+"null, wo sie keine hat, und `values_from`, wessen sie sind."
 
 #: src/Abilities/SetProductValues.php:87
 msgid ""
@@ -4256,8 +4253,8 @@ msgstr ""
 "Bei einer Seite, deren Druckposition als Seiten gedruckt wird, etwa die "
 "Innenseiten eines Fotobuchs: die anderen Vorlagen, auf denen eine Seite "
 "gestaltet werden darf (Layouts wie zwei oder vier Fotos), so wie "
-"`template_id` sie annimmt, in der Reihenfolge, in der der Kunde sie "
-"sieht; jede Seite beginnt auf `template_id`. Jede folgt ihrer neuesten "
+"`template_id` sie annimmt, in der Reihenfolge, in der der Kunde sie sieht; "
+"jede Seite beginnt auf `template_id`. Jede folgt ihrer neuesten "
 "veröffentlichten Version oder bleibt auf der angegebenen Version, wenn "
 "`template_pinned` true ist. Höchstens %d, jede im Seitenverhältnis von "
 "`template_id`, keine doppelt und nicht `template_id` selbst; jede andere "
@@ -4425,6 +4422,41 @@ msgstr ""
 "Die Variante hat eine eigene Einrichtung ohne Rohling, es gibt also keine "
 "Druckposition, deren Größe sie übernehmen könnte: Geben Sie ihr eine Größe "
 "oder lassen Sie sie mit set-product-setup wieder ihrem Produkt folgen."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/SetVariationsSetup.php:58
+msgid "Set up many variations for Pixonaut"
+msgstr "Viele Varianten für Pixonaut einrichten"
+
+#: src/Abilities/SetVariationsSetup.php:59
+msgid ""
+"Sets the same setup on many variations of one variable product, each as `set-"
+"product-setup` sets one variation: a field left out keeps what that "
+"variation has, so each keeps its own blank variant, and its own blank unless "
+"`blank_id` is given. Every id must be a variation of the product, or nothing "
+"is saved. The answer lists each variation's setup, or why it was refused, in "
+"the order given."
+msgstr "Richtet viele Varianten eines variablen Produkts gleich ein, jede so, wie `set-product-setup` eine Variante einrichtet: Ein weggelassenes Feld behält, was die Variante hat, sodass jede ihre eigene Blank-Variante behält und ihren eigenen Blank, sofern `blank_id` nicht angegeben ist. Jede ID muss eine Variante des Produkts sein, sonst wird nichts gespeichert. Die Antwort nennt die Einrichtung jeder Variante oder warum sie abgelehnt wurde, in der angegebenen Reihenfolge."
+
+#: src/Abilities/SetVariationsSetup.php:65
+msgid "The variable product."
+msgstr "Das variable Produkt."
+
+#: src/Abilities/SetVariationsSetup.php:70
+msgid "Its variations to set up, each once."
+msgstr "Die einzurichtenden Varianten des Produkts, jede einmal."
+
+#. translators: %s: the ids given, comma-separated.
+#: src/Abilities/SetVariationsSetup.php:114
+#, php-format
+msgid "These are not variations of the product: %s. Nothing was saved."
+msgstr "Dies sind keine Varianten des Produkts: %s. Es wurde nichts gespeichert."
+
+#: src/Abilities/SetVariationsSetup.php:166
+msgid ""
+"Why this variation was refused, which leaves it as it was; absent once it is "
+"set up."
+msgstr "Warum diese Variante abgelehnt wurde, die dann bleibt, wie sie war; fehlt, sobald sie eingerichtet ist."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetVariationVariants.php:56
@@ -7471,8 +7503,8 @@ msgid ""
 "a book’s inner pages. Remove the side’s page layouts, or choose such a print "
 "position, in %s."
 msgstr ""
-"Seitenlayouts werden nur bei einer Druckposition angeboten, die als "
-"Seiten gedruckt wird, etwa den Innenseiten eines Buchs. Entfernen Sie die "
+"Seitenlayouts werden nur bei einer Druckposition angeboten, die als Seiten "
+"gedruckt wird, etwa den Innenseiten eines Buchs. Entfernen Sie die "
 "Seitenlayouts der Seite oder wählen Sie eine solche Druckposition in %s."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
@@ -7483,10 +7515,9 @@ msgid ""
 "template, so a page designed on it would not fill the page. Choose layouts "
 "at the side template’s ratio in %s."
 msgstr ""
-"Die Vorlage eines Seitenlayouts hat nicht das Seitenverhältnis der "
-"Vorlage der Seite, daher würde eine darauf gestaltete Seite die Seite "
-"nicht ausfüllen. Wählen Sie Layouts im Seitenverhältnis der Seitenvorlage "
-"in %s."
+"Die Vorlage eines Seitenlayouts hat nicht das Seitenverhältnis der Vorlage "
+"der Seite, daher würde eine darauf gestaltete Seite die Seite nicht "
+"ausfüllen. Wählen Sie Layouts im Seitenverhältnis der Seitenvorlage in %s."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
 #: src/Catalogue/InvalidReason.php:467
@@ -7495,9 +7526,9 @@ msgid ""
 "A page layout is chosen twice, or is the side’s own template, which every "
 "page starts on. Choose each layout once, besides the side’s template, in %s."
 msgstr ""
-"Ein Seitenlayout ist doppelt gewählt oder ist die eigene Vorlage der "
-"Seite, auf der jede Seite beginnt. Wählen Sie jedes Layout nur einmal, "
-"zusätzlich zur Vorlage der Seite, in %s."
+"Ein Seitenlayout ist doppelt gewählt oder ist die eigene Vorlage der Seite, "
+"auf der jede Seite beginnt. Wählen Sie jedes Layout nur einmal, zusätzlich "
+"zur Vorlage der Seite, in %s."
 
 #. translators: 1: most page layouts one side can offer, 2: where the settings are, e.g. "the product's Pixonaut tab".
 #: src/Catalogue/InvalidReason.php:473
@@ -7506,8 +7537,8 @@ msgid ""
 "A side offers at most %1$d page layouts besides its own template. Remove "
 "layouts in %2$s."
 msgstr ""
-"Eine Seite bietet höchstens %1$d Seitenlayouts neben ihrer eigenen "
-"Vorlage an. Entfernen Sie Layouts in %2$s."
+"Eine Seite bietet höchstens %1$d Seitenlayouts neben ihrer eigenen Vorlage "
+"an. Entfernen Sie Layouts in %2$s."
 
 #: src/Catalogue/InvalidReason.php:478
 msgid ""
@@ -13532,15 +13563,15 @@ msgstr "Vorlage"
 msgid "Search for a template"
 msgstr "Nach einer Vorlage suchen"
 
+#
 #. translators: Label of the field picking the other templates (layouts, such as two or four photos) a page of a book may be designed on. Admin product page.
 #: templates/admin/product-side.php:128
-#
 msgid "Page layouts"
 msgstr "Seitenlayouts"
 
+#
 #. translators: Placeholder of the search dropdown picking a book page's other layouts. Admin product page.
 #: templates/admin/product-side.php:132
-#
 msgid "Search for templates"
 msgstr "Nach Vorlagen suchen"
 
@@ -13551,9 +13582,8 @@ msgid ""
 "Up to %d other templates, at the template’s aspect ratio, that customers may "
 "design a page on. Every page starts on the template above."
 msgstr ""
-"Bis zu %d weitere Vorlagen im Seitenverhältnis der Vorlage, auf denen "
-"Kunden eine Seite gestalten dürfen. Jede Seite beginnt auf der Vorlage "
-"oben."
+"Bis zu %d weitere Vorlagen im Seitenverhältnis der Vorlage, auf denen Kunden "
+"eine Seite gestalten dürfen. Jede Seite beginnt auf der Vorlage oben."
 
 #: templates/admin/product-side.php:149
 msgid ""

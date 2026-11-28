@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-28T13:24:16+00:00\n"
+"POT-Creation-Date: 2026-11-28T16:54:54+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -2598,10 +2598,10 @@ msgid ""
 "values. Absent on a side without layouts."
 msgstr ""
 "En una cara con presentaciones de página: el conjunto de valores que "
-"Pixonaut hizo con los valores de las capas de cada presentación, por id "
-"de plantilla de la presentación sin su versión; una presentación sin "
-"ninguna de las capas no tiene ninguno, y tampoco lo tiene ninguna "
-"presentación sin valores. No aparece en una cara sin presentaciones."
+"Pixonaut hizo con los valores de las capas de cada presentación, por id de "
+"plantilla de la presentación sin su versión; una presentación sin ninguna de "
+"las capas no tiene ninguno, y tampoco lo tiene ninguna presentación sin "
+"valores. No aparece en una cara sin presentaciones."
 
 #: src/Abilities/ProductSetup.php:421
 msgid ""
@@ -2611,10 +2611,10 @@ msgid ""
 "on a side without layouts."
 msgstr ""
 "En una cara con presentaciones de página: las presentaciones, por id de "
-"plantilla sin versión, cuyo conjunto de valores Pixonaut rechazó o no "
-"pudo solicitar. Mientras figure alguna, el producto no se puede comprar; "
-"una nueva comprobación vuelve a crear el conjunto. No aparece en una cara "
-"sin presentaciones."
+"plantilla sin versión, cuyo conjunto de valores Pixonaut rechazó o no pudo "
+"solicitar. Mientras figure alguna, el producto no se puede comprar; una "
+"nueva comprobación vuelve a crear el conjunto. No aparece en una cara sin "
+"presentaciones."
 
 #: src/Abilities/ProductSetup.php:426
 msgid ""
@@ -3414,8 +3414,8 @@ msgstr "`price_changes` es uno de %1$s para #%2$d."
 msgid "Set up a product for Pixonaut"
 msgstr "Configurar un producto para Pixonaut"
 
-#: src/Abilities/SetProductSetup.php:63
 #
+#: src/Abilities/SetProductSetup.php:63
 msgid ""
 "Sets up a simple or variable product, or one variation, as its Pixonaut tab "
 "does: the blank, every side (template, placement, print sizes, start size, "
@@ -3428,20 +3428,19 @@ msgid ""
 "bought, and the answer says why. Page layouts that cannot be offered refuse "
 "the call instead, and nothing is saved."
 msgstr ""
-"Configura un producto simple o variable, o una sola variación, como lo "
-"hace su pestaña Pixonaut: el producto base, cada cara (plantilla, "
-"ubicación, tamaños de impresión, tamaño inicial, organización del "
-"formulario, personalizada o fija), la presentación, la disposición del "
-"formulario, el modo de aprobación, la forma del lienzo, las vistas del "
-"personalizador, la imprenta y la variante del producto base. Un campo "
-"omitido conserva lo que tiene, así que lee la configuración con "
-"`list-products` y envía lo que cambia. Una variación que recibe cualquier "
-"campo de configuración pasa a tener configuración propia; `own_setup` "
-"false hace que vuelva a seguir la de su producto. Pixonaut comprueba la "
-"configuración; un producto que no supera una comprobación se guarda, pero "
-"no se puede comprar, y la respuesta explica por qué. Las presentaciones "
-"de página que no se pueden ofrecer rechazan la llamada en su lugar, y no "
-"se guarda nada."
+"Configura un producto simple o variable, o una sola variación, como lo hace "
+"su pestaña Pixonaut: el producto base, cada cara (plantilla, ubicación, "
+"tamaños de impresión, tamaño inicial, organización del formulario, "
+"personalizada o fija), la presentación, la disposición del formulario, el "
+"modo de aprobación, la forma del lienzo, las vistas del personalizador, la "
+"imprenta y la variante del producto base. Un campo omitido conserva lo que "
+"tiene, así que lee la configuración con `list-products` y envía lo que "
+"cambia. Una variación que recibe cualquier campo de configuración pasa a "
+"tener configuración propia; `own_setup` false hace que vuelva a seguir la de "
+"su producto. Pixonaut comprueba la configuración; un producto que no supera "
+"una comprobación se guarda, pero no se puede comprar, y la respuesta explica "
+"por qué. Las presentaciones de página que no se pueden ofrecer rechazan la "
+"llamada en su lugar, y no se guarda nada."
 
 #: src/Abilities/SetProductSetup.php:74
 msgid ""
@@ -3520,7 +3519,7 @@ msgstr ""
 "del producto base que vende, por su identificador `v_…`; vacío para "
 "asignarla según los atributos del producto."
 
-#: src/Abilities/SetProductSetup.php:152
+#: src/Abilities/SetProductSetup.php:166
 msgid ""
 "A variation follows its product for option_groups and group_numbers: set "
 "them on the product."
@@ -3820,8 +3819,8 @@ msgstr "La imagen de la tarjeta %s no es una URL pública."
 msgid "Set a product's own values for its template"
 msgstr "Establecer los valores propios de un producto para su plantilla"
 
-#: src/Abilities/SetProductValues.php:76
 #
+#: src/Abilities/SetProductValues.php:76
 msgid ""
 "Sets the values a simple or variable product, or a variation with a setup of "
 "its own (`variation_id`), gives its sides' template layers, by layer id and "
@@ -3844,30 +3843,30 @@ msgid ""
 "`value_set_id` Pixonaut made of the values it is sold with, its `values`, "
 "null where it has none, and `values_from`, whose they are."
 msgstr ""
-"Establece los valores que un producto simple o variable, o una variación "
-"con configuración propia (`variation_id`), da a las capas de la plantilla "
-"de sus caras, por id de capa y propiedad, p. ej. `{\"title\": "
-"{\"content\": \"farmor\"}}`: una misma plantilla vende entonces tantos "
-"productos como se quiera, cada uno con su propio tema o para su propio "
-"destinatario. Un valor en una propiedad que el cliente puede cambiar es "
-"donde empieza el personalizador; uno en una propiedad fija se imprime tal "
-"cual. Cada cara indicada por su `key` recibe sus `values`, o null (o un "
-"objeto vacío) para quitárselos; una cara que se omite conserva los suyos. "
-"En una cara con presentaciones de página, los valores llegan a todas las "
-"presentaciones: cada una recibe los de las capas que tiene, y una capa "
-"que no tiene ni la plantilla de la cara ni ninguna presentación rechaza "
-"la llamada. Pixonaut juzga los valores según la versión de la plantilla "
-"de la cara: una capa o propiedad que la plantilla no tiene, o un valor "
-"que sus reglas rechazan, hace que se rechace toda la llamada, y la "
-"respuesta nombra cada una por cara, capa y propiedad. Lo mismo ocurre con "
-"una cara que el producto no tiene, una cara sin plantilla, un producto "
-"sin configuración de Pixonaut y una variación que sigue a su producto. "
-"Los valores de un producto llegan a sus variaciones: las que lo siguen y, "
-"para una cara de la que no tienen valores propios, las que tienen "
-"configuración propia y cuya cara está en la misma plantilla que la del "
-"producto. La respuesta es cada cara con su `template_id`, el "
-"`value_set_id` que Pixonaut ha creado con los valores con los que se "
-"vende, sus `values`, null donde no tiene, y `values_from`, de quién son."
+"Establece los valores que un producto simple o variable, o una variación con "
+"configuración propia (`variation_id`), da a las capas de la plantilla de sus "
+"caras, por id de capa y propiedad, p. ej. `{\"title\": {\"content\": "
+"\"farmor\"}}`: una misma plantilla vende entonces tantos productos como se "
+"quiera, cada uno con su propio tema o para su propio destinatario. Un valor "
+"en una propiedad que el cliente puede cambiar es donde empieza el "
+"personalizador; uno en una propiedad fija se imprime tal cual. Cada cara "
+"indicada por su `key` recibe sus `values`, o null (o un objeto vacío) para "
+"quitárselos; una cara que se omite conserva los suyos. En una cara con "
+"presentaciones de página, los valores llegan a todas las presentaciones: "
+"cada una recibe los de las capas que tiene, y una capa que no tiene ni la "
+"plantilla de la cara ni ninguna presentación rechaza la llamada. Pixonaut "
+"juzga los valores según la versión de la plantilla de la cara: una capa o "
+"propiedad que la plantilla no tiene, o un valor que sus reglas rechazan, "
+"hace que se rechace toda la llamada, y la respuesta nombra cada una por "
+"cara, capa y propiedad. Lo mismo ocurre con una cara que el producto no "
+"tiene, una cara sin plantilla, un producto sin configuración de Pixonaut y "
+"una variación que sigue a su producto. Los valores de un producto llegan a "
+"sus variaciones: las que lo siguen y, para una cara de la que no tienen "
+"valores propios, las que tienen configuración propia y cuya cara está en la "
+"misma plantilla que la del producto. La respuesta es cada cara con su "
+"`template_id`, el `value_set_id` que Pixonaut ha creado con los valores con "
+"los que se vende, sus `values`, null donde no tiene, y `values_from`, de "
+"quién son."
 
 #: src/Abilities/SetProductValues.php:87
 msgid ""
@@ -4234,14 +4233,14 @@ msgid ""
 "`template_id` itself; any other is refused. Empty or left out for none."
 msgstr ""
 "En una cara cuya posición de impresión se imprime como páginas, como las "
-"páginas interiores de un fotolibro: las otras plantillas en las que se "
-"puede diseñar una página (presentaciones como dos o cuatro fotos), tal "
-"como las acepta `template_id`, en el orden en que las ve el cliente; cada "
-"página empieza en `template_id`. Cada una sigue su última versión "
-"publicada, o se queda en la versión indicada cuando `template_pinned` es "
-"true. Como máximo %d, cada una con la relación de aspecto de "
-"`template_id`, ninguna dos veces ni la propia `template_id`; cualquier "
-"otra se rechaza. Vacío u omitido para ninguna."
+"páginas interiores de un fotolibro: las otras plantillas en las que se puede "
+"diseñar una página (presentaciones como dos o cuatro fotos), tal como las "
+"acepta `template_id`, en el orden en que las ve el cliente; cada página "
+"empieza en `template_id`. Cada una sigue su última versión publicada, o se "
+"queda en la versión indicada cuando `template_pinned` es true. Como máximo "
+"%d, cada una con la relación de aspecto de `template_id`, ninguna dos veces "
+"ni la propia `template_id`; cualquier otra se rechaza. Vacío u omitido para "
+"ninguna."
 
 #. translators: %s: what the empty choice follows, e.g. "empty for the template's own setting".
 #: src/Abilities/SetupFields.php:254
@@ -4406,6 +4405,41 @@ msgstr ""
 "La variación tiene una configuración propia sin producto base, así que no "
 "hay ninguna ubicación cuyo tamaño pueda tomar: indícale un tamaño o haz que "
 "vuelva a seguir a su producto con set-product-setup."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/SetVariationsSetup.php:58
+msgid "Set up many variations for Pixonaut"
+msgstr "Configurar muchas variaciones para Pixonaut"
+
+#: src/Abilities/SetVariationsSetup.php:59
+msgid ""
+"Sets the same setup on many variations of one variable product, each as `set-"
+"product-setup` sets one variation: a field left out keeps what that "
+"variation has, so each keeps its own blank variant, and its own blank unless "
+"`blank_id` is given. Every id must be a variation of the product, or nothing "
+"is saved. The answer lists each variation's setup, or why it was refused, in "
+"the order given."
+msgstr "Aplica la misma configuración a muchas variaciones de un producto variable, cada una como `set-product-setup` configura una variación: un campo omitido conserva lo que tiene esa variación, así que cada una conserva su propia variante del blank, y su propio blank salvo que se indique `blank_id`. Cada id debe ser una variación del producto; si no, no se guarda nada. La respuesta indica la configuración de cada variación, o por qué se rechazó, en el orden indicado."
+
+#: src/Abilities/SetVariationsSetup.php:65
+msgid "The variable product."
+msgstr "El producto variable."
+
+#: src/Abilities/SetVariationsSetup.php:70
+msgid "Its variations to set up, each once."
+msgstr "Sus variaciones a configurar, cada una una vez."
+
+#. translators: %s: the ids given, comma-separated.
+#: src/Abilities/SetVariationsSetup.php:114
+#, php-format
+msgid "These are not variations of the product: %s. Nothing was saved."
+msgstr "Estas no son variaciones del producto: %s. No se guardó nada."
+
+#: src/Abilities/SetVariationsSetup.php:166
+msgid ""
+"Why this variation was refused, which leaves it as it was; absent once it is "
+"set up."
+msgstr "Por qué se rechazó esta variación, que queda como estaba; ausente una vez configurada."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetVariationVariants.php:56
@@ -7441,9 +7475,9 @@ msgid ""
 "position, in %s."
 msgstr ""
 "Las presentaciones de página solo se ofrecen en una posición de impresión "
-"que se imprime como páginas, como las páginas interiores de un libro. "
-"Quita las presentaciones de página de la cara o elige una posición de "
-"impresión así en %s."
+"que se imprime como páginas, como las páginas interiores de un libro. Quita "
+"las presentaciones de página de la cara o elige una posición de impresión "
+"así en %s."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
 #: src/Catalogue/InvalidReason.php:461
@@ -7453,10 +7487,10 @@ msgid ""
 "template, so a page designed on it would not fill the page. Choose layouts "
 "at the side template’s ratio in %s."
 msgstr ""
-"La plantilla de una presentación de página no tiene la relación de "
-"aspecto de la plantilla de la cara, así que una página diseñada en ella "
-"no llenaría la página. Elige presentaciones con la relación de aspecto de "
-"la plantilla de la cara en %s."
+"La plantilla de una presentación de página no tiene la relación de aspecto "
+"de la plantilla de la cara, así que una página diseñada en ella no llenaría "
+"la página. Elige presentaciones con la relación de aspecto de la plantilla "
+"de la cara en %s."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
 #: src/Catalogue/InvalidReason.php:467
@@ -7465,9 +7499,9 @@ msgid ""
 "A page layout is chosen twice, or is the side’s own template, which every "
 "page starts on. Choose each layout once, besides the side’s template, in %s."
 msgstr ""
-"Una presentación de página está elegida dos veces o es la propia "
-"plantilla de la cara, en la que empieza cada página. Elige cada "
-"presentación una sola vez, además de la plantilla de la cara, en %s."
+"Una presentación de página está elegida dos veces o es la propia plantilla "
+"de la cara, en la que empieza cada página. Elige cada presentación una sola "
+"vez, además de la plantilla de la cara, en %s."
 
 #. translators: 1: most page layouts one side can offer, 2: where the settings are, e.g. "the product's Pixonaut tab".
 #: src/Catalogue/InvalidReason.php:473
@@ -13421,15 +13455,15 @@ msgstr "Plantilla"
 msgid "Search for a template"
 msgstr "Buscar una plantilla"
 
+#
 #. translators: Label of the field picking the other templates (layouts, such as two or four photos) a page of a book may be designed on. Admin product page.
 #: templates/admin/product-side.php:128
-#
 msgid "Page layouts"
 msgstr "Presentaciones de página"
 
+#
 #. translators: Placeholder of the search dropdown picking a book page's other layouts. Admin product page.
 #: templates/admin/product-side.php:132
-#
 msgid "Search for templates"
 msgstr "Buscar plantillas"
 
@@ -13440,8 +13474,8 @@ msgid ""
 "Up to %d other templates, at the template’s aspect ratio, that customers may "
 "design a page on. Every page starts on the template above."
 msgstr ""
-"Hasta %d plantillas más, con la relación de aspecto de la plantilla, en "
-"las que los clientes pueden diseñar una página. Cada página empieza en la "
+"Hasta %d plantillas más, con la relación de aspecto de la plantilla, en las "
+"que los clientes pueden diseñar una página. Cada página empieza en la "
 "plantilla de arriba."
 
 #: templates/admin/product-side.php:149

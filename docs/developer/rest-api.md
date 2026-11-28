@@ -80,7 +80,7 @@ offered to a user:
 | Linking a template | `link-product` |
 | Blank variants of variations | `set-variation-variants` |
 | A variation's print size | `set-variation-print-size` |
-| A variation's own setup | `set-product-setup`, always with a variation's id |
+| A variation's own setup | `set-product-setup`, always with a variation's id; `set-variations-setup` for many of one product alike |
 | Showcase pictures | `set-product-showcase`, `get-product-picture-views`, `set-product-picture-view` |
 | A product's designer form | `get-product-form`, `set-product-form` |
 | A product's own values for its templates | `set-product-values`, with a variation's id for one with a setup of its own |

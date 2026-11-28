@@ -59,6 +59,7 @@ use Pixonaut\WooCommerce\Abilities\GetProductVariationPlan;
 use Pixonaut\WooCommerce\Abilities\GenerateProductVariations;
 use Pixonaut\WooCommerce\Abilities\VariationGenerator;
 use Pixonaut\WooCommerce\Abilities\SetProductSetup;
+use Pixonaut\WooCommerce\Abilities\SetVariationsSetup;
 use Pixonaut\WooCommerce\Abilities\SetProductForm;
 use Pixonaut\WooCommerce\Abilities\SetProductValues;
 use Pixonaut\WooCommerce\Abilities\SetProductPictureView;
@@ -496,7 +497,7 @@ final class Plugin {
 		( new InvalidProductNotice( $this->notices() ) )->register();
 		$this->connection()->register();
 		$this->store_access()->register();
-		( new ShopToolRoute( $this->store_access(), new ShopTools( fn (): ProductLinks => $this->product_links(), fn (): ProductVariants => $this->product_variants(), fn (): ShowcaseField => $this->showcase_field(), fn (): GetProductPictureViews => $this->picture_views(), fn (): SetVariationPrintSize => $this->variation_print_size(), fn (): SetProductSetup => new SetProductSetup( $this->product_links(), $this->setup_fields() ), fn (): array => $this->pricing_abilities(), fn (): array => $this->settings_abilities(), fn (): array => $this->form_abilities(), fn (): array => $this->variation_abilities(), fn (): RegenerateProductPictures => new RegenerateProductPictures( $this->regenerate_pictures() ) ), new WcLogger() ) )->register();
+		( new ShopToolRoute( $this->store_access(), new ShopTools( fn (): ProductLinks => $this->product_links(), fn (): ProductVariants => $this->product_variants(), fn (): ShowcaseField => $this->showcase_field(), fn (): GetProductPictureViews => $this->picture_views(), fn (): SetVariationPrintSize => $this->variation_print_size(), fn (): array => $this->setup_abilities(), fn (): array => $this->pricing_abilities(), fn (): array => $this->settings_abilities(), fn (): array => $this->form_abilities(), fn (): array => $this->variation_abilities(), fn (): RegenerateProductPictures => new RegenerateProductPictures( $this->regenerate_pictures() ) ), new WcLogger() ) )->register();
 		$this->workspace_settings()->register();
 		$this->webhook_processor()->register();
 		( new Receiver( $this->connection(), $this->intake(), new WcLogger() ) )->register();
@@ -667,7 +668,7 @@ final class Plugin {
 					new LinkProduct( $links ),
 					new UnlinkProduct( $links ),
 					new SetVariationVariants( $links, $this->product_variants() ),
-					new SetProductSetup( $links, $fields ),
+					...$this->setup_abilities(),
 					$this->variation_print_size(),
 					new SetProductShowcase( $links, $this->showcase_field(), $views ),
 					$views,
@@ -780,6 +781,17 @@ final class Plugin {
 	 */
 	public function variation_generator( ?Closure $pricing = null ): VariationGenerator {
 		return new VariationGenerator( $this->product_links(), $this->setup_fields(), $this->product_variants(), $pricing ?? fn (): ProductPricing => $this->product_pricing() );
+	}
+
+	/**
+	 * The abilities that set up a product or a variation, and many
+	 * variations of one product alike.
+	 *
+	 * @return list<Ability>
+	 */
+	private function setup_abilities(): array {
+		$one = new SetProductSetup( $this->product_links(), $this->setup_fields() );
+		return array( $one, new SetVariationsSetup( $one, $this->catalogue() ) );
 	}
 
 	private function variation_print_size(): SetVariationPrintSize {

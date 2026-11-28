@@ -62,7 +62,57 @@ final class Catalogue {
 	 */
 	private const PRINT_SIZE_CHECK = 'templates.printSize.validate';
 
+	/**
+	 * What Pixonaut answered while `remembering()` runs, by question; null
+	 * outside it, when every call asks again.
+	 *
+	 * @var array<string, mixed>|null
+	 */
+	private ?array $remembered = null;
+
 	public function __construct( private readonly Sdk $pixonaut ) {
+	}
+
+	/**
+	 * Runs $work with the reads and print size checks it makes asked of
+	 * Pixonaut once each: a question asked again is answered as the first
+	 * time, so setting many variations up alike checks their shared sides
+	 * once. A question Pixonaut refused or could not answer is asked again.
+	 *
+	 * @template T
+	 * @param callable(): T $work What to run.
+	 * @return T What it returned.
+	 */
+	public function remembering( callable $work ): mixed {
+		if ( null !== $this->remembered ) {
+			return $work();
+		}
+		$this->remembered = array();
+		try {
+			return $work();
+		} finally {
+			$this->remembered = null;
+		}
+	}
+
+	/**
+	 * The answer to a question, asked of Pixonaut unless `remembering()`
+	 * already has it.
+	 *
+	 * @template T
+	 * @param array<mixed>  $question What is asked, as its key.
+	 * @param callable(): T $ask      Asks it.
+	 * @return T
+	 */
+	private function asked_once( array $question, callable $ask ): mixed {
+		if ( null === $this->remembered ) {
+			return $ask();
+		}
+		$key = (string) wp_json_encode( $question );
+		if ( ! array_key_exists( $key, $this->remembered ) ) {
+			$this->remembered[ $key ] = $ask();
+		}
+		return $this->remembered[ $key ];
 	}
 
 	/**
@@ -147,7 +197,7 @@ final class Catalogue {
 	 */
 	public function template_state( string $template_id ): array {
 		// Read as sent: a Pixonaut that predates a field the spec now requires still answers the store.
-		$template = $this->pixonaut->call( 'templates.get', array( 'id' => $template_id ) )->object();
+		$template = $this->read( 'templates.get', array( 'id' => $template_id ) );
 		$status   = $template['status'] ?? null;
 		if ( ! is_string( $status ) ) {
 			throw self::unexpected( 'templates.get' );
@@ -215,7 +265,7 @@ final class Catalogue {
 	 * @throws ApiException When Pixonaut refused (`404` for an unknown template), could not be reached, or answered with something else than a JSON object.
 	 */
 	public function template_showcases( string $template_id ): array {
-		$template  = $this->pixonaut->call( 'templates.get', array( 'id' => $template_id ) )->object();
+		$template  = $this->read( 'templates.get', array( 'id' => $template_id ) );
 		$showcases = array();
 		foreach ( is_array( $template['showcases'] ?? null ) ? $template['showcases'] : array() as $showcase ) {
 			$id = is_array( $showcase ) ? ( $showcase['id'] ?? null ) : null;
@@ -455,9 +505,13 @@ final class Catalogue {
 			blankId: $on_blank ? $blank_id : null,
 			placementId: $on_blank ? $placement_id : null,
 		);
-		$verdicts = CheckSlowdown::ask(
-			self::PRINT_SIZE_CHECK,
-			fn (): array => Read::answer( $this->pixonaut->call( self::PRINT_SIZE_CHECK, array( 'id' => $template_id ), body: $body->toArray() ), PrintSizeVerdicts::from_answer( ... ) )->verdicts
+		$request  = $body->toArray();
+		$verdicts = $this->asked_once(
+			array( self::PRINT_SIZE_CHECK, $template_id, $request ),
+			fn (): array => CheckSlowdown::ask(
+				self::PRINT_SIZE_CHECK,
+				fn (): array => Read::answer( $this->pixonaut->call( self::PRINT_SIZE_CHECK, array( 'id' => $template_id ), body: $request ), PrintSizeVerdicts::from_answer( ... ) )->verdicts
+			)
 		);
 		if ( count( $verdicts ) !== count( $sizes ) ) {
 			throw self::unexpected( self::PRINT_SIZE_CHECK );
@@ -528,7 +582,7 @@ final class Catalogue {
 	 * @throws ApiException When Pixonaut refused, could not be reached, or answered with something else than a JSON object.
 	 */
 	private function read( string $operation, array $path = array(), array $query = array() ): array {
-		return $this->pixonaut->call( $operation, $path, $query )->object();
+		return $this->asked_once( array( $operation, $path, $query ), fn (): array => $this->pixonaut->call( $operation, $path, $query )->object() );
 	}
 
 	/**

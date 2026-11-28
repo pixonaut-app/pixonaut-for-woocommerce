@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-28T13:24:16+00:00\n"
+"POT-Creation-Date: 2026-11-28T16:54:54+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: fi\n"
@@ -2535,11 +2535,11 @@ msgid ""
 "layout with none of the layers has none, and so does every layout without "
 "values. Absent on a side without layouts."
 msgstr ""
-"Puolella, jolla on sivuasetteluja: arvojoukko, jonka Pixonaut on "
-"muodostanut kunkin asettelun tasojen arvoista, asettelun mallipohjan "
-"tunnuksen mukaan ilman versiota; asettelulla, jolla ei ole mitään "
-"tasoista, ei ole arvojoukkoa, eikä asettelulla, jolla ei ole arvoja. "
-"Puuttuu puolelta, jolla ei ole asetteluja."
+"Puolella, jolla on sivuasetteluja: arvojoukko, jonka Pixonaut on muodostanut "
+"kunkin asettelun tasojen arvoista, asettelun mallipohjan tunnuksen mukaan "
+"ilman versiota; asettelulla, jolla ei ole mitään tasoista, ei ole "
+"arvojoukkoa, eikä asettelulla, jolla ei ole arvoja. Puuttuu puolelta, jolla "
+"ei ole asetteluja."
 
 #: src/Abilities/ProductSetup.php:421
 msgid ""
@@ -2549,10 +2549,10 @@ msgid ""
 "on a side without layouts."
 msgstr ""
 "Puolella, jolla on sivuasetteluja: asettelut mallipohjan tunnuksen mukaan "
-"ilman versiota, joiden arvojoukon Pixonaut on hylännyt tai jota ei ole "
-"voitu pyytää. Niin kauan kuin asettelu on listalla, tuotetta ei voi "
-"ostaa; uusi tarkistus muodostaa joukon uudelleen. Puuttuu puolelta, jolla "
-"ei ole asetteluja."
+"ilman versiota, joiden arvojoukon Pixonaut on hylännyt tai jota ei ole voitu "
+"pyytää. Niin kauan kuin asettelu on listalla, tuotetta ei voi ostaa; uusi "
+"tarkistus muodostaa joukon uudelleen. Puuttuu puolelta, jolla ei ole "
+"asetteluja."
 
 #: src/Abilities/ProductSetup.php:426
 msgid ""
@@ -3342,8 +3342,8 @@ msgstr "`price_changes` on jokin arvoista %1$s kohteelle #%2$d."
 msgid "Set up a product for Pixonaut"
 msgstr "Määritä tuotteen Pixonaut-asetukset"
 
-#: src/Abilities/SetProductSetup.php:63
 #
+#: src/Abilities/SetProductSetup.php:63
 msgid ""
 "Sets up a simple or variable product, or one variation, as its Pixonaut tab "
 "does: the blank, every side (template, placement, print sizes, start size, "
@@ -3358,17 +3358,16 @@ msgid ""
 msgstr ""
 "Määrittää yksinkertaisen tuotteen, muunnelmatuotteen tai yksittäisen "
 "muunnelman asetukset samoin kuin sen Pixonaut-välilehti: pohjatuotteen, "
-"jokaisen puolen (mallipohja, painokohta, painokoot, aloituskoko, "
-"lomakkeen järjestely, personoitu tai kiinteä), asettelun, lomakkeen "
-"asettelun, hyväksyntätavan, suunnittelualueen muodon, suunnittelutyökalun "
-"näkymät, painotalon ja pohjatuotteen version. Pois jätetty kenttä "
-"säilyttää arvonsa, joten lue asetukset kyvyllä `list-products` ja lähetä "
-"vain muuttuvat. Muunnelma, joka saa minkä tahansa asetuskentän, saa omat "
-"asetukset; `own_setup` false saa sen taas noudattamaan tuotteensa "
-"asetuksia. Pixonaut tarkistaa asetukset; tuote, joka ei läpäise "
-"tarkistusta, tallennetaan, mutta sitä ei voi ostaa, ja vastaus kertoo "
-"syyn. Sivuasettelut, joita ei voi tarjota, hylkäävät kutsun, eikä mitään "
-"tallenneta."
+"jokaisen puolen (mallipohja, painokohta, painokoot, aloituskoko, lomakkeen "
+"järjestely, personoitu tai kiinteä), asettelun, lomakkeen asettelun, "
+"hyväksyntätavan, suunnittelualueen muodon, suunnittelutyökalun näkymät, "
+"painotalon ja pohjatuotteen version. Pois jätetty kenttä säilyttää arvonsa, "
+"joten lue asetukset kyvyllä `list-products` ja lähetä vain muuttuvat. "
+"Muunnelma, joka saa minkä tahansa asetuskentän, saa omat asetukset; "
+"`own_setup` false saa sen taas noudattamaan tuotteensa asetuksia. Pixonaut "
+"tarkistaa asetukset; tuote, joka ei läpäise tarkistusta, tallennetaan, mutta "
+"sitä ei voi ostaa, ja vastaus kertoo syyn. Sivuasettelut, joita ei voi "
+"tarjota, hylkäävät kutsun, eikä mitään tallenneta."
 
 #: src/Abilities/SetProductSetup.php:74
 msgid ""
@@ -3445,7 +3444,7 @@ msgstr ""
 "pohjatuotteen versio, jota se myy, sen `v_…`-id:llä; tyhjä, jos versio "
 "täsmätään tuotteen ominaisuuksien perusteella."
 
-#: src/Abilities/SetProductSetup.php:152
+#: src/Abilities/SetProductSetup.php:166
 msgid ""
 "A variation follows its product for option_groups and group_numbers: set "
 "them on the product."
@@ -3736,8 +3735,8 @@ msgstr "Kortin %s kuva ei ole julkinen URL."
 msgid "Set a product's own values for its template"
 msgstr "Aseta tuotteen omat arvot sen mallipohjalle"
 
-#: src/Abilities/SetProductValues.php:76
 #
+#: src/Abilities/SetProductValues.php:76
 msgid ""
 "Sets the values a simple or variable product, or a variation with a setup of "
 "its own (`variation_id`), gives its sides' template layers, by layer id and "
@@ -3761,30 +3760,29 @@ msgid ""
 "null where it has none, and `values_from`, whose they are."
 msgstr ""
 "Asettaa arvot, jotka yksinkertainen tai muunnelmatuote tai omat asetukset "
-"omaava muunnelma (`variation_id`) antaa puoliensa mallipohjan tasoille "
-"tason tunnuksen ja ominaisuuden mukaan, esim. `{\"title\": {\"content\": "
+"omaava muunnelma (`variation_id`) antaa puoliensa mallipohjan tasoille tason "
+"tunnuksen ja ominaisuuden mukaan, esim. `{\"title\": {\"content\": "
 "\"farmor\"}}`: yksi mallipohja myy silloin yhtä monta tuotetta, kunkin "
-"omassa teemassaan tai omalle vastaanottajalleen. Arvo ominaisuudella, "
-"jota asiakas saa muuttaa, on kohta, josta suunnittelutyökalu lähtee "
-"liikkeelle; arvo kiinteällä ominaisuudella painetaan sellaisenaan. "
-"Jokainen `key`-tunnuksellaan mainittu puoli saa `values`-arvonsa tai null "
-"(tai tyhjän objektin), jos ne poistetaan; pois jätetty puoli säilyttää "
-"omansa. Puolella, jolla on sivuasetteluja, arvot ulottuvat jokaiseen "
-"asetteluun: kukin asettelu saa arvot niille tasoille, jotka sillä on, ja "
-"taso, jota ei ole puolen mallipohjassa eikä missään asettelussa, hylkää "
-"kutsun. Pixonaut arvioi arvot puolen mallipohjaversiota vastaan: taso tai "
-"ominaisuus, jota mallipohjassa ei ole, tai arvo, jonka sen säännöt "
-"hylkäävät, hylkää koko kutsun, ja vastaus nimeää jokaisen puolen, tason "
-"ja ominaisuuden mukaan. Sama koskee puolta, jota tuotteella ei ole, "
-"puolta ilman mallipohjaa, tuotetta ilman Pixonaut-asetuksia ja "
-"muunnelmaa, joka seuraa tuotettaan. Tuotteen arvot ulottuvat sen "
-"muunnelmiin: niihin, jotka seuraavat sitä, ja puolelle, jolle niillä ei "
-"ole omia arvoja, niihin, joilla on omat asetukset ja joiden puoli on "
-"samalla mallipohjalla kuin tuotteen. Vastauksena on jokainen puoli "
-"`template_id`-tunnuksineen, `value_set_id`-tunnuksineen, jonka Pixonaut "
-"on tehnyt arvoista, joilla puolta myydään, `values`-arvoineen, null, jos "
-"sillä ei ole niitä, ja `values_from`-kenttineen, joka kertoo, kenen ne "
-"ovat."
+"omassa teemassaan tai omalle vastaanottajalleen. Arvo ominaisuudella, jota "
+"asiakas saa muuttaa, on kohta, josta suunnittelutyökalu lähtee liikkeelle; "
+"arvo kiinteällä ominaisuudella painetaan sellaisenaan. Jokainen `key`-"
+"tunnuksellaan mainittu puoli saa `values`-arvonsa tai null (tai tyhjän "
+"objektin), jos ne poistetaan; pois jätetty puoli säilyttää omansa. Puolella, "
+"jolla on sivuasetteluja, arvot ulottuvat jokaiseen asetteluun: kukin "
+"asettelu saa arvot niille tasoille, jotka sillä on, ja taso, jota ei ole "
+"puolen mallipohjassa eikä missään asettelussa, hylkää kutsun. Pixonaut "
+"arvioi arvot puolen mallipohjaversiota vastaan: taso tai ominaisuus, jota "
+"mallipohjassa ei ole, tai arvo, jonka sen säännöt hylkäävät, hylkää koko "
+"kutsun, ja vastaus nimeää jokaisen puolen, tason ja ominaisuuden mukaan. "
+"Sama koskee puolta, jota tuotteella ei ole, puolta ilman mallipohjaa, "
+"tuotetta ilman Pixonaut-asetuksia ja muunnelmaa, joka seuraa tuotettaan. "
+"Tuotteen arvot ulottuvat sen muunnelmiin: niihin, jotka seuraavat sitä, ja "
+"puolelle, jolle niillä ei ole omia arvoja, niihin, joilla on omat asetukset "
+"ja joiden puoli on samalla mallipohjalla kuin tuotteen. Vastauksena on "
+"jokainen puoli `template_id`-tunnuksineen, `value_set_id`-tunnuksineen, "
+"jonka Pixonaut on tehnyt arvoista, joilla puolta myydään, `values`-"
+"arvoineen, null, jos sillä ei ole niitä, ja `values_from`-kenttineen, joka "
+"kertoo, kenen ne ovat."
 
 #: src/Abilities/SetProductValues.php:87
 msgid ""
@@ -3891,8 +3889,8 @@ msgid ""
 "side `%1$s`, layer `%2$s`: neither the side's template nor any of its page "
 "layouts has it"
 msgstr ""
-"puoli `%1$s`, taso `%2$s`: sitä ei ole puolen mallipohjassa eikä missään "
-"sen sivuasettelussa"
+"puoli `%1$s`, taso `%2$s`: sitä ei ole puolen mallipohjassa eikä missään sen "
+"sivuasettelussa"
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductValues.php:345
@@ -4146,11 +4144,10 @@ msgstr ""
 "sisäsivuina: muut mallipohjat, joille sivu voidaan suunnitella (asettelut "
 "kuten kaksi tai neljä valokuvaa), siinä muodossa kuin `template_id` ne "
 "ottaa, siinä järjestyksessä kuin ostaja ne näkee; jokainen sivu aloittaa "
-"mallipohjasta `template_id`. Kukin seuraa uusinta julkaistua versiotaan "
-"tai pysyy annetussa versiossa, kun `template_pinned` on true. Enintään "
-"%d, kukin `template_id`:n kuvasuhteella, ei yhtäkään kahdesti eikä "
-"`template_id`:tä itseään; muut hylätään. Tyhjä tai pois jätetty "
-"tarkoittaa ei yhtään."
+"mallipohjasta `template_id`. Kukin seuraa uusinta julkaistua versiotaan tai "
+"pysyy annetussa versiossa, kun `template_pinned` on true. Enintään %d, kukin "
+"`template_id`:n kuvasuhteella, ei yhtäkään kahdesti eikä `template_id`:tä "
+"itseään; muut hylätään. Tyhjä tai pois jätetty tarkoittaa ei yhtään."
 
 #. translators: %s: what the empty choice follows, e.g. "empty for the template's own setting".
 #: src/Abilities/SetupFields.php:254
@@ -4308,6 +4305,41 @@ msgstr ""
 "Muunnelmalla on omat asetukset ilman pohjatuotetta, joten painokohtaa, jonka "
 "koon se voisi saada, ei ole: anna sille koko tai aseta se noudattamaan taas "
 "tuotettaan kyvyllä set-product-setup."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/SetVariationsSetup.php:58
+msgid "Set up many variations for Pixonaut"
+msgstr "Määritä monen muunnelman Pixonaut-asetukset"
+
+#: src/Abilities/SetVariationsSetup.php:59
+msgid ""
+"Sets the same setup on many variations of one variable product, each as `set-"
+"product-setup` sets one variation: a field left out keeps what that "
+"variation has, so each keeps its own blank variant, and its own blank unless "
+"`blank_id` is given. Every id must be a variation of the product, or nothing "
+"is saved. The answer lists each variation's setup, or why it was refused, in "
+"the order given."
+msgstr "Antaa monelle saman muunnelmatuotteen muunnelmalle samat asetukset, kullekin niin kuin `set-product-setup` määrittää yhden muunnelman: pois jätetty kenttä pitää muunnelman nykyisen arvon, joten kukin pitää oman pohjatuotteen varianttinsa ja oman pohjatuotteensa, ellei `blank_id` ole annettu. Jokaisen tunnisteen on oltava tuotteen muunnelma, muuten mitään ei tallenneta. Vastaus kertoo kunkin muunnelman asetukset tai miksi se hylättiin, annetussa järjestyksessä."
+
+#: src/Abilities/SetVariationsSetup.php:65
+msgid "The variable product."
+msgstr "Muunnelmatuote."
+
+#: src/Abilities/SetVariationsSetup.php:70
+msgid "Its variations to set up, each once."
+msgstr "Sen määritettävät muunnelmat, kukin kerran."
+
+#. translators: %s: the ids given, comma-separated.
+#: src/Abilities/SetVariationsSetup.php:114
+#, php-format
+msgid "These are not variations of the product: %s. Nothing was saved."
+msgstr "Nämä eivät ole tuotteen muunnelmia: %s. Mitään ei tallennettu."
+
+#: src/Abilities/SetVariationsSetup.php:166
+msgid ""
+"Why this variation was refused, which leaves it as it was; absent once it is "
+"set up."
+msgstr "Miksi tämä muunnelma hylättiin, jolloin se jää ennalleen; puuttuu, kun se on määritetty."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetVariationVariants.php:56
@@ -7330,8 +7362,8 @@ msgid ""
 "A side offers at most %1$d page layouts besides its own template. Remove "
 "layouts in %2$s."
 msgstr ""
-"Puoli tarjoaa enintään %1$d sivuasettelua oman mallipohjansa lisäksi. "
-"Poista asetteluja kohdassa %2$s."
+"Puoli tarjoaa enintään %1$d sivuasettelua oman mallipohjansa lisäksi. Poista "
+"asetteluja kohdassa %2$s."
 
 #: src/Catalogue/InvalidReason.php:478
 msgid ""
@@ -13213,15 +13245,15 @@ msgstr "Mallipohja"
 msgid "Search for a template"
 msgstr "Hae mallipohjaa"
 
+#
 #. translators: Label of the field picking the other templates (layouts, such as two or four photos) a page of a book may be designed on. Admin product page.
 #: templates/admin/product-side.php:128
-#
 msgid "Page layouts"
 msgstr "Sivuasettelut"
 
+#
 #. translators: Placeholder of the search dropdown picking a book page's other layouts. Admin product page.
 #: templates/admin/product-side.php:132
-#
 msgid "Search for templates"
 msgstr "Hae mallipohjia"
 

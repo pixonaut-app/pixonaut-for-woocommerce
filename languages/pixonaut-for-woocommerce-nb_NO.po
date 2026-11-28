@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-28T13:24:16+00:00\n"
+"POT-Creation-Date: 2026-11-28T16:54:54+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: nb_NO\n"
@@ -2490,10 +2490,10 @@ msgid ""
 "layout with none of the layers has none, and so does every layout without "
 "values. Absent on a side without layouts."
 msgstr ""
-"På en side med sideutforminger: verdisettet Pixonaut har laget av "
-"verdiene for hver utformings lag, etter utformingens mal-id uten versjon; "
-"en utforming uten noen av lagene har ingen, og det har heller ingen "
-"utforming uten verdier. Mangler på en side uten utforminger."
+"På en side med sideutforminger: verdisettet Pixonaut har laget av verdiene "
+"for hver utformings lag, etter utformingens mal-id uten versjon; en "
+"utforming uten noen av lagene har ingen, og det har heller ingen utforming "
+"uten verdier. Mangler på en side uten utforminger."
 
 #: src/Abilities/ProductSetup.php:421
 msgid ""
@@ -2503,9 +2503,9 @@ msgid ""
 "on a side without layouts."
 msgstr ""
 "På en side med sideutforminger: utformingene, etter mal-id uten versjon, "
-"hvis verdisett Pixonaut har avvist eller ikke har kunnet be om. Så lenge "
-"en utforming står oppført, kan ikke produktet kjøpes; en ny kontroll "
-"lager settet på nytt. Mangler på en side uten utforminger."
+"hvis verdisett Pixonaut har avvist eller ikke har kunnet be om. Så lenge en "
+"utforming står oppført, kan ikke produktet kjøpes; en ny kontroll lager "
+"settet på nytt. Mangler på en side uten utforminger."
 
 #: src/Abilities/ProductSetup.php:426
 msgid ""
@@ -3286,8 +3286,8 @@ msgstr "`price_changes` er en av %1$s for #%2$d."
 msgid "Set up a product for Pixonaut"
 msgstr "Sett opp et produkt for Pixonaut"
 
-#: src/Abilities/SetProductSetup.php:63
 #
+#: src/Abilities/SetProductSetup.php:63
 msgid ""
 "Sets up a simple or variable product, or one variation, as its Pixonaut tab "
 "does: the blank, every side (template, placement, print sizes, start size, "
@@ -3302,15 +3302,15 @@ msgid ""
 msgstr ""
 "Setter opp et enkelt eller variabelt produkt, eller én variant, slik "
 "Pixonaut-fanen gjør: basisproduktet, hver side (mal, plassering, "
-"trykkstørrelser, startstørrelse, skjemaoppsett, personalisert eller "
-"fast), utforming, skjemautforming, godkjenningsmåte, lerretsform, "
-"designverktøyets visninger, trykkeriet og basisproduktvarianten. Et felt "
-"som utelates, beholder verdien sin, så les oppsettet med `list-products` "
-"og send det som endres. En variant som får et oppsettfelt, får sitt eget "
-"oppsett; `own_setup` false gjør at den følger produktet igjen. Pixonaut "
-"kontrollerer oppsettet; et produkt som ikke består en kontroll, lagres, "
-"men kan ikke kjøpes, og svaret forteller hvorfor. Sideutforminger som "
-"ikke kan tilbys, avviser i stedet kallet, og ingenting lagres."
+"trykkstørrelser, startstørrelse, skjemaoppsett, personalisert eller fast), "
+"utforming, skjemautforming, godkjenningsmåte, lerretsform, designverktøyets "
+"visninger, trykkeriet og basisproduktvarianten. Et felt som utelates, "
+"beholder verdien sin, så les oppsettet med `list-products` og send det som "
+"endres. En variant som får et oppsettfelt, får sitt eget oppsett; "
+"`own_setup` false gjør at den følger produktet igjen. Pixonaut kontrollerer "
+"oppsettet; et produkt som ikke består en kontroll, lagres, men kan ikke "
+"kjøpes, og svaret forteller hvorfor. Sideutforminger som ikke kan tilbys, "
+"avviser i stedet kallet, og ingenting lagres."
 
 #: src/Abilities/SetProductSetup.php:74
 msgid ""
@@ -3385,7 +3385,7 @@ msgstr ""
 "basisproduktvarianten det selger, angitt med `v_…`-id-en; tom for å matche "
 "den ut fra produktets attributter."
 
-#: src/Abilities/SetProductSetup.php:152
+#: src/Abilities/SetProductSetup.php:166
 msgid ""
 "A variation follows its product for option_groups and group_numbers: set "
 "them on the product."
@@ -3672,8 +3672,8 @@ msgstr "Bildet for kort %s er ikke en offentlig URL."
 msgid "Set a product's own values for its template"
 msgstr "Angi et produkts egne verdier for malen"
 
-#: src/Abilities/SetProductValues.php:76
 #
+#: src/Abilities/SetProductValues.php:76
 msgid ""
 "Sets the values a simple or variable product, or a variation with a setup of "
 "its own (`variation_id`), gives its sides' template layers, by layer id and "
@@ -3696,27 +3696,27 @@ msgid ""
 "`value_set_id` Pixonaut made of the values it is sold with, its `values`, "
 "null where it has none, and `values_from`, whose they are."
 msgstr ""
-"Angir verdiene et enkelt eller variabelt produkt, eller en variant med "
-"eget oppsett (`variation_id`), gir malens lag på sidene sine, etter "
-"lag-id og egenskap, f.eks. `{\"title\": {\"content\": \"farmor\"}}`: én "
-"mal selger da like mange produkter, hvert i sitt eget tema eller til sin "
-"egen mottaker. En verdi på en egenskap kunden kan endre, er der "
-"designverktøyet starter; en verdi på en fast egenskap trykkes som angitt. "
-"Hver side som er nevnt med sin `key`, får sine `values`, eller null "
-"(eller et tomt objekt) for å fjerne dem; en side som utelates, beholder "
-"sine egne. På en side med sideutforminger gjelder verdiene for hver "
-"utforming: hver utforming får verdiene for lagene den har, og et lag som "
-"verken sidens mal eller noen utforming har, avviser kallet. Pixonaut "
-"vurderer verdiene mot sidens malversjon: et lag eller en egenskap malen "
-"ikke har, eller en verdi dens regler avviser, gjør at hele kallet "
-"avvises, og svaret nevner hver av dem etter side, lag og egenskap. Det "
-"samme gjelder en side produktet ikke har, en side uten mal, et produkt "
-"uten Pixonaut-oppsett og en variant som følger produktet sitt. Et "
-"produkts verdier når variantene dens: de som følger det, og, for en side "
-"de ikke har egne verdier for, de med eget oppsett der siden ligger på "
-"samme mal som produktets. Svaret er hver side med sin `template_id`, den "
-"`value_set_id` Pixonaut har laget av verdiene den selges med, dens "
-"`values`, null der den ingen har, og `values_from`, hvem sine de er."
+"Angir verdiene et enkelt eller variabelt produkt, eller en variant med eget "
+"oppsett (`variation_id`), gir malens lag på sidene sine, etter lag-id og "
+"egenskap, f.eks. `{\"title\": {\"content\": \"farmor\"}}`: én mal selger da "
+"like mange produkter, hvert i sitt eget tema eller til sin egen mottaker. En "
+"verdi på en egenskap kunden kan endre, er der designverktøyet starter; en "
+"verdi på en fast egenskap trykkes som angitt. Hver side som er nevnt med sin "
+"`key`, får sine `values`, eller null (eller et tomt objekt) for å fjerne "
+"dem; en side som utelates, beholder sine egne. På en side med "
+"sideutforminger gjelder verdiene for hver utforming: hver utforming får "
+"verdiene for lagene den har, og et lag som verken sidens mal eller noen "
+"utforming har, avviser kallet. Pixonaut vurderer verdiene mot sidens "
+"malversjon: et lag eller en egenskap malen ikke har, eller en verdi dens "
+"regler avviser, gjør at hele kallet avvises, og svaret nevner hver av dem "
+"etter side, lag og egenskap. Det samme gjelder en side produktet ikke har, "
+"en side uten mal, et produkt uten Pixonaut-oppsett og en variant som følger "
+"produktet sitt. Et produkts verdier når variantene dens: de som følger det, "
+"og, for en side de ikke har egne verdier for, de med eget oppsett der siden "
+"ligger på samme mal som produktets. Svaret er hver side med sin "
+"`template_id`, den `value_set_id` Pixonaut har laget av verdiene den selges "
+"med, dens `values`, null der den ingen har, og `values_from`, hvem sine de "
+"er."
 
 #: src/Abilities/SetProductValues.php:87
 msgid ""
@@ -4067,14 +4067,13 @@ msgid ""
 "most %d, each at the ratio of `template_id`, none twice and not "
 "`template_id` itself; any other is refused. Empty or left out for none."
 msgstr ""
-"På en side hvis trykkposisjon trykkes som sider, for eksempel innsidene i "
-"en fotobok: de andre malene en side kan utformes på (utforminger som to "
-"eller fire bilder), slik `template_id` tar dem, i den rekkefølgen kunden "
-"ser dem; hver side starter på `template_id`. Hver følger sin siste "
-"publiserte versjon, eller blir på den oppgitte versjonen når "
-"`template_pinned` er true. Høyst %d, hver i `template_id`s bildeformat, "
-"ingen to ganger og ikke `template_id` selv; alle andre avvises. Tom eller "
-"utelatt for ingen."
+"På en side hvis trykkposisjon trykkes som sider, for eksempel innsidene i en "
+"fotobok: de andre malene en side kan utformes på (utforminger som to eller "
+"fire bilder), slik `template_id` tar dem, i den rekkefølgen kunden ser dem; "
+"hver side starter på `template_id`. Hver følger sin siste publiserte "
+"versjon, eller blir på den oppgitte versjonen når `template_pinned` er true. "
+"Høyst %d, hver i `template_id`s bildeformat, ingen to ganger og ikke "
+"`template_id` selv; alle andre avvises. Tom eller utelatt for ingen."
 
 #. translators: %s: what the empty choice follows, e.g. "empty for the template's own setting".
 #: src/Abilities/SetupFields.php:254
@@ -4231,6 +4230,41 @@ msgstr ""
 "Varianten har sitt eget oppsett uten basisprodukt, så det finnes ingen "
 "plassering den kan få størrelsen fra: gi den en størrelse, eller la den "
 "følge produktet igjen med set-product-setup."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/SetVariationsSetup.php:58
+msgid "Set up many variations for Pixonaut"
+msgstr "Sett opp mange varianter for Pixonaut"
+
+#: src/Abilities/SetVariationsSetup.php:59
+msgid ""
+"Sets the same setup on many variations of one variable product, each as `set-"
+"product-setup` sets one variation: a field left out keeps what that "
+"variation has, so each keeps its own blank variant, and its own blank unless "
+"`blank_id` is given. Every id must be a variation of the product, or nothing "
+"is saved. The answer lists each variation's setup, or why it was refused, in "
+"the order given."
+msgstr "Gir mange varianter av ett variabelt produkt samme oppsett, hver slik `set-product-setup` setter opp én variant: et felt som utelates, beholder det varianten har, så hver beholder sin egen blankvariant, og sin egen blank med mindre `blank_id` er gitt. Hver id må være en variant av produktet, ellers lagres ingenting. Svaret viser hver variants oppsett, eller hvorfor den ble avvist, i rekkefølgen som ble gitt."
+
+#: src/Abilities/SetVariationsSetup.php:65
+msgid "The variable product."
+msgstr "Det variable produktet."
+
+#: src/Abilities/SetVariationsSetup.php:70
+msgid "Its variations to set up, each once."
+msgstr "Variantene som skal settes opp, hver én gang."
+
+#. translators: %s: the ids given, comma-separated.
+#: src/Abilities/SetVariationsSetup.php:114
+#, php-format
+msgid "These are not variations of the product: %s. Nothing was saved."
+msgstr "Dette er ikke varianter av produktet: %s. Ingenting ble lagret."
+
+#: src/Abilities/SetVariationsSetup.php:166
+msgid ""
+"Why this variation was refused, which leaves it as it was; absent once it is "
+"set up."
+msgstr "Hvorfor denne varianten ble avvist, som lar den være som den var; mangler når den er satt opp."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetVariationVariants.php:56
@@ -7206,9 +7240,9 @@ msgid ""
 "a book’s inner pages. Remove the side’s page layouts, or choose such a print "
 "position, in %s."
 msgstr ""
-"Sideutforminger tilbys bare på en trykkposisjon som trykkes som sider, "
-"for eksempel innsidene i en bok. Fjern sidens sideutforminger, eller velg "
-"en slik trykkposisjon, i %s."
+"Sideutforminger tilbys bare på en trykkposisjon som trykkes som sider, for "
+"eksempel innsidene i en bok. Fjern sidens sideutforminger, eller velg en "
+"slik trykkposisjon, i %s."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
 #: src/Catalogue/InvalidReason.php:461
@@ -7218,9 +7252,9 @@ msgid ""
 "template, so a page designed on it would not fill the page. Choose layouts "
 "at the side template’s ratio in %s."
 msgstr ""
-"Malen til en sideutforming har ikke samme bildeformat som sidens mal, så "
-"en side utformet på den ville ikke fylt siden. Velg utforminger i "
-"bildeformatet til sidens mal i %s."
+"Malen til en sideutforming har ikke samme bildeformat som sidens mal, så en "
+"side utformet på den ville ikke fylt siden. Velg utforminger i bildeformatet "
+"til sidens mal i %s."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
 #: src/Catalogue/InvalidReason.php:467
@@ -7229,9 +7263,8 @@ msgid ""
 "A page layout is chosen twice, or is the side’s own template, which every "
 "page starts on. Choose each layout once, besides the side’s template, in %s."
 msgstr ""
-"En sideutforming er valgt to ganger, eller er sidens egen mal, som hver "
-"side starter på. Velg hver utforming én gang, i tillegg til sidens mal, i "
-"%s."
+"En sideutforming er valgt to ganger, eller er sidens egen mal, som hver side "
+"starter på. Velg hver utforming én gang, i tillegg til sidens mal, i %s."
 
 #. translators: 1: most page layouts one side can offer, 2: where the settings are, e.g. "the product's Pixonaut tab".
 #: src/Catalogue/InvalidReason.php:473
@@ -7240,8 +7273,8 @@ msgid ""
 "A side offers at most %1$d page layouts besides its own template. Remove "
 "layouts in %2$s."
 msgstr ""
-"En side tilbyr høyst %1$d sideutforminger i tillegg til sin egen mal. "
-"Fjern utforminger i %2$s."
+"En side tilbyr høyst %1$d sideutforminger i tillegg til sin egen mal. Fjern "
+"utforminger i %2$s."
 
 #: src/Catalogue/InvalidReason.php:478
 msgid ""
@@ -13094,15 +13127,15 @@ msgstr "Mal"
 msgid "Search for a template"
 msgstr "Søk etter en mal"
 
+#
 #. translators: Label of the field picking the other templates (layouts, such as two or four photos) a page of a book may be designed on. Admin product page.
 #: templates/admin/product-side.php:128
-#
 msgid "Page layouts"
 msgstr "Sideutforminger"
 
+#
 #. translators: Placeholder of the search dropdown picking a book page's other layouts. Admin product page.
 #: templates/admin/product-side.php:132
-#
 msgid "Search for templates"
 msgstr "Søk etter maler"
 
@@ -13113,8 +13146,8 @@ msgid ""
 "Up to %d other templates, at the template’s aspect ratio, that customers may "
 "design a page on. Every page starts on the template above."
 msgstr ""
-"Opptil %d andre maler, i malens bildeformat, som kunder kan utforme en "
-"side på. Hver side starter på malen over."
+"Opptil %d andre maler, i malens bildeformat, som kunder kan utforme en side "
+"på. Hver side starter på malen over."
 
 #: templates/admin/product-side.php:149
 msgid ""

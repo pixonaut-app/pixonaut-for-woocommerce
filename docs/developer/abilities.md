@@ -25,6 +25,7 @@ client signs in as, and checks that user's capability itself.
 | `pixonaut-for-woocommerce/generate-product-variations` | Makes, changes and disables a variable product's variations from its plan, one per combination of its attribute values; a dry run by default | `edit_product` on that product |
 | `pixonaut-for-woocommerce/set-variation-print-size` | Gives one variation its own print size, checked with Pixonaut; a size it cannot print is refused | `edit_product` on that variation and its product |
 | `pixonaut-for-woocommerce/set-product-setup` | Sets up a simple or variable product, or a variation, as its Pixonaut tab does: blank, sides, settings, views, printshop and blank variant | `edit_product` on that product (and on a variation's product) |
+| `pixonaut-for-woocommerce/set-variations-setup` | Sets the same setup on many variations of one variable product, each as `set-product-setup` sets one | `edit_product` on that product |
 | `pixonaut-for-woocommerce/set-product-showcase` | Sets which of its template's showcase sets a product's images are drawn with | `edit_product` on that product |
 | `pixonaut-for-woocommerce/get-product-picture-views` | What a product's or variation's images are drawn on, the views and photos of its side's placement, and the showcase sets a product can show | `edit_product` on that product (and on a variation's product) |
 | `pixonaut-for-woocommerce/set-product-picture-view` | Sets the view and photo one image of a product or variation is drawn on, or flat | `edit_product` on that product (and on a variation's product) |
@@ -369,6 +370,19 @@ A variation given any setup field gets a setup of its own, starting from its
 product's; `own_setup` false makes it follow its product again, keeping its
 own unused. Its `variant` can be set either way; left out, a variant picked on a blank
 it is no longer on is matched by options again.
+
+`set-variations-setup` sets many variations of one variable product alike in
+one call: `product_id`, `variation_ids` (at most 100, each once) and the
+setup fields `set-product-setup` takes, without `variant`, `option_groups`
+and `group_numbers`. Each variation is set up as `set-product-setup` sets
+it, so a field left out keeps what that variation has: each keeps its own
+blank variant, and its own blank unless `blank_id` is given. Pixonaut is
+asked each question the variations' checks share once, so sides set alike
+are checked once. An id that is not a variation of the product refuses the
+call (`pixonaut_wc_ability_not_its_variation`) and saves nothing. The answer
+is `product_id` and `variations`, in the order given: each one's
+`variation_id` with its setup as `set-product-setup` answers it, or an
+`error` (`code`, `message`) for one refused, which is left as it was.
 
 `set-variation-print-size` gives one variation its own print size, on a
 product with or without a blank: `variation_id`, `width_mm`, `height_mm` and
