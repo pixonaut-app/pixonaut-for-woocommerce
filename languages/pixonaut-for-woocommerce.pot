@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Pixonaut for WooCommerce 1.37.0\n"
+"Project-Id-Version: Pixonaut for WooCommerce 1.38.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-28T08:19:50+00:00\n"
+"POT-Creation-Date: 2026-11-28T10:09:21+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pixonaut-for-woocommerce\n"
@@ -7086,23 +7086,23 @@ msgid "Options"
 msgstr ""
 
 #. translators: Why Pixonaut refused a product, filling in %2$s of a message on the admin product page. Ends a sentence; lower case.
-#: src/Storefront/KeptDesignerLinks.php:772
+#: src/Storefront/KeptDesignerLinks.php:775
 msgid "one of the print sizes it offers does not fit its template or its position on the blank. Change the sizes in its Pixonaut tab."
 msgstr ""
 
 #. translators: Why Pixonaut refused a product, filling in %2$s of a message on the admin product page. Ends a sentence; lower case.
-#: src/Storefront/KeptDesignerLinks.php:774
+#: src/Storefront/KeptDesignerLinks.php:777
 msgid "its blank no longer has a position one of its sides prints on. Pick the positions again in its Pixonaut tab."
 msgstr ""
 
 #. translators: %s: the error code Pixonaut answered, e.g. `invalid_input`.
-#: src/Storefront/KeptDesignerLinks.php:776
+#: src/Storefront/KeptDesignerLinks.php:779
 #, php-format
 msgid "Pixonaut answered %s."
 msgstr ""
 
 #. translators: 1: the product's name, 2: why Pixonaut refused its link.
-#: src/Storefront/KeptDesignerLinks.php:780
+#: src/Storefront/KeptDesignerLinks.php:783
 #, php-format
 msgid "Customers cannot open the designer for %1$s: %2$s"
 msgstr ""

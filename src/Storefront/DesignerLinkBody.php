@@ -30,6 +30,10 @@ use Pixonaut\WooCommerce\Catalogue\Side;
  * A side printed as pages offers the one page count the product or
  * variation is sold at, so the hosted designer cannot design a book of
  * another count than the cart charges for.
+ *
+ * A side sold with values of its own names their value set, so the hosted
+ * designer opens on the product's motif and texts, and the design it
+ * returns carries the set the cart checks it against.
  */
 final class DesignerLinkBody {
 
@@ -60,19 +64,26 @@ final class DesignerLinkBody {
 	 * @param bool                $add_to_cart Whether the store adds the design to the cart on return, which the hosted page's button then says.
 	 * @param int|null            $page_count  The pages a book is sold at; null for none.
 	 * @param string[]            $paged       The blank's placements printed as pages.
+	 * @param array<string|null>  $value_sets  Each side's value set (`SideValues::set_of()`), by its place in the sides; null or absent for none.
 	 * @phpstan-param list<string> $paged
+	 * @phpstan-param array<int, string|null> $value_sets
 	 */
-	public static function for_config( ProductConfig $config, string $return_url, ?string $language, ?ProductVariant $variant = null, bool $frame = false, ?string $layout = null, bool $add_to_cart = false, ?int $page_count = null, array $paged = array() ): ?self {
+	public static function for_config( ProductConfig $config, string $return_url, ?string $language, ?ProductVariant $variant = null, bool $frame = false, ?string $layout = null, bool $add_to_cart = false, ?int $page_count = null, array $paged = array(), array $value_sets = array() ): ?self {
 		$sides = $config->sides;
 		if ( ! $config->valid || array() === $sides || ( count( $sides ) > 1 && null === $config->blank_id ) ) {
 			return null;
 		}
 		$first = $sides[0];
 		$parts = array();
-		foreach ( $sides as $side ) {
+		foreach ( $sides as $index => $side ) {
 			$part = self::side( $side, $config, $variant );
 			if ( null === $part ) {
 				return null;
+			}
+			$value_set = $value_sets[ $index ] ?? null;
+			if ( null !== $value_set ) {
+				// Absent, as for a link kept from before, the template's own values.
+				$part['valueSet'] = $value_set;
 			}
 			if ( null !== $page_count && in_array( $side->placement_id, $paged, true ) ) {
 				$part['pages'] = array(
