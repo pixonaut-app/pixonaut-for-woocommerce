@@ -36,7 +36,9 @@ use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
  * A row the template cannot be printed at (Pixonaut refuses its design for
  * its print size: on a cut-and-sewn panel, the template's shape matches an
  * S's panel and not an XL's) gets no design, so its variants are not sold,
- * and is named among the side's misfit sizes.
+ * and is named among the side's misfit sizes. So does a row the side's
+ * check already found unprintable (`Side::$row_sizes`), without asking for
+ * its design.
  *
  * A row the store manager laid out by hand keeps its adjusted design, asking
  * Pixonaut nothing, while the side stays on the same template, blank and
@@ -83,6 +85,12 @@ final class StandingRows {
 		$rows    = array();
 		$misfits = array();
 		foreach ( PrintAreas::rows( $this->catalogue->variants( $blank_id ), $varies_by ) as $found ) {
+			$checked = $side->row_size_for( $found['variants'][0] ?? null );
+			if ( null !== $checked && null === $checked->size ) {
+				// The side's check found the row unprintable: its template misfits it, or Pixonaut refused the row's own size.
+				$misfits[] = MisfitSizes::value( $found['row'] );
+				continue;
+			}
 			$adjusted = self::adjusted( $known, $found['row'], $blank_id, $side );
 			if ( null !== $adjusted ) {
 				$rows[] = $this->with_preview( $adjusted->with_variants( $found['variants'] ), $side );

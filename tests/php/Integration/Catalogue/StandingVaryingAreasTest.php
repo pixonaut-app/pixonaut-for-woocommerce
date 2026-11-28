@@ -7,6 +7,8 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Catalogue;
 
+use Pixonaut\WooCommerce\Catalogue\InvalidReason;
+use Pixonaut\WooCommerce\Catalogue\MisfitSizes;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\RowSize;
 use Pixonaut\WooCommerce\Catalogue\Side;
@@ -92,13 +94,38 @@ final class StandingVaryingAreasTest extends StandingTestCase {
 		$this->assertArrayNotHasKey( 'widthMm', $requests[2] );
 	}
 
+	public function test_a_row_whose_area_pixonaut_refuses_gets_no_design_and_the_others_are_sold(): void {
+		$product  = $this->product();
+		$too_soft = array(
+			'legal'         => false,
+			'reason'        => InvalidReason::LOW_RESOLUTION,
+			'lowResolution' => array(),
+		);
+		$this->script_save( array( VerdictAnswers::LEGAL, $too_soft ), array( self::A6 ) );
+
+		$this->save( $product->get_id(), array(), array( 'mode' => Side::STANDING ) );
+
+		$config = ProductConfig::stored_on( $this->reload( $product->get_id() ) );
+		$this->assertTrue( $config->valid, 'a row it fits still sells' );
+		$side = $config->sides[0];
+		$this->assertSame( 'des_row_a6', $side->standing_design_for( 'v_a6' ) );
+		$this->assertNull( $side->standing_design_for( 'v_a5' ), 'an A5 variant is not sold' );
+		$this->assertCount( 2, $this->standing_requests(), 'no design is asked for the refused row' );
+		$this->assertSame( array( MisfitSizes::value( array( self::AREAS_VARY_BY => self::A5 ) ) ), $side->misfit_sizes );
+	}
+
 	/**
 	 * Scripts a save of the standing side at the placement's default on the
 	 * card blank: the blank, the constraints, each row's area's verdict, the
 	 * template's read, then the refusal of a design naming no row, the blank
-	 * again and each row's design with its read.
+	 * again and each designed row's design with its read.
+	 *
+	 * @param array[]|null  $verdicts Pixonaut's verdict of each row's area; null for legal.
+	 * @param string[]|null $designed The rows given a design; null for every row.
+	 * @phpstan-param list<array<string, mixed>>|null $verdicts
+	 * @phpstan-param list<string>|null $designed
 	 */
-	private function script_save(): void {
+	private function script_save( ?array $verdicts = null, ?array $designed = null ): void {
 		$blank = $this->card_blank();
 		$this->script_blank( $blank );
 		$constraints                               = $this->constraints( self::PLACEMENT_ID );
@@ -110,7 +137,7 @@ final class StandingVaryingAreasTest extends StandingTestCase {
 		$constraints['placement']['printWidthMm']  = self::PLACEMENT_BOX_MM;
 		$constraints['placement']['printHeightMm'] = self::PLACEMENT_BOX_MM;
 		$this->recorder->json( 200, $constraints );
-		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL, VerdictAnswers::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => $verdicts ?? array_fill( 0, count( self::AREAS ), VerdictAnswers::LEGAL ) ) );
 		$this->script_template();
 		$this->recorder->json(
 			422,
@@ -121,7 +148,7 @@ final class StandingVaryingAreasTest extends StandingTestCase {
 			)
 		);
 		$this->script_blank( $blank );
-		foreach ( self::AREAS as $size => list( $width, $height ) ) {
+		foreach ( array_intersect_key( self::AREAS, array_flip( $designed ?? array_keys( self::AREAS ) ) ) as $size => list( $width, $height ) ) {
 			$design_id = 'des_row_' . strtolower( $size );
 			$this->script_standing( $design_id );
 			$this->recorder->json(
