@@ -96,6 +96,11 @@ final class SideValues {
 		if ( null !== $own ) {
 			return self::found( $own, self::FROM_OWN );
 		}
+		$document = self::document_on( $product );
+		if ( null !== $document && array() === self::decoded( $document ) ) {
+			// Values of its own this plugin cannot read (a newer version's): never sold with its product's in their place.
+			return self::found( null, null );
+		}
 		$value = self::applying( $parent, $side );
 		if ( null === $value ) {
 			return self::found( null, null );

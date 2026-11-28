@@ -110,6 +110,20 @@ final class SideValuesTest extends WP_UnitTestCase {
 		$this->assertNull( SideValues::set_of( $this->reload( $own ), self::side( self::OTHER_TEMPLATE ) ) );
 	}
 
+	public function test_a_variation_whose_own_values_this_plugin_cannot_read_takes_none_of_its_products(): void {
+		list( $parent, , $own ) = $this->variable();
+		SideValues::replace_on( $parent, array( 'front' => new SideValue( self::TEMPLATE, self::SET, self::VALUES ) ), null );
+		$newer = (string) wp_json_encode(
+			array(
+				'v'     => SideValues::VERSION + 1,
+				'sides' => array( 'front' => ( new SideValue( self::TEMPLATE, self::OTHER_SET, self::VALUES ) )->to_array() ),
+			)
+		);
+		update_post_meta( $own->get_id(), SideValues::META_KEY, wp_slash( $newer ) );
+
+		$this->assertNull( SideValues::set_of( $this->reload( $own ), self::side( self::TEMPLATE ) ) );
+	}
+
 	public function test_values_left_behind_on_a_product_moved_to_another_template_reach_none_of_its_variations(): void {
 		list( $parent, , $own ) = $this->variable();
 		SideValues::replace_on( $parent, array( 'front' => new SideValue( self::TEMPLATE, self::SET, self::VALUES ) ), null );
