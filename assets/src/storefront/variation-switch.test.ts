@@ -8,6 +8,7 @@ import { ProductDesigner } from './designer';
 import { ReadsAhead } from './reads-ahead';
 import { type PixonautSdk, SdkLoadError } from './sdk-loader';
 import {
+	type FakePages,
 	fakeDesigner,
 	fakeSdk,
 	MOUNTS,
@@ -1036,6 +1037,63 @@ describe('ProductDesigner on a variable product', () => {
 			placementId: 'front',
 			initialValues: values,
 		});
+	});
+
+	it('holds the next switch, and keeps the designer locked, while it carries a book’s pages to the switched template', async () => {
+		const { form, sdkDesigner } = start();
+		await settle();
+		const saved = {
+			count: 2,
+			page: 1,
+			pages: [
+				{ templateId: 'mini-tee@2', values: {} },
+				{ templateId: 'mini-tee@2', values: { title: { content: 'Two' } } },
+			],
+		};
+		sdkDesigner.getPages.mockReturnValue({
+			count: 2,
+			page: 1,
+			shown: true,
+			placementId: 'front',
+			min: 2,
+			max: 8,
+			step: 2,
+		} as FakePages);
+		sdkDesigner.getState.mockReturnValue({
+			templateId: 'mini-tee@2',
+			values: { $sides: { $pages: { front: saved } } },
+		});
+		sdkDesigner.setTemplate.mockImplementation((to: string) => {
+			sdkDesigner.getState.mockReturnValue({ templateId: to, values: {} });
+			return Promise.resolve();
+		});
+		let showPage = (): void => undefined;
+		sdkDesigner.setPage.mockImplementationOnce(
+			() =>
+				new Promise<void>((resolve) => {
+					showPage = resolve;
+				}),
+		);
+
+		await choose(form, '14');
+		await choose(form, '11');
+
+		expect(sdkDesigner.setPage).toHaveBeenCalledExactlyOnceWith(2);
+		expect(sdkDesigner.setLocked).toHaveBeenLastCalledWith(true);
+		expect(sdkDesigner.setTemplate).toHaveBeenCalledOnce();
+
+		showPage();
+		await settle();
+
+		expect(sdkDesigner.setPage.mock.calls).toEqual([[2], [1]]);
+		expect(sdkDesigner.setLocked).toHaveBeenLastCalledWith(false);
+		expect(sdkDesigner.setTemplate.mock.calls).toEqual([
+			['mini-poster@1'],
+			['mini-tee@2'],
+		]);
+		expect(sdkDesigner.setLocked.mock.invocationCallOrder.at(-1)).toBeLessThan(
+			sdkDesigner.setTemplate.mock.invocationCallOrder[1] ?? 0,
+		);
 	});
 
 	it('carries a value without a field key to the switched template by layer id', async () => {

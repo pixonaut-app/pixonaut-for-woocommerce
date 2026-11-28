@@ -55,11 +55,12 @@ function book({
 		designer: designer as unknown as PixonautDesigner,
 		given,
 		pages: () => pages,
-		carry: (kept = KEPT) =>
+		carry: (kept = KEPT, stale?: () => boolean) =>
 			carryPageValues(
 				designer as unknown as PixonautDesigner,
 				kept,
 				designer.setPageCount,
+				stale,
 			),
 	};
 }
@@ -109,6 +110,36 @@ describe('carryPageValues()', () => {
 		expect(pages()).toMatchObject({ page: 2, count: 4 });
 		expect(logged).toHaveBeenCalledOnce();
 		logged.mockRestore();
+	});
+
+	it('gives no values to a page saved on a page layout, which keeps its layout', async () => {
+		const { carry, given } = book();
+		const pages = [...KEPT.saved.pages];
+		pages[3] = {
+			templateId: 'two-photos@2',
+			values: { title: { content: 'Four' } },
+		};
+
+		await carry({ ...KEPT, saved: { ...KEPT.saved, pages } });
+
+		expect(given).toEqual([
+			[1, 'title', 'content', 'One'],
+			[5, 'title', 'content', 'Five'],
+		]);
+	});
+
+	it('carries no further page once a newer carry began, and shows the page and count it found again', async () => {
+		const { carry, given, pages } = book();
+		let begun = false;
+
+		await carry(KEPT, () => {
+			const was = begun;
+			begun = true;
+			return was;
+		});
+
+		expect(given).toEqual([[1, 'title', 'content', 'One']]);
+		expect(pages()).toMatchObject({ page: 2, count: 4 });
 	});
 
 	it('leaves the pages alone on the template they were designed on', async () => {

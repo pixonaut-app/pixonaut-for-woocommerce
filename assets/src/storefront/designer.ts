@@ -374,6 +374,21 @@ export class ProductDesigner {
 	/** The page count each designer shows, or was told the item has. */
 	private readonly pageCounts = new WeakMap<PixonautDesigner, number>();
 
+	/** Each designer's carry of a book's pages under way (`carryPages()`),
+	 *  which an approval waits for, by the count of carries begun before it. */
+	private readonly carries = new Map<
+		PixonautDesigner,
+		{ begun: number; done: Promise<void> }
+	>();
+
+	/** How many carries of a book's pages, and switches of variation, have
+	 *  begun: a carry stops once a newer one of either has. */
+	private carriesBegun = 0;
+
+	/** Whether the designers are locked for an approval or a correction;
+	 *  one carrying a book's pages stays locked until it is done. */
+	private locked = false;
+
 	/** The blanks the server's reads say have a placement printed as pages. */
 	private readonly books = new Set<string>();
 
@@ -732,9 +747,10 @@ export class ProductDesigner {
 			followDrawnShape(frame, designer);
 		}
 		this.designers.set(side, designer);
-		if (keptPages !== undefined) {
-			this.carryPages(designer, keptPages);
-		}
+		const carried =
+			keptPages === undefined
+				? undefined
+				: this.carryPages(designer, keptPages);
 		try {
 			// Mounted without the server's reads, it starts at the fewest pages;
 			// a cover mounted before the pages hears of them now.
@@ -766,6 +782,8 @@ export class ProductDesigner {
 		) {
 			this.variantPicked(side, shown);
 		}
+		// A switch that mounted the side again ends once its pages are carried.
+		await carried;
 		if (keptView !== undefined && keptViewAfterMount) {
 			await this.showKeptView(designer, keptView);
 		}
@@ -1308,6 +1326,8 @@ export class ProductDesigner {
 	/** Switches to the variation after any switch under way; false when the
 	 *  switch failed. */
 	private queueSwitch(id: string): Promise<boolean> {
+		// A carry of the last switch's pages stops, so this one starts sooner.
+		this.carriesBegun++;
 		let switched = true;
 		this.switching = this.switching
 			.then(() => this.switchTo(id))
@@ -1545,21 +1565,42 @@ export class ProductDesigner {
 			console.error('Pixonaut: a value could not be carried over.', error);
 		}
 		if (pages !== undefined) {
-			this.carryPages(designer, pages);
+			await this.carryPages(designer, pages);
 		}
 		return true;
 	}
 
 	/** Gives each page of a book the values it held in `kept`, on the template
-	 *  the designer shows now. */
-	private carryPages(designer: PixonautDesigner, kept: KeptPages): void {
-		carryPageValues(designer, kept, (count) => {
-			// Before the SDK reports it, so it is not taken for a pick.
-			this.pageCounts.set(designer, count);
-			designer.setPageCount(count);
-		}).catch((error: unknown) => {
-			console.error('Pixonaut: a page could not be carried over.', error);
-		});
+	 *  the designer shows now. The designer is locked while it moves from
+	 *  page to page, so the customer's moves are not lost to its way back,
+	 *  and an approval waits for it; a newer carry or switch stops it. */
+	private carryPages(
+		designer: PixonautDesigner,
+		kept: KeptPages,
+	): Promise<void> {
+		const begun = ++this.carriesBegun;
+		designer.setLocked(true);
+		const done = carryPageValues(
+			designer,
+			kept,
+			(count) => {
+				// Before the SDK reports it, so it is not taken for a pick.
+				this.pageCounts.set(designer, count);
+				designer.setPageCount(count);
+			},
+			() => begun !== this.carriesBegun,
+		)
+			.catch((error: unknown) => {
+				console.error('Pixonaut: a page could not be carried over.', error);
+			})
+			.finally(() => {
+				if (this.carries.get(designer)?.begun === begun) {
+					this.carries.delete(designer);
+					designer.setLocked(this.locked);
+				}
+			});
+		this.carries.set(designer, { begun, done });
+		return done;
 	}
 
 	/** Keeps what the customer designed on the side for its next mount. */
@@ -1991,6 +2032,8 @@ export class ProductDesigner {
 			return kept;
 		}
 		this.approved.delete(side);
+		// The proof is of the pages once each holds what it was carried.
+		await this.carries.get(designer)?.done;
 		for (let attempt = 0; attempt < APPROVE_ATTEMPTS; attempt++) {
 			// The proof is of the item sold, however many pages the designer shows.
 			this.showPages();
@@ -2456,8 +2499,10 @@ export class ProductDesigner {
 	}
 
 	private setLocked(locked: boolean): void {
+		this.locked = locked;
 		for (const designer of this.designers.values()) {
-			designer.setLocked(locked);
+			// One carrying a book's pages is unlocked once its carry ends.
+			designer.setLocked(locked || this.carries.has(designer));
 		}
 	}
 

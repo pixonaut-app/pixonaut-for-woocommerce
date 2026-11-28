@@ -1,5 +1,6 @@
 import type { PixonautDesigner } from '../types/sdk';
 import { fieldKeys } from './template-carry';
+import { baseIdOf } from './value-sets';
 
 type Values = ReturnType<PixonautDesigner['getState']>['values'];
 
@@ -77,12 +78,17 @@ export function withKeptPages(
  * alone, and keeps every other for the way back. Pages past the count are
  * reached by `setPageCount`, which is left at the count it found. Each
  * page is shown before it is given its values: a page laid in a template of
- * its own is shown once that template is drawn.
+ * its own is shown once that template is drawn. Only a page saved on the
+ * template `keys` name is carried: one on a page layout keeps its layout,
+ * which the SDK keeps it on with its own values. Once `stale` answers true,
+ * a newer carry has begun: no further page is carried, and the page and
+ * count it found are shown again.
  */
 export async function carryPageValues(
 	designer: PixonautDesigner,
 	{ saved, templateId, keys }: KeptPages,
 	setPageCount: (count: number) => void,
+	stale: () => boolean = () => false,
 ): Promise<void> {
 	const opened = designer.getPages();
 	if (
@@ -95,7 +101,9 @@ export async function carryPageValues(
 	const designed = saved.pages
 		.map((page, index) => ({ ...page, number: index + 1 }))
 		.filter(
-			({ number, values }) =>
+			({ number, values, templateId: on }) =>
+				// A page on a layout is not on the template the keys are of.
+				(typeof on !== 'string' || baseIdOf(on) === baseIdOf(templateId)) &&
 				// The page shown holds its own already, unless it was past the count.
 				(number !== opened.page || opened.page !== saved.page) &&
 				number <= opened.max &&
@@ -112,6 +120,9 @@ export async function carryPageValues(
 	}
 	try {
 		for (const { number, values } of designed) {
+			if (stale()) {
+				break;
+			}
 			if (raised || number <= opened.count) {
 				await designer.setPage(number);
 				givePage(designer, values, keys);
