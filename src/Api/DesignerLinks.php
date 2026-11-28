@@ -65,7 +65,7 @@ final class DesignerLinks {
 	 * is built for, is logged; the link is made all the same.
 	 *
 	 * @param string               $template_base_id The template's base id; a side under `sides` may name another.
-	 * @param array<string, mixed> $body             One side at the top level or 2–10 under `sides`, and `returnUrl`, `locale`, `name`.
+	 * @param array<string, mixed> $body             One side at the top level or 2–25 under `sides`, and `returnUrl`, `locale`, `name`.
 	 *
 	 * @return array{id: string, url: string} The link's id and the hosted designer's address.
 	 *

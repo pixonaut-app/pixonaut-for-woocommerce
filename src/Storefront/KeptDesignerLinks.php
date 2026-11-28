@@ -241,7 +241,7 @@ final class KeptDesignerLinks {
 		 *
 		 * @since 0.1.0
 		 *
-		 * @param array<string, mixed> $body    One side's `blankId`, `placementId`, `views` (when the product narrows them), `variants` and `initialVariant` (the variant it sells), `initialView` (the product's starting view), `printSizes`, `selectedPrintSizeIndex` (the size it starts on), `pages` (`min` and `max`, both the page count it is sold at, on a side printed as pages) at the top level, or 2–10 under `sides` with `key`, `label` and `templateId` when it is not the link's; `returnUrl`, `locale`, `printAreaFrame` (`true`, when the store frames the print area), `layout` (`page` or `steps`, when the product or store fixes the form's layout), and `afterApprove` (`add_to_cart`, when the store adds the design on return).
+		 * @param array<string, mixed> $body    One side's `blankId`, `placementId`, `views` (when the product narrows them), `variants` and `initialVariant` (the variant it sells), `initialView` (the product's starting view), `printSizes`, `selectedPrintSizeIndex` (the size it starts on), `pages` (`min` and `max`, both the page count it is sold at, on a side printed as pages) at the top level, or 2–25 under `sides` with `key`, `label` and `templateId` when it is not the link's; `returnUrl`, `locale`, `printAreaFrame` (`true`, when the store frames the print area), `layout` (`page` or `steps`, when the product or store fixes the form's layout), and `afterApprove` (`add_to_cart`, when the store adds the design on return).
 		 * @param WC_Product           $product The product or variation.
 		 *
 		 * @example

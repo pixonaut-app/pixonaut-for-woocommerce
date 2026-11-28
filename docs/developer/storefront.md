@@ -1686,7 +1686,7 @@ handler, at `wp_loaded`, the plugin:
    under `workspace`). The link is minted once
    (`POST /v1/templates/{id}/designer-links`) for the first side's template,
    without `state`, `expiresInDays` or `designLimit`, so it works until it
-   is withdrawn: one side at the top level, or 2–10 under `sides` with each
+   is withdrawn: one side at the top level, or 2–25 under `sides` with each
    side's `key`, `label` and, when it differs, `templateId`; each side's
    blank, placement and print-size menu with the size marked **Starts
    selected** chosen (`selectedPrintSizeIndex`), and the product's starting

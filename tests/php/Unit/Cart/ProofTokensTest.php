@@ -43,6 +43,19 @@ final class ProofTokensTest extends TestCase {
 		);
 	}
 
+	public function test_a_calendars_every_page_returned_as_a_set_reads_as_a_token_a_side(): void {
+		$keys = array( 'cover' );
+		for ( $month = 1; $month <= 12; $month++ ) {
+			$keys[] = "month-{$month}";
+		}
+		$set = self::set( ...array_map( static fn ( string $key ): ProofSetProof => new ProofSetProof( $key, null, "prf.{$key}" ), $keys ) );
+
+		$this->assertSame(
+			array_combine( $keys, array_map( static fn ( string $key ): string => "prf.{$key}", $keys ) ),
+			ProofTokens::of_set( self::config( ...$keys ), $set )
+		);
+	}
+
 	public function test_a_set_naming_no_side_is_the_only_sides(): void {
 		$set = self::set( new ProofSetProof( null, 2, 'prf.p2' ), new ProofSetProof( null, 1, 'prf.p1' ) );
 

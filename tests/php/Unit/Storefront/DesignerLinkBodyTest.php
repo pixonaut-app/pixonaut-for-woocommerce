@@ -312,7 +312,7 @@ final class DesignerLinkBodyTest extends TestCase {
 
 		$this->assertCount( 1, $logger->entries );
 		$this->assertSame( 'warning', $logger->entries[0]['level'] );
-		$this->assertStringContainsString( 'with 10 sides; its designer is built for at most 4', $logger->entries[0]['message'] );
+		$this->assertStringContainsString( 'with ' . PostedSides::MAX_SIDES . ' sides; its designer is built for at most 4', $logger->entries[0]['message'] );
 		$this->assertSame( DesignerLinks::SIDES_OVER_RECOMMENDED, $logger->entries[0]['context']['warning']['code'] );
 	}
 

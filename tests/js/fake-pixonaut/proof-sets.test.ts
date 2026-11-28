@@ -129,6 +129,35 @@ describe('a hosted approval of a side printed as pages', () => {
 	});
 });
 
+describe('a hosted approval of more sides than tokens fit the address', () => {
+	/** A wall calendar's every page: its cover and twelve months. */
+	const CALENDAR_PAGES = 13;
+
+	it('returns a proof set with a proof for each side, in order', async () => {
+		const keys = Array.from({ length: CALENDAR_PAGES }, (_, index) =>
+			index === 0 ? 'cover' : `month-${index}`,
+		);
+		const link = await post('/v1/templates/mini-tee/designer-links', {
+			sides: keys.map((key) => ({ ...COVER, key, label: key })),
+			returnUrl: RETURN_URL,
+		});
+		expect(link.status).toBe(201);
+		const path = new URL(((await link.json()) as { url: string }).url).pathname;
+		const approved = await send(fake, `${path}/approve`);
+		expect(approved.status).toBe(302);
+		const back = new URL(approved.headers.get('location') ?? '');
+
+		expect(back.searchParams.has('proofToken[cover]')).toBe(false);
+		const response = await readSet(back.searchParams.get('proofSet') ?? '');
+		expect(response.status).toBe(200);
+		const { proofs } = (await response.json()) as { proofs: SetProof[] };
+		expect(proofs.map(({ key, page }) => [key, page])).toEqual(
+			keys.map((key) => [key, null]),
+		);
+		expect(fake.violations).toEqual([]);
+	});
+});
+
 describe('POST /v1/orders naming pages', () => {
 	async function book(): Promise<{ cover: string; pages: string[] }> {
 		const back = await approveBook();

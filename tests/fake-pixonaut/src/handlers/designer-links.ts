@@ -1,5 +1,5 @@
 // `POST /v1/templates/{id}/designer-links`: a hosted designer link for the
-// template's live version, one side at the top level or 2–10 under `sides`;
+// template's live version, one side at the top level or 2–25 under `sides`;
 // more than `RECOMMENDED_SIDES` is made, and answered with a warning.
 // A side's `initialVariant` must be one of its `variants` when it names any;
 // the hosted designer shows the variant and views a side is shown in. A side's

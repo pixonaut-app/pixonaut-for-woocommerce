@@ -21,7 +21,7 @@ const BASE_ID = 'mini-tee';
 const OTHER_BASE_ID = 'mini-poster';
 const RETURN_URL = `${SITE_URL}/?pixonaut_designer=return`;
 /** Most sides one link takes (`maxItems` of `sides`). */
-const MAX_SIDES = 10;
+const MAX_SIDES = 25;
 /** A side's print size where it names no blank to size it by. */
 const COASTER_SIZE = { widthMm: 90, heightMm: 90, label: 'Coaster' };
 const VISIT = 'visit-1';
