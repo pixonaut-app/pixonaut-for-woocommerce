@@ -130,11 +130,19 @@ final class ProductRecheck {
 
 	/**
 	 * Seconds a link spends moving its variations with a setup of their
-	 * own before it leaves the rest to a re-check: Pixonaut waits 30
-	 * seconds for the store's answer to a link, the product's own check
-	 * included.
+	 * own before it leaves the rest to a re-check. Pixonaut waits 30
+	 * seconds for the store's answer to a link, but each check costs a busy
+	 * store seconds and holds a PHP worker other calls wait for, so a link
+	 * answers soon and the queued re-check, which runs at once, moves the
+	 * rest.
 	 */
-	public const FOLLOW_BUDGET_SECONDS = 15;
+	public const FOLLOW_BUDGET_SECONDS = 3;
+
+	/**
+	 * Variations a link checks at most before it answers; the rest are left
+	 * to the re-check it queues.
+	 */
+	public const FOLLOW_INLINE_MAX = 2;
 
 	/**
 	 * Wait before the second attempt; it doubles with every attempt after.
@@ -291,7 +299,7 @@ final class ProductRecheck {
 	 */
 	public function queue( array $product_ids ): void {
 		foreach ( array_chunk( $product_ids, self::BATCH ) as $batch ) {
-			$this->queue_batch( $batch, 1, 0 );
+			$this->queue_batch( $batch, 1, 0, null );
 		}
 	}
 
@@ -329,7 +337,7 @@ final class ProductRecheck {
 		};
 		$queued = true;
 		foreach ( array_chunk( $ids, self::BATCH ) as $batch ) {
-			$queued = $this->queue_batch( $batch, 1, 0 ) && $queued;
+			$queued = $this->queue_batch( $batch, 1, 0, null ) && $queued;
 		}
 		if ( self::QUEUE_PAGE === count( $ids ) ) {
 			$queued = $this->queue_after( $by, $key, $ids[ self::QUEUE_PAGE - 1 ] ) && $queued;
@@ -394,11 +402,14 @@ final class ProductRecheck {
 	 * re-check does; their other sides follow their templates' live
 	 * versions. Without it such a variation waits for the re-check the
 	 * version's publishing queued, which a busy store can run long after,
-	 * and its customers design on the version it left until then. A
-	 * variation Pixonaut could not check now, or one left once the link has
-	 * spent `FOLLOW_BUDGET_SECONDS`, is re-checked later, against the live
-	 * versions then. A template that is not live moves nothing: the
-	 * re-check its event queued stops those variations' sales.
+	 * and its customers design on the version it left until then. A link
+	 * checks at most `FOLLOW_INLINE_MAX` of them, and starts none once the
+	 * slowest check so far would take it past `FOLLOW_BUDGET_SECONDS` (the
+	 * first always starts, and one may run longer); the rest, and any
+	 * Pixonaut could not check now, are queued ahead of the bulk re-checks
+	 * and checked against the live versions then. A template that is not
+	 * live moves nothing: the re-check its event queued stops those
+	 * variations' sales.
 	 *
 	 * A product linked to another template takes along the variations
 	 * whose setup of their own is its own but for the blank, variant or
@@ -452,14 +463,17 @@ final class ProductRecheck {
 		$left    = array();
 		$slowed  = array();
 		$waiting = null;
+		$slowest = 0.0;
 		foreach ( $ids as $i => $id ) {
-			if ( microtime( true ) - $started >= self::FOLLOW_BUDGET_SECONDS ) {
-				// The store's caller waits only so long for the link's answer; the rest are checked at once, after it.
+			$elapsed = microtime( true ) - $started;
+			if ( $i >= self::FOLLOW_INLINE_MAX || $elapsed + $slowest >= self::FOLLOW_BUDGET_SECONDS ) {
+				// The link answers before another check would take it past its budget; the rest are checked at once, after it.
 				$left = array_slice( $ids, $i );
 				break;
 			}
 			$this->retry_after = null;
 			$checked           = $this->recheck_one( $id, $live );
+			$slowest           = max( $slowest, microtime( true ) - $started - $elapsed );
 			if ( self::SLOWED_DOWN === $checked ) {
 				// The variations after it would be refused too.
 				$slowed  = array_slice( $ids, $i );
@@ -671,7 +685,7 @@ final class ProductRecheck {
 			)
 		);
 		if ( $attempt < self::MAX_ATTEMPTS ) {
-			$this->queue_batch( $product_ids, $attempt + 1, self::RETRY_BASE_SECONDS * 2 ** ( $attempt - 1 ) );
+			$this->queue_batch( $product_ids, $attempt + 1, self::RETRY_BASE_SECONDS * 2 ** ( $attempt - 1 ), $this->priority );
 		}
 	}
 
@@ -696,7 +710,7 @@ final class ProductRecheck {
 				'retry_after' => $retry_after,
 			)
 		);
-		if ( ! $this->queue_batch( $product_ids, $attempt, self::slowed_delay( $retry_after ) ) ) {
+		if ( ! $this->queue_batch( $product_ids, $attempt, self::slowed_delay( $retry_after ), $this->priority ) ) {
 			throw new RuntimeException( 'The re-check of products refused for too many requests could not be queued again.' );
 		}
 	}
@@ -715,14 +729,15 @@ final class ProductRecheck {
 	}
 
 	/**
-	 * @param int[] $product_ids Products and variations.
-	 * @param int   $attempt     Which attempt.
-	 * @param int   $delay       Seconds to wait; 0 to run as soon as possible.
+	 * @param int[]    $product_ids Products and variations.
+	 * @param int      $attempt     Which attempt.
+	 * @param int      $delay       Seconds to wait; 0 to run as soon as possible.
+	 * @param int|null $priority    A retry's priority: the one the re-check running was queued at. Null for a new re-check, whichever job ran before it in this request.
 	 * @phpstan-param list<int> $product_ids
 	 * @return bool False when the job could not be queued.
 	 */
-	private function queue_batch( array $product_ids, int $attempt, int $delay ): bool {
-		return self::enqueue( $product_ids, $attempt, $delay, $this->logger, $this->priority );
+	private function queue_batch( array $product_ids, int $attempt, int $delay, ?int $priority ): bool {
+		return self::enqueue( $product_ids, $attempt, $delay, $this->logger, $priority );
 	}
 
 	/**
