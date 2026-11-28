@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.41.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.40.1...v1.41.0) (2026-11-28)
+
+
+### Features
+
+* **storefront:** a designer link for a photo book offers its page layouts ([#454](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/454)) ([c20e015](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/c20e01567c44219a6bf96710da135038d776a2e3))
+
 ## [1.40.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.40.0...v1.40.1) (2026-11-28)
 
 
