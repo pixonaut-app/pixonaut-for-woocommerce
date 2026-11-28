@@ -9,6 +9,7 @@ namespace Pixonaut\WooCommerce\Tests\Unit\Cart;
 
 use Pixonaut\WooCommerce\Api\Answers\Design;
 use Pixonaut\WooCommerce\Cart\DesignCheck;
+use Pixonaut\WooCommerce\Catalogue\PageTemplate;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\Side;
 use Pixonaut\WooCommerce\Catalogue\TemplateRenames;
@@ -55,6 +56,26 @@ final class DesignCheckTest extends TestCase {
 	 */
 	private static function mismatch( array $overrides, ?Side $side = null, ?string $value_set_id = null ): ?string {
 		return DesignCheck::mismatch( Design::from_answer( DesignFixture::design( $overrides ) ), $side ?? self::side(), DesignFixture::BLANK_ID, $value_set_id );
+	}
+
+	public function test_a_page_made_from_one_of_the_sides_page_layouts_is_judged_by_the_layouts_versions_and_values(): void {
+		$side = self::side()->with_page_templates( array( new PageTemplate( 'two-photos', 3, 2 ) ) );
+		$page = static fn ( array $overrides ): array => $overrides + array(
+			'templateBaseId'  => 'two-photos',
+			'templateVersion' => 3,
+			'page'            => 4,
+			'pageCount'       => 24,
+		);
+		$sets = array( 'two-photos' => self::OTHER_VALUE_SET );
+
+		$check = static fn ( array $overrides, array $layout_sets = array() ): ?string => DesignCheck::mismatch( Design::from_answer( DesignFixture::design( $page( $overrides ) ) ), $side, DesignFixture::BLANK_ID, self::VALUE_SET, $layout_sets );
+
+		$this->assertNull( $check( array( 'valueSetId' => self::OTHER_VALUE_SET ), $sets ) );
+		$this->assertNull( $check( array( 'templateVersion' => 2 ) ), 'the version it moved from is still accepted' );
+		$this->assertSame( DesignCheck::TEMPLATE_OUTDATED, $check( array( 'templateVersion' => 1 ) ) );
+		$this->assertSame( DesignCheck::VALUES, $check( array( 'valueSetId' => self::VALUE_SET ), $sets ), 'a layout is judged by its own set, not the side\'s' );
+		$this->assertSame( DesignCheck::TEMPLATE, $check( array( 'templateBaseId' => 'four-photos' ) ) );
+		$this->assertSame( DesignCheck::TEMPLATE, $check( array( 'page' => null ) ), 'only a page is made from a layout' );
 	}
 
 	public function test_accepts_a_design_made_with_the_sides_value_set(): void {
