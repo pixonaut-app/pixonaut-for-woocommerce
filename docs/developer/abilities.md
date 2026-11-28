@@ -633,7 +633,14 @@ starts on). An image that names neither keeps the view and photo its set
 was drawn on before. A set may be named more than once, on another view or
 photo each time, so a gallery can show the same example values on several
 views; it refuses a view or photo the blank does not have, naming those it
-has.
+has. `side_pictures` (`side` and `kind`), up to 9, names the product's
+other sides its gallery shows after those pictures, such as a calendar's
+month page or a shirt's back: each is drawn with its side's template and
+the values that side is sold with, on the first view of the side's
+placement the product is shown in, or flat. It replaces the ones the
+product has; left out, they are kept. It refuses a side the product does
+not have, naming those it has: the sides of the variation a variable
+product is pictured as. The answer gives them in `side_pictures`.
 
 `get-product-picture-views` reads what a product's or variation's images are
 drawn on: `picture_view`, the image drawn while no set is chosen (on a
@@ -646,7 +653,9 @@ Pixonaut could not be asked; and `available_showcases`, the sets the
 product can show, as `set-product-showcase` lists them: those of the
 template version it is linked to, which can differ from the template's
 draft; empty without a template and on a variation, null when Pixonaut
-could not be asked. `set-product-picture-view` sets one of them:
+could not be asked; `side_pictures`, the other sides its gallery shows; and
+`sides`, the sides it can show (`key`, `label`, `template`), empty on a
+variation. `set-product-picture-view` sets one of them:
 `showcase` names a set chosen on a product (left out, the image without a
 set), `view` and `photo` one of those listed (a photo's view is found when
 left out; neither is the photo the product page starts on), or `kind`

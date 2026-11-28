@@ -280,6 +280,13 @@ is drawn with that template's set of the same name, else its first set, as
 is recorded as gone in `_pixonaut_picture` for the field to say so. The
 designer never receives a showcase set.
 
+After those pictures, a product's gallery can show its other sides:
+`_pixonaut_side_pictures` on the product (JSON, a list of `{side, kind}`),
+written by `set-product-showcase`. Each is drawn with that side's template,
+placement and value set (`valueSet=`), at most 10 pictures in all; the sides
+are those of the variation a variable product is drawn as, and a side it no
+longer has draws none (`SidePictures`).
+
 What a picture is drawn on can be chosen: a set's `view` and `photo`, and
 `_pixonaut_picture_view` (JSON, `{kind, view?, photo?}`) on the product for
 the picture drawn without a set and on a variation for its own, written by

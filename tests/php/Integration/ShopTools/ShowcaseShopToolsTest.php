@@ -12,6 +12,7 @@ use Pixonaut\WooCommerce\Catalogue\CatalogueCache;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ShowcaseImages;
 use Pixonaut\WooCommerce\Catalogue\Side;
+use Pixonaut\WooCommerce\Catalogue\SidePictures;
 use Pixonaut\WooCommerce\Connection\StoreAccess;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Plugin;
@@ -251,6 +252,85 @@ final class ShowcaseShopToolsTest extends WP_UnitTestCase {
 		$this->assert_invalid_input( $this->call( self::GET, array( 'product_id' => PHP_INT_MAX ) ) );
 	}
 
+	public function test_it_sets_the_other_sides_the_gallery_shows_and_reads_them_back_with_the_sides_it_can_show(): void {
+		$product = $this->two_sided();
+		$this->answer_sets( array() );
+
+		$set = $this->succeed(
+			self::SET,
+			array(
+				'product_id'    => $product->get_id(),
+				'images'        => array(),
+				'side_pictures' => array( array( 'side' => 'back' ) ),
+			)
+		);
+
+		// Without a blank, drawn flat.
+		$chosen = array(
+			array(
+				'side' => 'back',
+				'kind' => ShowcaseImages::PREVIEW,
+			),
+		);
+		$this->assertSame( $chosen, $set['side_pictures'] );
+		$this->assertSame( $chosen, SidePictures::on( $this->reload( $product ) ) );
+
+		$this->answer_sets( array() );
+		$read = $this->succeed( self::GET, array( 'product_id' => $product->get_id() ) );
+
+		$this->assertSame( $chosen, $read['side_pictures'] );
+		$this->assertSame(
+			array(
+				array(
+					'key'      => 'design',
+					'label'    => 'Front print',
+					'template' => 'mini-tee',
+				),
+				array(
+					'key'      => 'back',
+					'label'    => 'Back print',
+					'template' => 'mini-tee-back',
+				),
+			),
+			$read['sides']
+		);
+	}
+
+	public function test_leaving_the_other_sides_out_keeps_them(): void {
+		$product = $this->two_sided();
+		SidePictures::save( $product, array( array( 'side' => 'back' ) ) );
+		$this->answer_sets( array( self::GRADUATE ) );
+
+		$this->succeed(
+			self::SET,
+			array(
+				'product_id' => $product->get_id(),
+				'images'     => array( array( 'id' => self::GRADUATE['id'] ) ),
+			)
+		);
+
+		$this->assertSame( array( 'back' ), array_column( SidePictures::on( $this->reload( $product ) ), 'side' ) );
+	}
+
+	public function test_a_side_the_product_does_not_have_is_invalid_input_and_changes_nothing(): void {
+		$product = $this->two_sided();
+		$this->answer_sets( array( self::GRADUATE ) );
+
+		$answer = $this->call(
+			self::SET,
+			array(
+				'product_id'    => $product->get_id(),
+				'images'        => array( array( 'id' => self::GRADUATE['id'] ) ),
+				'side_pictures' => array( array( 'side' => 'sleeve' ) ),
+			)
+		);
+
+		$this->assert_invalid_input( $answer );
+		$this->assertStringContainsString( 'design, back', $answer->get_data()['message'] );
+		$this->assertSame( array(), SidePictures::on( $this->reload( $product ) ) );
+		$this->assertSame( array(), ShowcaseImages::on( $this->reload( $product ) ), 'the sets are not saved either' );
+	}
+
 	/**
 	 * Answers the next `GET /v1/templates/{id}` with the sets.
 	 *
@@ -318,6 +398,21 @@ final class ShowcaseShopToolsTest extends WP_UnitTestCase {
 		$product->set_regular_price( '25' );
 		$product->save();
 		( new ProductConfig( personalise: true, sides: array( new Side( 'design', 'Front print', null, null, 'mini-tee', 2, null, 'Mini tee', array() ) ) ) )->save_to( $product );
+		return $this->reload( $product );
+	}
+
+	/**
+	 * A simple product personalised on two sides, each on its own template, and no blank.
+	 */
+	private function two_sided(): WC_Product {
+		$product = $this->product();
+		( new ProductConfig(
+			personalise: true,
+			sides: array(
+				new Side( 'design', 'Front print', null, null, 'mini-tee', 2, null, 'Mini tee', array() ),
+				new Side( 'back', 'Back print', null, null, 'mini-tee-back', 1, null, 'Mini tee back', array() ),
+			)
+		) )->save_to( $product );
 		return $this->reload( $product );
 	}
 

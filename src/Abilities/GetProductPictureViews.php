@@ -14,6 +14,8 @@ use Pixonaut\WooCommerce\Admin\ShowcaseField;
 use Pixonaut\WooCommerce\Catalogue\PictureView;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ShowcaseImages;
+use Pixonaut\WooCommerce\Catalogue\Side;
+use Pixonaut\WooCommerce\Catalogue\SidePictures;
 use WC_Product;
 use WP_Error;
 
@@ -21,7 +23,9 @@ use WP_Error;
  * Reads, for a personalised product or variation, what each of its images
  * is drawn on, as the product images field and a variation's options show
  * it, and the views and photos of its side's placement it can be drawn on;
- * of a product, also the showcase sets it can show. Whoever may edit the product may read it.
+ * of a product, also the showcase sets it can show, and its other sides
+ * its gallery shows and can show (`SidePictures`). Whoever may edit the
+ * product may read it.
  */
 final class GetProductPictureViews implements Ability {
 
@@ -40,7 +44,7 @@ final class GetProductPictureViews implements Ability {
 		return array(
 			/* translators: Name of an ability an AI assistant or an MCP client can use on the store. */
 			'label'               => __( 'Read what a product\'s images are drawn on', 'pixonaut-for-woocommerce' ),
-			'description'         => __( 'Reads what a personalised product\'s or variation\'s Pixonaut images are drawn on: the image drawn without a showcase set (a variation: its own choice), and each showcase set chosen, each on the photo the product page starts on, on a view and photo of the blank, or flat; the views of its side\'s placement with their photos, scenes included; and, of a product, the showcase sets its template offers, the ids `set-product-showcase` takes. Set them with `set-product-picture-view`.', 'pixonaut-for-woocommerce' ),
+			'description'         => __( 'Reads what a personalised product\'s or variation\'s Pixonaut images are drawn on: the image drawn without a showcase set (a variation: its own choice), and each showcase set chosen, each on the photo the product page starts on, on a view and photo of the blank, or flat; the views of its side\'s placement with their photos, scenes included; and, of a product, the showcase sets its template offers, the ids `set-product-showcase` takes, and its sides, the keys `set-product-showcase` takes in `side_pictures`, with the ones its gallery shows. Set them with `set-product-picture-view`.', 'pixonaut-for-woocommerce' ),
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
@@ -73,8 +77,18 @@ final class GetProductPictureViews implements Ability {
 		if ( ! $product instanceof WC_Product ) {
 			return $product;
 		}
+		$variation = $product->is_type( 'variation' );
 		return $this->answer( $product ) + array(
-			'available_showcases' => $product->is_type( 'variation' ) ? array() : $this->showcases->offered_on( $product ),
+			'available_showcases' => $variation ? array() : $this->showcases->offered_on( $product ),
+			'side_pictures'       => SidePictures::on( $product ),
+			'sides'               => $variation ? array() : array_map(
+				static fn ( Side $side ): array => array(
+					'key'      => $side->key,
+					'label'    => $side->label,
+					'template' => '' === $side->template_base_id ? null : $side->template_base_id,
+				),
+				SidePictures::sides_of( $product )
+			),
 		);
 	}
 
@@ -203,7 +217,46 @@ final class GetProductPictureViews implements Ability {
 			array( 'array', 'null' ),
 			__( 'The showcase sets the product\'s template offers, by id and name: those of the template version it is linked to, the ids `set-product-showcase` takes. Empty without a template and on a variation; null when Pixonaut could not be asked.', 'pixonaut-for-woocommerce' )
 		);
+		$schema['properties']['side_pictures']       = self::side_pictures_schema();
+		$schema['properties']['sides']               = array(
+			'type'        => 'array',
+			'description' => __( 'The product\'s sides its gallery can show, by key: those of the variation a variable product is pictured as, which may be more than its own. Empty on a variation.', 'pixonaut-for-woocommerce' ),
+			'items'       => array(
+				'type'       => 'object',
+				'properties' => array(
+					'key'      => array( 'type' => 'string' ),
+					'label'    => array( 'type' => 'string' ),
+					'template' => array(
+						'type'        => array( 'string', 'null' ),
+						'description' => __( 'The template the side is on, by its base id; null for none.', 'pixonaut-for-woocommerce' ),
+					),
+				),
+			),
+		);
 		return $schema;
+	}
+
+	/**
+	 * The schema of the product's other sides its gallery shows, as this
+	 * ability and `set-product-showcase` answer them.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public static function side_pictures_schema(): array {
+		return array(
+			'type'        => 'array',
+			'description' => __( 'The product\'s other sides its gallery shows after its showcase pictures, in order, each drawn with its side\'s template and values, on the blank\'s photo (`mockup`) or flat (`preview`); empty for none and on a variation.', 'pixonaut-for-woocommerce' ),
+			'items'       => array(
+				'type'       => 'object',
+				'properties' => array(
+					'side' => array( 'type' => 'string' ),
+					'kind' => array(
+						'type' => 'string',
+						'enum' => array( PictureView::MOCKUP, PictureView::PREVIEW ),
+					),
+				),
+			),
+		);
 	}
 
 	/**
