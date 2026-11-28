@@ -543,10 +543,10 @@ final class ProductLinker {
 	 * also knows the sizes its template cannot be printed at; a standing
 	 * side learns them from its rows' designs (`standing()`). Until a check
 	 * replaces them, a side keeps the misfits it held for the same template
-	 * version on the same placement. A personalised side on such a blank
-	 * also knows what it prints at per row (`row_sizes()`), so a variation
-	 * sold at the placement's default prints at its variant's row, and a
-	 * size of its own is judged against that row. A
+	 * version on the same placement. A side on such a blank, personalised
+	 * or standing, also knows what it prints at per row (`row_sizes()`), so a
+	 * variation sold at the placement's default prints at its variant's row,
+	 * and a size of its own is judged against that row. A
 	 * size Pixonaut refused is kept in the menu as entered, unsold, so the
 	 * product screen shows it with the reason.
 	 *
@@ -593,7 +593,8 @@ final class ProductLinker {
 				$checked_at[ $entered ] = count( $sizes );
 				$sizes[]                = $size;
 			}
-			$rows = null !== $varying && Side::STANDING !== $input->mode ? $this->row_sizes( (string) $template, $blank_id, $varying, $placement_id ) : array();
+			// A standing side is judged on its rows too: each row's design prints at the row's usual size where the side's does not fit it (`StandingRows`).
+			$rows = null !== $varying ? $this->row_sizes( (string) $template, $blank_id, $varying, $placement_id ) : array();
 			// Printed across its whole area, with an area per row, a print is its row's area: the placement's own box, the widest and tallest of its rows, is the area of no size.
 			$on_rows = null !== $varying && array() !== $rows && PrintAreas::covers_area( $varying, $placement_id );
 			list( $legal, $legal_at, $refused, $refused_size, $soft ) = $on_rows
