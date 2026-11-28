@@ -16,7 +16,8 @@ use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 /**
  * Asks Pixonaut for a template's value set with the integration key: the
  * only code that sends `templates.valueSets.create`, so the rest of the
- * plugin depends on `ValueSets` alone.
+ * plugin depends on `ValueSets` alone. It reads a template's layers with the
+ * catalogue's read (`Catalogue::template_state()`).
  */
 final class PixonautValueSets implements ValueSets {
 
@@ -46,5 +47,9 @@ final class PixonautValueSets implements ValueSets {
 			throw $result->unexpected();
 		}
 		return $id;
+	}
+
+	public function layer_ids( string $template_id ): array {
+		return ( new Catalogue( $this->pixonaut->sdk() ) )->template_state( $template_id )['layer_ids'];
 	}
 }

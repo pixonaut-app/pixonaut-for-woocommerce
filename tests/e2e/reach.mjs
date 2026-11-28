@@ -53,6 +53,7 @@ export const NO_SPEC = [
 	'src/Catalogue/ProductConfig.php', // the stored configuration every product reads
 	'src/Catalogue/Side.php',
 	'src/Catalogue/PageTemplate.php', // a side's page layouts, stored with it; tested by the PHP suites, the designer draws their picker
+	'src/Catalogue/LayoutValueSets.php', // a side's values reaching its page layouts; tested by the PHP suites against a scripted maker
 	'src/Catalogue/CatalogueCache.php',
 	'src/Catalogue/RequestCache.php', // reads kept for the rest of a request; every page passes through it
 	'src/Catalogue/ProductMeta.php', // many products' meta read at once; every product page passes through it

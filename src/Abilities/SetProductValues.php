@@ -60,7 +60,7 @@ final class SetProductValues implements Ability {
 		return array(
 			/* translators: Name of an ability an AI assistant or an MCP client can use on the store. */
 			'label'               => __( 'Set a product\'s own values for its template', 'pixonaut-for-woocommerce' ),
-			'description'         => __( 'Sets the values a simple or variable product, or a variation with a setup of its own (`variation_id`), gives its sides\' template layers, by layer id and prop, e.g. `{"title": {"content": "farmor"}}`: one template then sells as many products, each in its own theme or for its own recipient. A value on a prop the customer may change is where the designer starts; one on a fixed prop is printed as given. Each side named by its `key` takes its `values`, or null (or an empty object) to take them off; a side left out keeps its own. Pixonaut judges the values against the side\'s template version: a layer or prop the template does not have, or a value its rules refuse, refuses the whole call, and the answer names each by side, layer and prop. So does a side the product does not have, a side without a template, a product without a Pixonaut setup, and a variation that follows its product. A product\'s values reach its variations: those that follow it, and, for a side they have no values of their own for, those with a setup of their own whose side is on the same template as the product\'s. The answer is every side with its `template_id`, the `value_set_id` Pixonaut made of the values it is sold with, its `values`, null where it has none, and `values_from`, whose they are.', 'pixonaut-for-woocommerce' ),
+			'description'         => __( 'Sets the values a simple or variable product, or a variation with a setup of its own (`variation_id`), gives its sides\' template layers, by layer id and prop, e.g. `{"title": {"content": "farmor"}}`: one template then sells as many products, each in its own theme or for its own recipient. A value on a prop the customer may change is where the designer starts; one on a fixed prop is printed as given. Each side named by its `key` takes its `values`, or null (or an empty object) to take them off; a side left out keeps its own. On a side with page layouts the values reach every layout: each layout is given those for the layers it has, and a layer neither the side\'s template nor any layout has refuses the call. Pixonaut judges the values against the side\'s template version: a layer or prop the template does not have, or a value its rules refuse, refuses the whole call, and the answer names each by side, layer and prop. So does a side the product does not have, a side without a template, a product without a Pixonaut setup, and a variation that follows its product. A product\'s values reach its variations: those that follow it, and, for a side they have no values of their own for, those with a setup of their own whose side is on the same template as the product\'s. The answer is every side with its `template_id`, the `value_set_id` Pixonaut made of the values it is sold with, its `values`, null where it has none, and `values_from`, whose they are.', 'pixonaut-for-woocommerce' ),
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
@@ -266,7 +266,12 @@ final class SetProductValues implements Ability {
 			}
 			$template = (string) new TemplateId( $side->template_base_id, (int) $side->template_version );
 			try {
-				$sides[ $key ] = new SideValue( $side->template_base_id, $this->value_sets->make( $template, $entry['values'] ), $entry['values'] );
+				$made = array() === $side->page_templates
+					? new SideValue( $side->template_base_id, $this->value_sets->make( $template, $entry['values'] ), $entry['values'] )
+					: $this->laid_out( $key, $side, $entry['values'], $problems );
+				if ( null !== $made ) {
+					$sides[ $key ] = $made;
+				}
 			} catch ( ValueSetRefused $refused ) {
 				$problems = array_merge( $problems, self::issues( $key, $refused ) );
 			} catch ( ApiException $error ) {
@@ -285,6 +290,53 @@ final class SetProductValues implements Ability {
 		// Only the sides the product has now; values a removed side left go.
 		$keys = array_flip( array_map( static fn ( Side $side ): string => $side->key, $config->sides ) );
 		return array() === $problems ? array_intersect_key( $sides, $keys ) : self::refused( $problems );
+	}
+
+	/**
+	 * The values of a side with page layouts, reaching every layout: the
+	 * side's set made of the values for its own template's layers, and a
+	 * set per layout made of those for the layout's, for a layout that has
+	 * any. A layer none of them has is a problem, as Pixonaut finds a layer
+	 * the template does not have on a side without layouts. Null when a
+	 * problem was found, which `$problems` says.
+	 *
+	 * @param string                              $key      The side's key.
+	 * @param Side                                $side     The side.
+	 * @param array<string, array<string, mixed>> $values   The values given.
+	 * @param string[]                            $problems Problems found so far; appended to.
+	 * @phpstan-param list<string> $problems
+	 * @phpstan-param-out list<string> $problems
+	 *
+	 * @throws ValueSetRefused When Pixonaut refused the values of a template.
+	 * @throws ApiException    When Pixonaut refused otherwise or could not be reached.
+	 */
+	private function laid_out( string $key, Side $side, array $values, array &$problems ): ?SideValue {
+		$template = (string) new TemplateId( $side->template_base_id, (int) $side->template_version );
+		$layers   = array( $template => $this->value_sets->layer_ids( $template ) );
+		foreach ( $side->page_templates as $layout ) {
+			$layers[ (string) $layout->id() ] = $this->value_sets->layer_ids( (string) $layout->id() );
+		}
+		$unknown = array_diff( array_map( 'strval', array_keys( $values ) ), array_merge( ...array_values( $layers ) ) );
+		foreach ( $unknown as $layer ) {
+			/* translators: 1: a side's key; 2: a layer's id. Why an AI assistant's change to the store was refused. */
+			$problems[] = sprintf( __( 'side `%1$s`, layer `%2$s`: neither the side\'s template nor any of its page layouts has it', 'pixonaut-for-woocommerce' ), $key, $layer );
+		}
+		$own = SideValue::for_layers( $values, $layers[ $template ] );
+		if ( array() === $own ) {
+			/* translators: %s: a side's key. Why an AI assistant's change to the store was refused. */
+			$problems[] = sprintf( __( 'the template of side `%s` has none of the layers given, which every page starts on', 'pixonaut-for-woocommerce' ), $key );
+		}
+		if ( array() !== $unknown || array() === $own ) {
+			return null;
+		}
+		$sets = array();
+		foreach ( $side->page_templates as $layout ) {
+			$given = SideValue::for_layers( $values, $layers[ (string) $layout->id() ] );
+			if ( array() !== $given ) {
+				$sets[ $layout->base_id ] = $this->value_sets->make( (string) $layout->id(), $given );
+			}
+		}
+		return new SideValue( $side->template_base_id, $this->value_sets->make( $template, $own ), $values, $sets );
 	}
 
 	/**

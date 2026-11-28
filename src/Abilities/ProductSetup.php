@@ -402,15 +402,20 @@ final class ProductSetup {
 	 */
 	public static function side_values_schema(): array {
 		return array(
-			'value_set_id' => array(
+			'value_set_id'             => array(
 				'type'        => array( 'string', 'null' ),
 				'description' => __( 'The value set Pixonaut made of the side\'s own values, which its designer, pictures and cart name; null without values.', 'pixonaut-for-woocommerce' ),
 			),
-			'values'       => array(
+			'values'                   => array(
 				'type'        => array( 'object', 'null' ),
 				'description' => __( 'The side\'s own values for its template\'s layers, by layer id and prop, set with `set-product-values`; null for none.', 'pixonaut-for-woocommerce' ),
 			),
-			'values_from'  => array(
+			'page_template_value_sets' => array(
+				'type'                 => 'object',
+				'description'          => __( 'On a side with page layouts: the value set Pixonaut made of the values for each layout\'s layers, by the layout\'s template id without its version; a layout with none of the layers has none, and so does every layout without values. Absent on a side without layouts.', 'pixonaut-for-woocommerce' ),
+				'additionalProperties' => array( 'type' => 'string' ),
+			),
+			'values_from'              => array(
 				'type'        => array( 'string', 'null' ),
 				'enum'        => array( SideValues::FROM_OWN, SideValues::FROM_PRODUCT, null ),
 				'description' => __( 'Whose values the side is sold with: `own`, those set on this product or variation; `product`, a variation\'s product\'s, which a variation with a setup of its own is sold with for a side on the same template that has none of its own; null without values.', 'pixonaut-for-woocommerce' ),
@@ -425,15 +430,22 @@ final class ProductSetup {
 	 *
 	 * @param WC_Product $product The product or variation sold with the side.
 	 * @param Side       $side    The side.
-	 * @return array{value_set_id: string|null, values: array<string, array<string, mixed>>|null, values_from: string|null}
+	 * @return array{value_set_id: string|null, values: array<string, array<string, mixed>>|null, values_from: string|null, page_template_value_sets?: object}
 	 */
 	public static function side_values( WC_Product $product, Side $side ): array {
 		$sold = SideValues::sold_with( $product, $side );
-		return array(
+		$read = array(
 			'value_set_id' => $sold['value']?->value_set_id,
 			'values'       => $sold['value']?->values,
 			'values_from'  => $sold['from'],
 		);
+		if ( array() === $side->page_templates ) {
+			return $read;
+		}
+		$sets = SideValues::sets_of( $product, $side );
+		unset( $sets[ $side->template_base_id ] );
+		// An object even when empty, as the schema says.
+		return $read + array( 'page_template_value_sets' => (object) $sets );
 	}
 
 	/**

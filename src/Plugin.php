@@ -137,6 +137,7 @@ use Pixonaut\WooCommerce\Api\RequestLog;
 use Pixonaut\WooCommerce\Api\WcLogger;
 use Pixonaut\WooCommerce\Catalogue\BlankOptionLinks;
 use Pixonaut\WooCommerce\Catalogue\CatalogueCache;
+use Pixonaut\WooCommerce\Catalogue\LayoutValueSets;
 use Pixonaut\WooCommerce\Catalogue\ProductLinker;
 use Pixonaut\WooCommerce\Catalogue\MediaSpace;
 use Pixonaut\WooCommerce\Catalogue\PictureQueue;
@@ -1026,7 +1027,7 @@ final class Plugin {
 	}
 
 	public function product_panel(): ProductPanel {
-		return new ProductPanel( new ProductLinker( $this->catalogue(), new Designs( $this->sdk() ), $this->sdk(), new WcLogger() ), new LinkedBlank( $this->catalogue(), $this->catalogue_cache() ), $this->notices(), $this->templates(), $this->settings(), $this->file, $this->variant_field(), $this->showcase_field(), $this->regenerate_pictures(), $this->proof_urls(), $this->connection(), new VariantPairing( $this->product_variants(), new LinkedBlank( $this->catalogue(), $this->catalogue_cache() ), $this->variant_field(), $this->templates() ), $this->pricing_panel(), $this->sold_rows(), $this->variation_pictures_field() );
+		return new ProductPanel( new ProductLinker( $this->catalogue(), new Designs( $this->sdk() ), $this->sdk(), new WcLogger() ), new LinkedBlank( $this->catalogue(), $this->catalogue_cache() ), $this->notices(), $this->templates(), $this->settings(), $this->file, $this->variant_field(), $this->showcase_field(), $this->regenerate_pictures(), $this->proof_urls(), $this->connection(), new VariantPairing( $this->product_variants(), new LinkedBlank( $this->catalogue(), $this->catalogue_cache() ), $this->variant_field(), $this->templates() ), $this->pricing_panel(), $this->sold_rows(), $this->variation_pictures_field(), new LayoutValueSets( new PixonautValueSets( $this->pixonaut() ), new WcLogger() ) );
 	}
 
 	/**

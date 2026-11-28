@@ -13,6 +13,7 @@ use LogicException;
 use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Catalogue\CanvasRatio;
 use Pixonaut\WooCommerce\Catalogue\InvalidReason;
+use Pixonaut\WooCommerce\Catalogue\LayoutValueSets;
 use Pixonaut\WooCommerce\Catalogue\MisfitSizes;
 use Pixonaut\WooCommerce\Catalogue\PostedSides;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
@@ -157,6 +158,7 @@ final class ProductPanel {
 	 * @param PricingPanel|null           $pricing    Renders the Prices section; null for none.
 	 * @param SoldRows|null               $sold_rows  Tells the rows of the blank the product sells, the only ones a side's misfit warning names; null names every row its template misfits.
 	 * @param VariationPicturesField|null $variation_pictures Renders a variable product's Picture for every variation choice; null for none.
+	 * @param LayoutValueSets|null        $layout_sets Gives the page layouts a configuration saved offers the sides' own values; null gives them none.
 	 */
 	public function __construct(
 		private readonly ProductLinker $linker,
@@ -174,6 +176,7 @@ final class ProductPanel {
 		private readonly ?PricingPanel $pricing = null,
 		private readonly ?SoldRows $sold_rows = null,
 		private readonly ?VariationPicturesField $variation_pictures = null,
+		private readonly ?LayoutValueSets $layout_sets = null,
 	) {
 		$this->low_resolution = new LowResolutionWarnings( $settings, $templates );
 	}
@@ -703,6 +706,8 @@ final class ProductPanel {
 		$config = SlowedCheck::kept( $product, $config );
 		try {
 			$config->save_to( $product );
+			// The sides' own values reach the page layouts they offer now.
+			$this->layout_sets?->refresh( $product );
 		} catch ( LogicException $e ) {
 			// A newer plugin version's configuration is kept as it is; the notice says why.
 			$config = ProductConfig::stored_on( $product );

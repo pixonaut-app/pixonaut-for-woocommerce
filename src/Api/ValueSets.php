@@ -35,4 +35,15 @@ interface ValueSets {
 	 * @throws ApiException         When Pixonaut refused otherwise (`404 template_not_found`), could not be reached, or answered without the set.
 	 */
 	public function make( string $template_id, array $values ): string;
+
+	/**
+	 * The ids of a template version's layers, which its values are given
+	 * by: `GET /v1/templates/{id}`.
+	 *
+	 * @param string $template_id `<baseId>@<version>`.
+	 * @return list<string>
+	 *
+	 * @throws ApiException When Pixonaut refused (`404 template_not_found`) or could not be reached.
+	 */
+	public function layer_ids( string $template_id ): array;
 }
