@@ -41,7 +41,15 @@ test.afterEach(async ({ request }) => {
 async function withSplitProducts(
 	request: APIRequestContext,
 	run: (products: SplitProducts) => Promise<void>,
-	sizes?: 'filtered',
+	{
+		sizes,
+		pictures,
+	}: {
+		/** The sizes list a card per value only while a filter chooses one. */
+		sizes?: 'filtered';
+		/** The poster's pictures are never drawn: its cards show its own images. */
+		pictures?: 'held';
+	} = {},
 ): Promise<void> {
 	const key = String(Date.now()).slice(-SLUG_CLOCK_DIGITS);
 	const config = (taxonomies: string[]) => ({
@@ -67,6 +75,7 @@ async function withSplitProducts(
 				key,
 				pixonaut: config([`pa_bild${key}`, `pa_storlek${key}`]),
 				...(sizes ? { sizes } : {}),
+				...(pictures ? { pictures } : {}),
 			},
 		},
 	);
@@ -303,7 +312,7 @@ test('sizes listed only while filtered make no cards until a filter chooses one,
 				{ [picture]: 'med-bild', [size]: '50x70' },
 			]);
 		},
-		'filtered',
+		{ sizes: 'filtered' },
 	);
 });
 
@@ -402,77 +411,83 @@ test('a card shows its own title and image, set on the product, and its lowest p
 }) => {
 	// The product screen, a save, and a purchase.
 	test.slow();
-	await withSplitProducts(request, async ({ poster, category, images }) => {
-		const [featured, gallery] = images;
-		const product = await request.get(
-			restUrl(`/wc/store/v1/products/${poster.id}`),
-		);
-		const { name } = (await product.json()) as { name: string };
+	// An unfiltered card shows its variation's flat picture once one is
+	// drawn, over its own image; held, the cards show their own images.
+	await withSplitProducts(
+		request,
+		async ({ poster, category, images }) => {
+			const [featured, gallery] = images;
+			const product = await request.get(
+				restUrl(`/wc/store/v1/products/${poster.id}`),
+			);
+			const { name } = (await product.json()) as { name: string };
 
-		// Unset, each card shows the product's title and image, and from
-		// its own variations' lowest price.
-		await customer.goto(category);
-		const first = cards(customer).nth(0);
-		const second = cards(customer).nth(1);
-		await expect(cardTitle(first)).toHaveText(name);
-		await expect(cardTitle(second)).toHaveText(name);
-		await expect(cardImage(second)).toHaveAttribute(
-			'src',
-			new RegExp(`pixonaut-e2e-picture-${poster.id}-0`),
-		);
-		await expect(cardPrice(first)).toContainText(/From:.*19/);
-		await expect(cardPrice(first)).not.toContainText('29');
-		await expect(cardPrice(second)).toContainText('15');
-		await expect(cardPrice(second)).not.toContainText('From');
+			// Unset, each card shows the product's title and image, and from
+			// its own variations' lowest price.
+			await customer.goto(category);
+			const first = cards(customer).nth(0);
+			const second = cards(customer).nth(1);
+			await expect(cardTitle(first)).toHaveText(name);
+			await expect(cardTitle(second)).toHaveText(name);
+			await expect(cardImage(second)).toHaveAttribute(
+				'src',
+				new RegExp(`pixonaut-e2e-picture-${poster.id}-0`),
+			);
+			await expect(cardPrice(first)).toContainText(/From:.*19/);
+			await expect(cardPrice(first)).not.toContainText('29');
+			await expect(cardPrice(second)).toContainText('15');
+			await expect(cardPrice(second)).not.toContainText('From');
 
-		await signIn(page, baseURL ?? '');
-		await page.goto(`/wp-admin/post.php?post=${poster.id}&action=edit`);
-		await page.locator('li.attribute_tab a').click();
-		const title = page.getByLabel('Title for “Utan bild”');
-		if (!(await title.isVisible())) {
-			// WooCommerce draws a saved attribute's row closed.
+			await signIn(page, baseURL ?? '');
+			await page.goto(`/wp-admin/post.php?post=${poster.id}&action=edit`);
+			await page.locator('li.attribute_tab a').click();
+			const title = page.getByLabel('Title for “Utan bild”');
+			if (!(await title.isVisible())) {
+				// WooCommerce draws a saved attribute's row closed.
+				await page
+					.locator('.woocommerce_attribute')
+					.filter({ has: title })
+					.locator('h3')
+					.click();
+			}
+			await title.fill('Safari without a photo');
 			await page
-				.locator('.woocommerce_attribute')
-				.filter({ has: title })
-				.locator('h3')
+				.getByRole('button', { name: 'Choose an image for “Utan bild”' })
 				.click();
-		}
-		await title.fill('Safari without a photo');
-		await page
-			.getByRole('button', { name: 'Choose an image for “Utan bild”' })
-			.click();
-		const library = page.locator('.media-modal:visible');
-		// WordPress opens a frame on Upload files when it has not loaded the library yet.
-		await library.getByRole('tab', { name: 'Media Library' }).click();
-		await library.locator(`li.attachment[data-id="${gallery}"]`).click();
-		await library.getByRole('button', { name: 'Use this image' }).click();
-		await expect(
-			page.getByRole('button', { name: 'Remove the image for “Utan bild”' }),
-		).toBeVisible();
-		await publish(page);
+			const library = page.locator('.media-modal:visible');
+			// WordPress opens a frame on Upload files when it has not loaded the library yet.
+			await library.getByRole('tab', { name: 'Media Library' }).click();
+			await library.locator(`li.attachment[data-id="${gallery}"]`).click();
+			await library.getByRole('button', { name: 'Use this image' }).click();
+			await expect(
+				page.getByRole('button', { name: 'Remove the image for “Utan bild”' }),
+			).toBeVisible();
+			await publish(page);
 
-		await customer.goto(category);
-		await expect(cardTitle(first)).toHaveText(name);
-		await expect(cardTitle(second)).toHaveText('Safari without a photo');
-		await expect(cardImage(first)).toHaveAttribute(
-			'src',
-			new RegExp(`pixonaut-e2e-picture-${poster.id}-0`),
-		);
-		await expect(cardImage(second)).toHaveAttribute(
-			'src',
-			new RegExp(`pixonaut-e2e-picture-${poster.id}-1`),
-		);
-		expect(featured).not.toBe(gallery);
+			await customer.goto(category);
+			await expect(cardTitle(first)).toHaveText(name);
+			await expect(cardTitle(second)).toHaveText('Safari without a photo');
+			await expect(cardImage(first)).toHaveAttribute(
+				'src',
+				new RegExp(`pixonaut-e2e-picture-${poster.id}-0`),
+			);
+			await expect(cardImage(second)).toHaveAttribute(
+				'src',
+				new RegExp(`pixonaut-e2e-picture-${poster.id}-1`),
+			);
+			expect(featured).not.toBe(gallery);
 
-		await second.locator('a[href]').first().click();
-		await expect(
-			customer.locator('#pixonaut-form-front *').first(),
-		).toBeVisible();
-		await addToCartButton(customer).click();
-		await expect(
-			customer.getByText(/has been added to your cart/),
-		).toBeVisible();
-		await pay(customer, checkout, await openCheckouts(request));
-		await expect(customer.getByText('Utan bild').first()).toBeVisible();
-	});
+			await second.locator('a[href]').first().click();
+			await expect(
+				customer.locator('#pixonaut-form-front *').first(),
+			).toBeVisible();
+			await addToCartButton(customer).click();
+			await expect(
+				customer.getByText(/has been added to your cart/),
+			).toBeVisible();
+			await pay(customer, checkout, await openCheckouts(request));
+			await expect(customer.getByText('Utan bild').first()).toBeVisible();
+		},
+		{ pictures: 'held' },
+	);
 });
