@@ -7,6 +7,7 @@ import {
 	fakeDesigner,
 	fakeSdk,
 	MOUNTS,
+	modalDialogs,
 	PagesChangedError,
 	PROOF,
 	pageDeps,
@@ -56,8 +57,12 @@ function start({
 	mounts = MOUNTED as object,
 	variations = BOOK as object | null,
 	pageCount = undefined as string | undefined,
+	checkbox = false,
 } = {}) {
-	const page = productPage(mounts, variations === null ? {} : { variations });
+	const page = productPage(mounts, {
+		...(variations === null ? {} : { variations }),
+		checkbox,
+	});
 	if (pageCount !== undefined) {
 		page.container.dataset.pixonautPageCount = pageCount;
 	}
@@ -175,6 +180,34 @@ describe('the pages of a book', () => {
 		await settled();
 		expect(page.book.getPages()?.count).toBe(60);
 		expect(page.field?.value).toBe('12');
+	});
+
+	it('proofs the pages picked when the proof is opened before the form settles', async () => {
+		modalDialogs();
+		const book = Object.fromEntries(
+			Object.entries(BOOK).map(([id, variation]) => [
+				id,
+				{ ...variation, approvalMode: 'checkbox' },
+			]),
+		);
+		const page = start({ variations: book, checkbox: true });
+		await settled();
+		await choose(page, '11');
+		const proofed: (number | undefined)[] = [];
+		page.book.approve.mockImplementation(() => {
+			proofed.push(page.book.getPages()?.count);
+			return Promise.resolve(PROOF);
+		});
+
+		page.book.setPageCount(60);
+		await settle();
+		page.container
+			.querySelector<HTMLButtonElement>('.pixonaut-approval__proof')
+			?.click();
+		await settled();
+
+		expect(page.field?.value).toBe('12');
+		expect(proofed).toEqual([60]);
 	});
 
 	it('changes nothing when a page is turned', async () => {

@@ -2219,6 +2219,10 @@ export class ProductDesigner {
 		let previewed: PixonautDesigner | null = null;
 		let changes = 0;
 		let variant: string | undefined;
+		// The variation chosen just before the click is the one proofed: a
+		// count picked in the designer selects it a moment before the form
+		// announces it.
+		this.readVariation();
 		try {
 			if (!(await this.applyVariation())) {
 				throw new Error('The designer could not switch to the variation.');
