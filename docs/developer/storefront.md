@@ -1714,7 +1714,11 @@ handler, at `wp_loaded`, the plugin:
    `max` are both the page count the product or variation is sold at
    (`Catalogue\BlankOptionLinks::page_count()`; the blank's cached views say
    which placements are printed as pages, and no link is made while Pixonaut
-   cannot be asked, or at a count nobody can read); and `views`, the ticked views of the side's placement,
+   cannot be asked, or at a count nobody can read), and `pageTemplates`
+   when the side offers page layouts, each by its template's base id with
+   the `valueSet` of the side's values on it when there is one, so the
+   hosted designer offers them a page at a time as the product page does;
+   and `views`, the ticked views of the side's placement,
    only when they leave out one the variant is photographed in there (absent,
    Pixonaut shows every view and its Design view);
    `returnUrl` (the home page with
