@@ -245,7 +245,7 @@ final class InlineProducts {
 		$opening_id = OpeningChoice::variation_among( $product, array_map( static fn ( array $entry ): WC_Product => $entry['variation'], $entries ) );
 		$opening    = $entries[ $opening_id ] ?? null;
 		if ( null !== $opening ) {
-			$switches->open_on( $opening['mounts'] );
+			$switches->open_on( $opening['mounts'], $opening['config'] );
 		}
 		if ( null !== $own ) {
 			$switches->add_mounts( $own, $config );
@@ -254,7 +254,7 @@ final class InlineProducts {
 			$variant      = $entry['config'];
 			$variant_mode = ApprovalMode::resolve( $variant->approval_mode, $this->settings );
 			$switches->add_mounts( $entry['mounts'], $variant );
-			$switches->add_personalised( $variation_id, $entry['attributes'], $entry['mounts'], $variant_mode, $refs[ $variation_id ], self::pages_sold( $entry['variation'], $variant ) );
+			$switches->add_personalised( $variation_id, $entry['attributes'], $entry['mounts'], $variant_mode, $refs[ $variation_id ], self::pages_sold( $entry['variation'], $variant ), $variant );
 			if ( ApprovalMode::CHECKBOX === $variant_mode ) {
 				$mode = ApprovalMode::CHECKBOX;
 			}

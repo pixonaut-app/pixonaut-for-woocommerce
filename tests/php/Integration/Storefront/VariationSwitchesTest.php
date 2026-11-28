@@ -543,10 +543,61 @@ final class VariationSwitchesTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'pixonaut-approval__box', $this->form_html( $product ) );
 	}
 
+	public function test_the_tabs_carry_the_side_names_of_the_variation_the_page_opens_on(): void {
+		$own         = StorefrontTest::two_sided();
+		[ $product ] = self::variable(
+			$own,
+			array(
+				'A4' => self::renamed( $own, 'Omslag', 'Januari' ),
+				'A3' => self::renamed( $own, 'Omslag A3', 'Januari A3' ),
+			)
+		);
+		$this->go_to( (string) get_permalink( $product->get_id() ) );
+
+		$html = $this->form_html( $product );
+
+		$this->assertMatchesRegularExpression( '/id="pixonaut-tab-front"[^>]*>Omslag<\/button>\s*<button[^>]*id="pixonaut-tab-back"[^>]*>Januari<\/button>/', $html );
+	}
+
+	public function test_each_variation_names_its_sides_for_the_tabs(): void {
+		$own                      = StorefrontTest::two_sided();
+		[ $product, $variations ] = self::variable(
+			$own,
+			array(
+				'M'  => null,
+				'A4' => self::renamed( $own, 'Omslag', 'Januari' ),
+			)
+		);
+
+		$switches = self::data( $this->form_html( $product ), 'variations' );
+
+		$this->assertSame( array( 'Front', 'Back' ), array_column( $switches[ $variations['M']->get_id() ]['sides'], 'label' ) );
+		$this->assertSame( array( 'Omslag', 'Januari' ), array_column( $switches[ $variations['A4']->get_id() ]['sides'], 'label' ) );
+	}
+
 	public function test_a_simple_product_has_no_variations(): void {
 		$product = StorefrontTest::product( StorefrontTest::personalised() );
 
 		$this->assertStringNotContainsString( 'data-pixonaut-variations', $this->form_html( $product ) );
+	}
+
+	/**
+	 * The configuration with its two sides named anew, as a variation with a
+	 * setup of its own names them.
+	 *
+	 * @param ProductConfig $config A configuration of a front and a back.
+	 * @param string        $front  The front's name.
+	 * @param string        $back   The back's name.
+	 */
+	private static function renamed( ProductConfig $config, string $front, string $back ): ProductConfig {
+		$names = array( $front, $back );
+		return $config->with_sides(
+			array_map(
+				static fn ( Side $side, string $name ): Side => new Side( $side->key, $name, $side->placement_id, $side->placement_name, $side->template_base_id, $side->template_version, null, $side->template_name, $side->print_sizes ),
+				$config->sides,
+				$names
+			)
+		);
 	}
 
 	private function form_html( WC_Product $product ): string {
