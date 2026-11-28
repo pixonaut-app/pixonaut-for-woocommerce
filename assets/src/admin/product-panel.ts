@@ -45,6 +45,11 @@ import {
 	showViewsSummary,
 } from './disclosures';
 import { setFieldError } from './field-error';
+import {
+	clearPageTemplates,
+	markPages,
+	showPageTemplates,
+} from './page-templates';
 import { initPictureCards } from './picture-cards';
 import { initPricing } from './pricing';
 import {
@@ -97,6 +102,8 @@ type Placement = {
 	/** The largest print the placement takes, when Pixonaut said. */
 	maxWidthMm?: number;
 	maxHeightMm?: number;
+	/** Whether it is printed as pages, whose sides offer page layouts. */
+	pages?: boolean;
 };
 
 /** Puts a placement's largest print on its option, for `placementLimit()`. */
@@ -126,6 +133,7 @@ export function fillPlacements(
 		const option = new Option(placement.text, placement.id);
 		option.dataset.thumbnail = placement.thumbnail ?? '';
 		setLimit(option, placement);
+		markPages(option, placement);
 		select.add(option);
 	}
 	select.value = placements.length === 1 ? (placements[0]?.id ?? '') : '';
@@ -143,6 +151,7 @@ export function addThumbnails(
 		if (placement !== undefined) {
 			option.dataset.thumbnail = placement.thumbnail ?? '';
 			setLimit(option, placement);
+			markPages(option, placement);
 		}
 	}
 }
@@ -735,8 +744,16 @@ function initSide(panel: Panel, side: HTMLElement): void {
 		background(undefined);
 		readLinked(showLinked);
 	});
+	const layouts = side.querySelector<HTMLSelectElement>(
+		'.pixonaut-side-page-templates',
+	);
 	const clearTemplate = () => {
 		standingOptionsChanged(side);
+		// Layouts are of the template's ratio, on a placement printed as pages.
+		clearPageTemplates(side);
+		if (layouts) {
+			$(layouts).trigger('change');
+		}
 		$(template).val('').trigger('change');
 		templateName.value = '';
 		offers(undefined);
@@ -780,6 +797,19 @@ function initSide(panel: Panel, side: HTMLElement): void {
 			groups?.templateChanged('');
 			offerVersions(side, '');
 		});
+	if (layouts) {
+		// The same search as the template's: templates that fit the placement.
+		searchField($, layouts, panel.nonce, (q) =>
+			templateSearch(
+				panel.urls,
+				panel.blank.value,
+				placement.value,
+				q,
+				panel.product,
+			),
+		).on('change', () => showPageTemplates(side));
+	}
+	showPageTemplates(side);
 	side.querySelector('.pixonaut-side-mode')?.addEventListener('change', () => {
 		showModeWarnings(side);
 		showGroups(side);

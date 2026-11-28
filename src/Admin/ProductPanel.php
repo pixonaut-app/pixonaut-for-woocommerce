@@ -14,6 +14,7 @@ use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Catalogue\CanvasRatio;
 use Pixonaut\WooCommerce\Catalogue\InvalidReason;
 use Pixonaut\WooCommerce\Catalogue\LayoutValueSets;
+use Pixonaut\WooCommerce\Catalogue\PageTemplate;
 use Pixonaut\WooCommerce\Catalogue\MisfitSizes;
 use Pixonaut\WooCommerce\Catalogue\PostedSides;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
@@ -924,7 +925,7 @@ final class ProductPanel {
 	 * @param WC_Product                $product The product or variation.
 	 * @param ProductConfig             $config The product's configuration.
 	 * @param array<string, mixed>|null $blank  The blank as `LinkedBlank::read()` gave it.
-	 * @phpstan-param array{placements: list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float}>, printshop_id: string|null, printshop_source: string, deleted: bool, status: string, name: string}|null $blank
+	 * @phpstan-param array{placements: list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float, pages?: bool}>, printshop_id: string|null, printshop_source: string, deleted: bool, status: string, name: string}|null $blank
 	 */
 	private static function invalid( WC_Product $product, ProductConfig $config, ?array $blank ): string {
 		if ( ! $config->personalise ) {
@@ -941,8 +942,8 @@ final class ProductPanel {
 	 *
 	 * @param ProductConfig             $config The product's configuration.
 	 * @param array<string, mixed>|null $blank  The blank as `LinkedBlank::read()` gave it.
-	 * @phpstan-param array{placements: list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float}>, printshop_id: string|null, printshop_source: string, deleted: bool, status: string, name: string}|null $blank
-	 * @return list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float}>
+	 * @phpstan-param array{placements: list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float, pages?: bool}>, printshop_id: string|null, printshop_source: string, deleted: bool, status: string, name: string}|null $blank
+	 * @return list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float, pages?: bool}>
 	 */
 	private function placements( ProductConfig $config, ?array $blank ): array {
 		if ( null !== $blank && array() !== $blank['placements'] ) {
@@ -1005,7 +1006,7 @@ final class ProductPanel {
 	 * @param bool      $variable Whether it is a variable product's.
 	 * @param string[]  $misfits  The blank's sizes its template cannot be printed at that its warning names.
 	 * @phpstan-param list<string> $misfits
-	 * @return array{key: string, label: string, title: string, placement_id: string, template_id: string, template_name: string, pinned: bool, version: int, versions: list<int>, mode: string, offers_properties: bool|null, misfit_warning: string, form_groups: string, canvas_ratio: string, sizes: list<array{kind: string, width: string, height: string, label: string, start: bool}>, value_sizes: array{attribute: string, sizes: array<string, array{width: string, height: string, label: string}>}}
+	 * @return array{key: string, label: string, title: string, placement_id: string, template_id: string, template_name: string, pinned: bool, version: int, versions: list<int>, mode: string, offers_properties: bool|null, misfit_warning: string, form_groups: string, canvas_ratio: string, sizes: list<array{kind: string, width: string, height: string, label: string, start: bool}>, value_sizes: array{attribute: string, sizes: array<string, array{width: string, height: string, label: string}>}, page_templates: list<array{id: string, name: string}>}
 	 */
 	private static function side_fields( ?Side $side, bool $variable = false, array $misfits = array() ): array {
 		$sizes = array();
@@ -1040,6 +1041,14 @@ final class ProductPanel {
 			// A variable product's variations may each have a size, so a side without a blank saved without one shows none to fill in.
 			'sizes'             => array() === $sizes && ( ! $variable || null === $side || null !== $side->placement_id ) ? array( array( 'start' => true ) + self::default_size_fields() ) : $sizes,
 			'value_sizes'       => self::value_size_fields( $side?->value_sizes ),
+			'page_templates'    => array_map(
+				static fn ( PageTemplate $layout ): array => array(
+					// The latest version, as the template field lists it; a pinned side stays on its own.
+					'id'   => true === $side?->pinned ? (string) $layout->id() : $layout->base_id . '@' . max( $layout->version, $layout->latest_version ?? 0 ),
+					'name' => $layout->name ?? $layout->base_id,
+				),
+				$side->page_templates ?? array()
+			),
 		);
 	}
 

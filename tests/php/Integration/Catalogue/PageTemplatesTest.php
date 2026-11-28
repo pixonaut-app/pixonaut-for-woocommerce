@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Catalogue;
 
+use Pixonaut\WooCommerce\Admin\ProductPanel;
 use Pixonaut\WooCommerce\Catalogue\InvalidReason;
 use Pixonaut\WooCommerce\Catalogue\PageTemplate;
 use Pixonaut\WooCommerce\Catalogue\PostedSides;
@@ -77,6 +78,21 @@ final class PageTemplatesTest extends ProductPanelTestCase {
 		$this->save( $product->get_id(), array(), array( PostedSides::PAGE_TEMPLATES => array( '' ) ) );
 
 		$this->assertSame( array(), ProductConfig::stored_on( $this->reload( $product->get_id() ) )->sides[0]->page_templates );
+	}
+
+	public function test_the_fields_mark_the_placement_printed_as_pages_and_show_its_sides_layouts(): void {
+		$product                         = $this->linked_book_product();
+		$blank                           = $this->blank();
+		$blank['placements'][0]['pages'] = self::PAGES;
+		$this->recorder->json( 200, $blank );
+		$this->recorder->json( 200, $this->mockups() );
+		$this->recorder->json( 200, self::printshops() );
+
+		$html = $this->panel->fields_html( $this->panel->panel( $this->reload( $product->get_id() ) ) );
+
+		$this->assertMatchesRegularExpression( '/<option value="' . self::PLACEMENT_ID . '"[^>]*data-pages="true"/', $html );
+		$this->assertMatchesRegularExpression( '/class="pixonaut-side-page-templates" multiple[^>]*>\s*<option value="' . self::TWO_PHOTOS . '@2" selected="selected">Two photos<\/option>/', $html );
+		$this->assertStringContainsString( 'name="' . ProductPanel::SIDES_FIELD . '[0][' . PostedSides::PAGE_TEMPLATES . '][]" value=""', $html );
 	}
 
 	public function test_page_layouts_on_a_placement_not_printed_as_pages_cannot_be_sold(): void {

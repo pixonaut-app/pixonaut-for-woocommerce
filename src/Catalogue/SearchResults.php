@@ -53,7 +53,7 @@ final class SearchResults {
 	 * its first photo, leaving out a blank whose import is running or failed.
 	 *
 	 * @param list<array<string, mixed>> $blanks The answer's `blanks`.
-	 * @return list<array{id: string, text: string, thumbnail: string, placements: list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float}>}>
+	 * @return list<array{id: string, text: string, thumbnail: string, placements: list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float, pages?: bool}>}>
 	 */
 	public static function blanks( array $blanks ): array {
 		$options = array();
@@ -75,10 +75,11 @@ final class SearchResults {
 
 	/**
 	 * A blank's placements, named as customers see them (`shopName`) when it
-	 * has one, with the largest print each takes when Pixonaut says.
+	 * has one, with the largest print each takes when Pixonaut says, and
+	 * `pages` true on one printed as pages.
 	 *
 	 * @param array<string, mixed> $blank A blank from `GET /v1/blanks` or `GET /v1/blanks/{id}`.
-	 * @return list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float}>
+	 * @return list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float, pages?: bool}>
 	 */
 	public static function placements( array $blank ): array {
 		$options = array();
@@ -90,7 +91,7 @@ final class SearchResults {
 			$options[] = array(
 				'id'   => $id,
 				'text' => self::text( $placement['shopName'] ?? null ) ?? self::text( $placement['name'] ?? null ) ?? $id,
-			) + self::limit( $placement );
+			) + self::limit( $placement ) + ( is_array( $placement['pages'] ?? null ) ? array( 'pages' => true ) : array() );
 		}
 		return $options;
 	}
