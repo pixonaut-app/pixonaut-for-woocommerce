@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-28T07:03:14+00:00\n"
+"POT-Creation-Date: 2026-11-28T08:19:50+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pixonaut-for-woocommerce\n"
@@ -1855,58 +1855,64 @@ msgstr ""
 msgid "A variation follows its product for option_groups and group_numbers: set them on the product."
 msgstr ""
 
-#: src/Abilities/SetProductShowcase.php:50
+#: src/Abilities/SetProductShowcase.php:51
 msgid "The sets the product's template offers, by id and name."
 msgstr ""
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/SetProductShowcase.php:54
+#: src/Abilities/SetProductShowcase.php:55
 msgid "Set a product's showcase pictures"
 msgstr ""
 
 #. translators: 1: how many showcase pictures a product shows at most, e.g. 10; 2: how many pictures of its other sides, e.g. 9.
-#: src/Abilities/SetProductShowcase.php:57
+#: src/Abilities/SetProductShowcase.php:58
 #, php-format
 msgid "Sets which of its template's showcase sets a personalised simple or variable product's images are drawn with, in order, up to %1$d; replaces the ones it has, and an empty list removes them. Each is drawn on the blank's photo (`mockup`) or as the flat design (`preview`); a product without a blank has only the flat design. On the photo, `view` and `photo` name a view of the blank and one of its photos, a scene's too, as `get-product-picture-views` lists them; `view` null is the photo the product page starts on, and leaving both out keeps what the set was drawn on before. A set may be named more than once, on another view or photo each time, so a gallery can show the same set on several views. `side_pictures`, up to %2$d, names the product's other sides its gallery shows after them, such as a calendar's month page or a shirt's back, each drawn with its side's template and the values that side is sold with, from the sides `get-product-picture-views` lists; it replaces the ones it has, and left out keeps them. The pictures are drawn again. The answer lists the sets the template offers."
 msgstr ""
 
-#: src/Abilities/SetProductShowcase.php:76
+#: src/Abilities/SetProductShowcase.php:77
 msgid "One of the template's showcase sets, by id."
 msgstr ""
 
-#: src/Abilities/SetProductShowcase.php:85
+#: src/Abilities/SetProductShowcase.php:86
 msgid "On the photo, one of the views `get-product-picture-views` lists; null for the one the product page starts on. Left out with `photo`, the set keeps what it was drawn on before."
 msgstr ""
 
-#: src/Abilities/SetProductShowcase.php:89
+#: src/Abilities/SetProductShowcase.php:90
 msgid "On the photo, one of the photos `get-product-picture-views` lists; its view is found when `view` is left out. Without it, the view's photo of the variant sold."
 msgstr ""
 
-#: src/Abilities/SetProductShowcase.php:104
+#: src/Abilities/SetProductShowcase.php:105
 msgid "One of the product's sides, by key, as `get-product-picture-views` lists them in `sides`."
 msgstr ""
 
-#: src/Abilities/SetProductShowcase.php:142
+#: src/Abilities/SetProductShowcase.php:143
 msgid "The product is not personalised with a template, so it has no showcase sets. Set it up first."
 msgstr ""
 
-#: src/Abilities/SetProductShowcase.php:147
+#: src/Abilities/SetProductShowcase.php:148
 msgid "Pixonaut could not be asked for the template's showcase sets. Try again later."
 msgstr ""
 
 #. translators: 1: a showcase set's id; 2: the ids the template offers, e.g. "graduate, wedding".
-#: src/Abilities/SetProductShowcase.php:162
+#: src/Abilities/SetProductShowcase.php:163
 #, php-format
 msgid "The template has no showcase set \"%1$s\". It has: %2$s."
 msgstr ""
 
-#: src/Abilities/SetProductShowcase.php:164
+#: src/Abilities/SetProductShowcase.php:165
 msgctxt "showcase sets a template offers"
 msgid "none"
 msgstr ""
 
+#. translators: 1: how many pictures were asked for, e.g. 12; 2: how many a product shows at most, e.g. 10.
+#: src/Abilities/SetProductShowcase.php:199
+#, php-format
+msgid "That is %1$d pictures, and a product shows at most %2$d: its showcase sets, or its first side's picture, and the pictures of its other sides. Name fewer, or take side pictures off with `side_pictures`."
+msgstr ""
+
 #. translators: 1: a side's key; 2: the keys of the product's sides, e.g. "front, back".
-#: src/Abilities/SetProductShowcase.php:220
+#: src/Abilities/SetProductShowcase.php:235
 #, php-format
 msgid "The product has no side \"%1$s\". It has: %2$s."
 msgstr ""

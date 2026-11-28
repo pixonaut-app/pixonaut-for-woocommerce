@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-28T07:03:14+00:00\n"
+"POT-Creation-Date: 2026-11-28T08:19:50+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -936,14 +936,14 @@ msgid ""
 msgstr ""
 "Indique sur quoi sont générées les images Pixonaut d'un produit ou d'une "
 "variation personnalisés : l'image générée sans jeu d'exemples (pour une "
-"variation : son propre choix) et chaque jeu d'exemples choisi, chacune "
-"sur la photo sur laquelle s'ouvre la page produit, sur une vue et une "
-"photo du produit vierge, ou à plat ; les vues de l'emplacement de sa face "
-"avec leurs photos, scènes comprises ; et, pour un produit, les jeux "
-"d'exemples que propose son modèle, soit les identifiants qu'accepte "
-"`set-product-showcase`, et ses faces, soit les clés qu'accepte "
-"`set-product-showcase` dans `side_pictures`, avec celles que montre sa "
-"galerie. Définissez-les avec `set-product-picture-view`."
+"variation : son propre choix) et chaque jeu d'exemples choisi, chacune sur "
+"la photo sur laquelle s'ouvre la page produit, sur une vue et une photo du "
+"produit vierge, ou à plat ; les vues de l'emplacement de sa face avec leurs "
+"photos, scènes comprises ; et, pour un produit, les jeux d'exemples que "
+"propose son modèle, soit les identifiants qu'accepte `set-product-showcase`, "
+"et ses faces, soit les clés qu'accepte `set-product-showcase` dans "
+"`side_pictures`, avec celles que montre sa galerie. Définissez-les avec `set-"
+"product-picture-view`."
 
 #: src/Abilities/GetProductPictureViews.php:53
 #: src/Abilities/SetProductPictureView.php:47
@@ -996,14 +996,14 @@ msgid ""
 "variation."
 msgstr ""
 "Les faces du produit que sa galerie peut montrer, par clé : celles de la "
-"variation sous laquelle un produit variable est présenté, qui peuvent "
-"être plus nombreuses que les siennes. Vide sur une variation."
+"variation sous laquelle un produit variable est présenté, qui peuvent être "
+"plus nombreuses que les siennes. Vide sur une variation."
 
 #: src/Abilities/GetProductPictureViews.php:231
 msgid "The template the side is on, by its base id; null for none."
 msgstr ""
-"Le modèle sur lequel se trouve la face, par son identifiant de base ; "
-"null s'il n'y en a pas."
+"Le modèle sur lequel se trouve la face, par son identifiant de base ; null "
+"s'il n'y en a pas."
 
 #: src/Abilities/GetProductPictureViews.php:248
 msgid ""
@@ -1011,10 +1011,10 @@ msgid ""
 "order, each drawn with its side's template and values, on the blank's photo "
 "(`mockup`) or flat (`preview`); empty for none and on a variation."
 msgstr ""
-"Les autres faces du produit que sa galerie montre après ses images de "
-"jeux d'exemples, dans l'ordre, chacune générée avec le modèle et les "
-"valeurs de sa face, sur la photo du produit vierge (`mockup`) ou à plat "
-"(`preview`) ; vide pour aucune et sur une variation."
+"Les autres faces du produit que sa galerie montre après ses images de jeux "
+"d'exemples, dans l'ordre, chacune générée avec le modèle et les valeurs de "
+"sa face, sur la photo du produit vierge (`mockup`) ou à plat (`preview`) ; "
+"vide pour aucune et sur une variation."
 
 #: src/Abilities/GetProductPictureViews.php:272
 msgid "`mockup` on the blank's photo, `preview` the flat design."
@@ -3513,17 +3513,17 @@ msgstr ""
 "Une variation suit son produit pour option_groups et group_numbers : "
 "définissez-les sur le produit."
 
-#: src/Abilities/SetProductShowcase.php:50
+#: src/Abilities/SetProductShowcase.php:51
 msgid "The sets the product's template offers, by id and name."
 msgstr "Les jeux que propose le modèle du produit, avec identifiant et nom."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/SetProductShowcase.php:54
+#: src/Abilities/SetProductShowcase.php:55
 msgid "Set a product's showcase pictures"
 msgstr "Définir les images d'exemple d'un produit"
 
 #. translators: 1: how many showcase pictures a product shows at most, e.g. 10; 2: how many pictures of its other sides, e.g. 9.
-#: src/Abilities/SetProductShowcase.php:57
+#: src/Abilities/SetProductShowcase.php:58
 #, php-format
 msgid ""
 "Sets which of its template's showcase sets a personalised simple or variable "
@@ -3543,29 +3543,29 @@ msgid ""
 "answer lists the sets the template offers."
 msgstr ""
 "Définit avec quels jeux d'exemples de son modèle les images d'un produit "
-"simple ou variable personnalisé sont générées, dans l'ordre, jusqu'à "
-"%1$d ; remplace ceux qu'il a, et une liste vide les supprime. Chacun est "
-"généré sur la photo du produit vierge (`mockup`) ou en création à plat "
-"(`preview`) ; un produit sans produit vierge n'a que la création à plat. "
-"Sur la photo, `view` et `photo` désignent une vue du produit vierge et "
-"l'une de ses photos, y compris celle d'une scène, telles que les liste "
-"`get-product-picture-views` ; `view` à null est la photo sur laquelle la "
-"page produit démarre, et si les deux sont omis, le jeu garde ce sur quoi "
-"il était généré auparavant. Un jeu peut être nommé plusieurs fois, chaque "
-"fois sur une autre vue ou une autre photo, pour qu'une galerie puisse "
-"montrer le même jeu sur plusieurs vues. `side_pictures`, jusqu'à %2$d, "
-"désigne les autres faces du produit que sa galerie montre après eux, "
-"comme la page d'un mois d'un calendrier ou le dos d'un tee-shirt, chacune "
-"générée avec le modèle de sa face et les valeurs avec lesquelles cette "
-"face est vendue, parmi les faces que liste `get-product-picture-views` ; "
-"remplace celles qu'il a, et si elle est omise, les conserve. Les images "
-"sont générées de nouveau. La réponse liste les jeux que propose le modèle."
+"simple ou variable personnalisé sont générées, dans l'ordre, jusqu'à %1$d ; "
+"remplace ceux qu'il a, et une liste vide les supprime. Chacun est généré sur "
+"la photo du produit vierge (`mockup`) ou en création à plat (`preview`) ; un "
+"produit sans produit vierge n'a que la création à plat. Sur la photo, `view` "
+"et `photo` désignent une vue du produit vierge et l'une de ses photos, y "
+"compris celle d'une scène, telles que les liste `get-product-picture-"
+"views` ; `view` à null est la photo sur laquelle la page produit démarre, et "
+"si les deux sont omis, le jeu garde ce sur quoi il était généré auparavant. "
+"Un jeu peut être nommé plusieurs fois, chaque fois sur une autre vue ou une "
+"autre photo, pour qu'une galerie puisse montrer le même jeu sur plusieurs "
+"vues. `side_pictures`, jusqu'à %2$d, désigne les autres faces du produit que "
+"sa galerie montre après eux, comme la page d'un mois d'un calendrier ou le "
+"dos d'un tee-shirt, chacune générée avec le modèle de sa face et les valeurs "
+"avec lesquelles cette face est vendue, parmi les faces que liste `get-"
+"product-picture-views` ; remplace celles qu'il a, et si elle est omise, les "
+"conserve. Les images sont générées de nouveau. La réponse liste les jeux que "
+"propose le modèle."
 
-#: src/Abilities/SetProductShowcase.php:76
+#: src/Abilities/SetProductShowcase.php:77
 msgid "One of the template's showcase sets, by id."
 msgstr "L'un des jeux d'exemples du modèle, par identifiant."
 
-#: src/Abilities/SetProductShowcase.php:85
+#: src/Abilities/SetProductShowcase.php:86
 msgid ""
 "On the photo, one of the views `get-product-picture-views` lists; null for "
 "the one the product page starts on. Left out with `photo`, the set keeps "
@@ -3575,7 +3575,7 @@ msgstr ""
 "pour celle sur laquelle la page produit démarre. Si elle est omise avec "
 "`photo`, le jeu garde ce sur quoi il était généré auparavant."
 
-#: src/Abilities/SetProductShowcase.php:89
+#: src/Abilities/SetProductShowcase.php:90
 msgid ""
 "On the photo, one of the photos `get-product-picture-views` lists; its view "
 "is found when `view` is left out. Without it, the view's photo of the "
@@ -3585,15 +3585,15 @@ msgstr ""
 "vue est déduite si `view` est omis. Sans photo, la photo de la vue pour la "
 "variante vendue."
 
-#: src/Abilities/SetProductShowcase.php:104
+#: src/Abilities/SetProductShowcase.php:105
 msgid ""
 "One of the product's sides, by key, as `get-product-picture-views` lists "
 "them in `sides`."
 msgstr ""
-"L'une des faces du produit, par clé, telle que "
-"`get-product-picture-views` les liste dans `sides`."
+"L'une des faces du produit, par clé, telle que `get-product-picture-views` "
+"les liste dans `sides`."
 
-#: src/Abilities/SetProductShowcase.php:142
+#: src/Abilities/SetProductShowcase.php:143
 msgid ""
 "The product is not personalised with a template, so it has no showcase sets. "
 "Set it up first."
@@ -3601,7 +3601,7 @@ msgstr ""
 "Le produit n'est pas personnalisé avec un modèle, il n'a donc pas de jeux "
 "d'exemples. Configurez-le d'abord."
 
-#: src/Abilities/SetProductShowcase.php:147
+#: src/Abilities/SetProductShowcase.php:148
 msgid ""
 "Pixonaut could not be asked for the template's showcase sets. Try again "
 "later."
@@ -3610,18 +3610,31 @@ msgstr ""
 "plus tard."
 
 #. translators: 1: a showcase set's id; 2: the ids the template offers, e.g. "graduate, wedding".
-#: src/Abilities/SetProductShowcase.php:162
+#: src/Abilities/SetProductShowcase.php:163
 #, php-format
 msgid "The template has no showcase set \"%1$s\". It has: %2$s."
 msgstr "Le modèle n'a pas de jeu d'exemples « %1$s ». Il propose : %2$s."
 
-#: src/Abilities/SetProductShowcase.php:164
+#: src/Abilities/SetProductShowcase.php:165
 msgctxt "showcase sets a template offers"
 msgid "none"
 msgstr "aucun"
 
+#. translators: 1: how many pictures were asked for, e.g. 12; 2: how many a product shows at most, e.g. 10.
+#: src/Abilities/SetProductShowcase.php:199
+#, php-format
+msgid ""
+"That is %1$d pictures, and a product shows at most %2$d: its showcase sets, "
+"or its first side's picture, and the pictures of its other sides. Name "
+"fewer, or take side pictures off with `side_pictures`."
+msgstr ""
+"Cela fait %1$d images, et un produit en montre au plus %2$d : ses jeux "
+"d'exemples, ou l'image de sa première face, et les images de ses autres "
+"faces. Nommez-en moins, ou retirez les images des faces avec "
+"`side_pictures`."
+
 #. translators: 1: a side's key; 2: the keys of the product's sides, e.g. "front, back".
-#: src/Abilities/SetProductShowcase.php:220
+#: src/Abilities/SetProductShowcase.php:235
 #, php-format
 msgid "The product has no side \"%1$s\". It has: %2$s."
 msgstr "Le produit n'a pas de face « %1$s ». Il a : %2$s."

@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-28T07:03:14+00:00\n"
+"POT-Creation-Date: 2026-11-28T08:19:50+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -925,15 +925,14 @@ msgid ""
 msgstr ""
 "Indica sobre qué se generan las imágenes de Pixonaut de un producto o una "
 "variación personalizados: la imagen que se genera sin conjunto de muestra "
-"(en una variación, su propia elección) y cada conjunto de muestra "
-"elegido, cada una sobre la foto con la que se abre la página de producto, "
-"sobre una vista y una foto del producto base, o como diseño plano; las "
-"vistas de la ubicación de su cara con sus fotos, escenas incluidas; y, en "
-"un producto, los conjuntos de muestra que ofrece su plantilla, es decir, "
-"los identificadores que acepta `set-product-showcase`, y sus caras, es "
-"decir, las claves que `set-product-showcase` acepta en `side_pictures`, "
-"con las que muestra su galería. Se establecen con "
-"`set-product-picture-view`."
+"(en una variación, su propia elección) y cada conjunto de muestra elegido, "
+"cada una sobre la foto con la que se abre la página de producto, sobre una "
+"vista y una foto del producto base, o como diseño plano; las vistas de la "
+"ubicación de su cara con sus fotos, escenas incluidas; y, en un producto, "
+"los conjuntos de muestra que ofrece su plantilla, es decir, los "
+"identificadores que acepta `set-product-showcase`, y sus caras, es decir, "
+"las claves que `set-product-showcase` acepta en `side_pictures`, con las que "
+"muestra su galería. Se establecen con `set-product-picture-view`."
 
 #: src/Abilities/GetProductPictureViews.php:53
 #: src/Abilities/SetProductPictureView.php:47
@@ -993,8 +992,8 @@ msgstr ""
 #: src/Abilities/GetProductPictureViews.php:231
 msgid "The template the side is on, by its base id; null for none."
 msgstr ""
-"La plantilla en la que está la cara, por su identificador base; null si "
-"no tiene ninguna."
+"La plantilla en la que está la cara, por su identificador base; null si no "
+"tiene ninguna."
 
 #: src/Abilities/GetProductPictureViews.php:248
 msgid ""
@@ -1002,11 +1001,10 @@ msgid ""
 "order, each drawn with its side's template and values, on the blank's photo "
 "(`mockup`) or flat (`preview`); empty for none and on a variation."
 msgstr ""
-"Las demás caras del producto que su galería muestra después de sus "
-"imágenes de conjunto de muestra, en orden, cada una generada con la "
-"plantilla y los valores de su cara, sobre la foto del producto base "
-"(`mockup`) o como diseño plano (`preview`); vacío si no hay ninguna y en "
-"una variación."
+"Las demás caras del producto que su galería muestra después de sus imágenes "
+"de conjunto de muestra, en orden, cada una generada con la plantilla y los "
+"valores de su cara, sobre la foto del producto base (`mockup`) o como diseño "
+"plano (`preview`); vacío si no hay ninguna y en una variación."
 
 #: src/Abilities/GetProductPictureViews.php:272
 msgid "`mockup` on the blank's photo, `preview` the flat design."
@@ -3480,19 +3478,19 @@ msgstr ""
 "Una variación sigue a su producto en option_groups y group_numbers: "
 "establecelos en el producto."
 
-#: src/Abilities/SetProductShowcase.php:50
+#: src/Abilities/SetProductShowcase.php:51
 msgid "The sets the product's template offers, by id and name."
 msgstr ""
 "Los conjuntos que ofrece la plantilla del producto, con identificador y "
 "nombre."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/SetProductShowcase.php:54
+#: src/Abilities/SetProductShowcase.php:55
 msgid "Set a product's showcase pictures"
 msgstr "Establecer las imágenes de muestra de un producto"
 
 #. translators: 1: how many showcase pictures a product shows at most, e.g. 10; 2: how many pictures of its other sides, e.g. 9.
-#: src/Abilities/SetProductShowcase.php:57
+#: src/Abilities/SetProductShowcase.php:58
 #, php-format
 msgid ""
 "Sets which of its template's showcase sets a personalised simple or variable "
@@ -3515,27 +3513,26 @@ msgstr ""
 "imágenes de un producto simple o variable personalizado, en orden, hasta "
 "%1$d; reemplaza los que tiene, y una lista vacía los elimina. Cada uno se "
 "genera sobre la foto del producto base (`mockup`) o como diseño plano "
-"(`preview`); un producto sin producto base solo tiene el diseño plano. "
-"Sobre la foto, `view` y `photo` indican una vista del producto base y una "
-"de sus fotos, también la de una escena, tal como las lista "
-"`get-product-picture-views`; `view` en null es la foto con la que empieza "
-"la página del producto, y si se omiten ambos, el conjunto conserva "
-"aquello sobre lo que se generó antes. Un conjunto puede nombrarse más de "
-"una vez, cada vez sobre otra vista o foto, de modo que una galería pueda "
-"mostrar el mismo conjunto en varias vistas. `side_pictures`, hasta %2$d, "
-"nombra las demás caras del producto que su galería muestra después de "
-"ellos, como la página de un mes de un calendario o la parte trasera de "
-"una camiseta, cada una generada con la plantilla de su cara y los valores "
-"con los que se vende esa cara, de las caras que lista "
-"`get-product-picture-views`; reemplaza las que tiene, y si se omite, las "
-"conserva. Las imágenes se vuelven a generar. La respuesta lista los "
-"conjuntos que ofrece la plantilla."
+"(`preview`); un producto sin producto base solo tiene el diseño plano. Sobre "
+"la foto, `view` y `photo` indican una vista del producto base y una de sus "
+"fotos, también la de una escena, tal como las lista `get-product-picture-"
+"views`; `view` en null es la foto con la que empieza la página del producto, "
+"y si se omiten ambos, el conjunto conserva aquello sobre lo que se generó "
+"antes. Un conjunto puede nombrarse más de una vez, cada vez sobre otra vista "
+"o foto, de modo que una galería pueda mostrar el mismo conjunto en varias "
+"vistas. `side_pictures`, hasta %2$d, nombra las demás caras del producto que "
+"su galería muestra después de ellos, como la página de un mes de un "
+"calendario o la parte trasera de una camiseta, cada una generada con la "
+"plantilla de su cara y los valores con los que se vende esa cara, de las "
+"caras que lista `get-product-picture-views`; reemplaza las que tiene, y si "
+"se omite, las conserva. Las imágenes se vuelven a generar. La respuesta "
+"lista los conjuntos que ofrece la plantilla."
 
-#: src/Abilities/SetProductShowcase.php:76
+#: src/Abilities/SetProductShowcase.php:77
 msgid "One of the template's showcase sets, by id."
 msgstr "Uno de los conjuntos de muestra de la plantilla, por identificador."
 
-#: src/Abilities/SetProductShowcase.php:85
+#: src/Abilities/SetProductShowcase.php:86
 msgid ""
 "On the photo, one of the views `get-product-picture-views` lists; null for "
 "the one the product page starts on. Left out with `photo`, the set keeps "
@@ -3545,7 +3542,7 @@ msgstr ""
 "para aquella con la que empieza la página del producto. Si se omite junto "
 "con `photo`, el conjunto conserva aquello sobre lo que se generó antes."
 
-#: src/Abilities/SetProductShowcase.php:89
+#: src/Abilities/SetProductShowcase.php:90
 msgid ""
 "On the photo, one of the photos `get-product-picture-views` lists; its view "
 "is found when `view` is left out. Without it, the view's photo of the "
@@ -3555,15 +3552,15 @@ msgstr ""
 "vista se deduce si se omite `view`. Sin foto, la foto de la vista de la "
 "variante que se vende."
 
-#: src/Abilities/SetProductShowcase.php:104
+#: src/Abilities/SetProductShowcase.php:105
 msgid ""
 "One of the product's sides, by key, as `get-product-picture-views` lists "
 "them in `sides`."
 msgstr ""
-"Una de las caras del producto, por clave, tal como las lista "
-"`get-product-picture-views` en `sides`."
+"Una de las caras del producto, por clave, tal como las lista `get-product-"
+"picture-views` en `sides`."
 
-#: src/Abilities/SetProductShowcase.php:142
+#: src/Abilities/SetProductShowcase.php:143
 msgid ""
 "The product is not personalised with a template, so it has no showcase sets. "
 "Set it up first."
@@ -3571,7 +3568,7 @@ msgstr ""
 "El producto no está personalizado con una plantilla, así que no tiene "
 "conjuntos de muestra. Configuralo primero."
 
-#: src/Abilities/SetProductShowcase.php:147
+#: src/Abilities/SetProductShowcase.php:148
 msgid ""
 "Pixonaut could not be asked for the template's showcase sets. Try again "
 "later."
@@ -3580,18 +3577,31 @@ msgstr ""
 "Intentalo de nuevo más tarde."
 
 #. translators: 1: a showcase set's id; 2: the ids the template offers, e.g. "graduate, wedding".
-#: src/Abilities/SetProductShowcase.php:162
+#: src/Abilities/SetProductShowcase.php:163
 #, php-format
 msgid "The template has no showcase set \"%1$s\". It has: %2$s."
 msgstr "La plantilla no tiene ningún conjunto de muestra “%1$s”. Tiene: %2$s."
 
-#: src/Abilities/SetProductShowcase.php:164
+#: src/Abilities/SetProductShowcase.php:165
 msgctxt "showcase sets a template offers"
 msgid "none"
 msgstr "ninguno"
 
+#. translators: 1: how many pictures were asked for, e.g. 12; 2: how many a product shows at most, e.g. 10.
+#: src/Abilities/SetProductShowcase.php:199
+#, php-format
+msgid ""
+"That is %1$d pictures, and a product shows at most %2$d: its showcase sets, "
+"or its first side's picture, and the pictures of its other sides. Name "
+"fewer, or take side pictures off with `side_pictures`."
+msgstr ""
+"Son %1$d imágenes, y un producto muestra como máximo %2$d: sus conjuntos"
+" de muestra, o la imagen de su primera cara, y las imágenes de sus demás"
+" caras. Nombra menos, o quita las imágenes de las caras con "
+"`side_pictures`."
+
 #. translators: 1: a side's key; 2: the keys of the product's sides, e.g. "front, back".
-#: src/Abilities/SetProductShowcase.php:220
+#: src/Abilities/SetProductShowcase.php:235
 #, php-format
 msgid "The product has no side \"%1$s\". It has: %2$s."
 msgstr "El producto no tiene ninguna cara “%1$s”. Tiene: %2$s."

@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-28T07:03:14+00:00\n"
+"POT-Creation-Date: 2026-11-28T08:19:50+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -938,16 +938,15 @@ msgid ""
 "gallery shows. Set them with `set-product-picture-view`."
 msgstr ""
 "Ruft ab, worauf die Pixonaut-Bilder eines personalisierten Produkts oder "
-"einer Variante erstellt werden: das Bild, das ohne Beispielset erstellt "
-"wird (bei einer Variante: ihre eigene Wahl), und jedes gewählte "
-"Beispielset, jeweils auf dem Foto, mit dem die Produktseite öffnet, auf "
-"einer Ansicht und einem Foto des Rohlings oder flach; die Ansichten der "
-"Druckposition seiner Seite mit ihren Fotos, Szenen eingeschlossen; und "
-"bei einem Produkt die Beispielsets, die seine Vorlage bietet, also die "
-"IDs, die `set-product-showcase` annimmt, und seine Seiten, also die "
-"Schlüssel, die `set-product-showcase` in `side_pictures` annimmt, mit "
-"denen, die seine Galerie zeigt. Festgelegt werden sie mit "
-"`set-product-picture-view`."
+"einer Variante erstellt werden: das Bild, das ohne Beispielset erstellt wird "
+"(bei einer Variante: ihre eigene Wahl), und jedes gewählte Beispielset, "
+"jeweils auf dem Foto, mit dem die Produktseite öffnet, auf einer Ansicht und "
+"einem Foto des Rohlings oder flach; die Ansichten der Druckposition seiner "
+"Seite mit ihren Fotos, Szenen eingeschlossen; und bei einem Produkt die "
+"Beispielsets, die seine Vorlage bietet, also die IDs, die `set-product-"
+"showcase` annimmt, und seine Seiten, also die Schlüssel, die `set-product-"
+"showcase` in `side_pictures` annimmt, mit denen, die seine Galerie zeigt. "
+"Festgelegt werden sie mit `set-product-picture-view`."
 
 #: src/Abilities/GetProductPictureViews.php:53
 #: src/Abilities/SetProductPictureView.php:47
@@ -998,9 +997,9 @@ msgid ""
 "variable product is pictured as, which may be more than its own. Empty on a "
 "variation."
 msgstr ""
-"Die Seiten des Produkts, die seine Galerie zeigen kann, nach Schlüssel: "
-"die der Variante, als die ein variables Produkt abgebildet wird, und das "
-"können mehr sein als seine eigenen. Leer bei einer Variante."
+"Die Seiten des Produkts, die seine Galerie zeigen kann, nach Schlüssel: die "
+"der Variante, als die ein variables Produkt abgebildet wird, und das können "
+"mehr sein als seine eigenen. Leer bei einer Variante."
 
 #: src/Abilities/GetProductPictureViews.php:231
 msgid "The template the side is on, by its base id; null for none."
@@ -1014,10 +1013,10 @@ msgid ""
 "order, each drawn with its side's template and values, on the blank's photo "
 "(`mockup`) or flat (`preview`); empty for none and on a variation."
 msgstr ""
-"Die weiteren Seiten des Produkts, die seine Galerie nach seinen "
-"Beispielset-Bildern zeigt, der Reihe nach, jeweils mit der Vorlage und "
-"den Werten ihrer Seite erstellt, auf dem Foto des Rohlings (`mockup`) "
-"oder flach (`preview`); leer für keine und bei einer Variante."
+"Die weiteren Seiten des Produkts, die seine Galerie nach seinen Beispielset-"
+"Bildern zeigt, der Reihe nach, jeweils mit der Vorlage und den Werten ihrer "
+"Seite erstellt, auf dem Foto des Rohlings (`mockup`) oder flach (`preview`); "
+"leer für keine und bei einer Variante."
 
 #: src/Abilities/GetProductPictureViews.php:272
 msgid "`mockup` on the blank's photo, `preview` the flat design."
@@ -3508,17 +3507,17 @@ msgstr ""
 "Eine Variante folgt bei option_groups und group_numbers ihrem Produkt: Legen "
 "Sie sie am Produkt fest."
 
-#: src/Abilities/SetProductShowcase.php:50
+#: src/Abilities/SetProductShowcase.php:51
 msgid "The sets the product's template offers, by id and name."
 msgstr "Die Sets, die die Vorlage des Produkts bietet, mit ID und Name."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/SetProductShowcase.php:54
+#: src/Abilities/SetProductShowcase.php:55
 msgid "Set a product's showcase pictures"
 msgstr "Beispielbilder eines Produkts festlegen"
 
 #. translators: 1: how many showcase pictures a product shows at most, e.g. 10; 2: how many pictures of its other sides, e.g. 9.
-#: src/Abilities/SetProductShowcase.php:57
+#: src/Abilities/SetProductShowcase.php:58
 #, php-format
 msgid ""
 "Sets which of its template's showcase sets a personalised simple or variable "
@@ -3543,25 +3542,25 @@ msgstr ""
 "entfernt sie. Jedes wird auf dem Foto des Rohlings (`mockup`) oder als "
 "flaches Design (`preview`) erstellt; ein Produkt ohne Rohling hat nur das "
 "flache Design. Auf dem Foto nennen `view` und `photo` eine Ansicht des "
-"Rohlings und eines ihrer Fotos, auch eines aus einer Szene, so wie "
-"`get-product-picture-views` sie auflistet; `view` null ist das Foto, mit "
-"dem die Produktseite beginnt, und wenn beides weggelassen wird, bleibt "
-"das Set bei dem, worauf es zuvor erstellt wurde. Ein Set kann mehrfach "
-"genannt werden, jedes Mal auf einer anderen Ansicht oder einem anderen "
-"Foto, sodass eine Galerie dasselbe Set auf mehreren Ansichten zeigen "
-"kann. `side_pictures`, bis zu %2$d, nennt die weiteren Seiten des "
-"Produkts, die seine Galerie danach zeigt, etwa die Monatsseite eines "
-"Kalenders oder die Rückseite eines Shirts, jeweils mit der Vorlage ihrer "
-"Seite und den Werten erstellt, mit denen diese Seite verkauft wird, aus "
-"den Seiten, die `get-product-picture-views` auflistet; es ersetzt die "
-"bisherigen, und weggelassen bleiben sie bestehen. Die Bilder werden neu "
-"erstellt. Die Antwort listet die Sets auf, die die Vorlage bietet."
+"Rohlings und eines ihrer Fotos, auch eines aus einer Szene, so wie `get-"
+"product-picture-views` sie auflistet; `view` null ist das Foto, mit dem die "
+"Produktseite beginnt, und wenn beides weggelassen wird, bleibt das Set bei "
+"dem, worauf es zuvor erstellt wurde. Ein Set kann mehrfach genannt werden, "
+"jedes Mal auf einer anderen Ansicht oder einem anderen Foto, sodass eine "
+"Galerie dasselbe Set auf mehreren Ansichten zeigen kann. `side_pictures`, "
+"bis zu %2$d, nennt die weiteren Seiten des Produkts, die seine Galerie "
+"danach zeigt, etwa die Monatsseite eines Kalenders oder die Rückseite eines "
+"Shirts, jeweils mit der Vorlage ihrer Seite und den Werten erstellt, mit "
+"denen diese Seite verkauft wird, aus den Seiten, die `get-product-picture-"
+"views` auflistet; es ersetzt die bisherigen, und weggelassen bleiben sie "
+"bestehen. Die Bilder werden neu erstellt. Die Antwort listet die Sets auf, "
+"die die Vorlage bietet."
 
-#: src/Abilities/SetProductShowcase.php:76
+#: src/Abilities/SetProductShowcase.php:77
 msgid "One of the template's showcase sets, by id."
 msgstr "Eines der Beispielsets der Vorlage, nach ID."
 
-#: src/Abilities/SetProductShowcase.php:85
+#: src/Abilities/SetProductShowcase.php:86
 msgid ""
 "On the photo, one of the views `get-product-picture-views` lists; null for "
 "the one the product page starts on. Left out with `photo`, the set keeps "
@@ -3571,7 +3570,7 @@ msgstr ""
 "null für die, mit der die Produktseite beginnt. Wird sie zusammen mit "
 "`photo` weggelassen, bleibt das Set bei dem, worauf es zuvor erstellt wurde."
 
-#: src/Abilities/SetProductShowcase.php:89
+#: src/Abilities/SetProductShowcase.php:90
 msgid ""
 "On the photo, one of the photos `get-product-picture-views` lists; its view "
 "is found when `view` is left out. Without it, the view's photo of the "
@@ -3581,15 +3580,15 @@ msgstr ""
 "seine Ansicht wird ermittelt, wenn `view` weggelassen wird. Ohne Foto gilt "
 "das Foto der Ansicht von der verkauften Rohling-Variante."
 
-#: src/Abilities/SetProductShowcase.php:104
+#: src/Abilities/SetProductShowcase.php:105
 msgid ""
 "One of the product's sides, by key, as `get-product-picture-views` lists "
 "them in `sides`."
 msgstr ""
-"Eine der Seiten des Produkts, nach Schlüssel, so wie "
-"`get-product-picture-views` sie in `sides` auflistet."
+"Eine der Seiten des Produkts, nach Schlüssel, so wie `get-product-picture-"
+"views` sie in `sides` auflistet."
 
-#: src/Abilities/SetProductShowcase.php:142
+#: src/Abilities/SetProductShowcase.php:143
 msgid ""
 "The product is not personalised with a template, so it has no showcase sets. "
 "Set it up first."
@@ -3597,7 +3596,7 @@ msgstr ""
 "Das Produkt ist nicht mit einer Vorlage personalisiert und hat daher keine "
 "Beispielsets. Richten Sie es zuerst ein."
 
-#: src/Abilities/SetProductShowcase.php:147
+#: src/Abilities/SetProductShowcase.php:148
 msgid ""
 "Pixonaut could not be asked for the template's showcase sets. Try again "
 "later."
@@ -3606,18 +3605,31 @@ msgstr ""
 "Versuchen Sie es später noch einmal."
 
 #. translators: 1: a showcase set's id; 2: the ids the template offers, e.g. "graduate, wedding".
-#: src/Abilities/SetProductShowcase.php:162
+#: src/Abilities/SetProductShowcase.php:163
 #, php-format
 msgid "The template has no showcase set \"%1$s\". It has: %2$s."
 msgstr "Die Vorlage hat kein Beispielset „%1$s“. Sie hat: %2$s."
 
-#: src/Abilities/SetProductShowcase.php:164
+#: src/Abilities/SetProductShowcase.php:165
 msgctxt "showcase sets a template offers"
 msgid "none"
 msgstr "keine"
 
+#. translators: 1: how many pictures were asked for, e.g. 12; 2: how many a product shows at most, e.g. 10.
+#: src/Abilities/SetProductShowcase.php:199
+#, php-format
+msgid ""
+"That is %1$d pictures, and a product shows at most %2$d: its showcase sets, "
+"or its first side's picture, and the pictures of its other sides. Name "
+"fewer, or take side pictures off with `side_pictures`."
+msgstr ""
+"Das sind %1$d Bilder, und ein Produkt zeigt höchstens %2$d: seine "
+"Beispielsets oder das Bild seiner ersten Seite und die Bilder seiner "
+"weiteren Seiten. Nennen Sie weniger oder entfernen Sie die Seitenbilder "
+"mit `side_pictures`."
+
 #. translators: 1: a side's key; 2: the keys of the product's sides, e.g. "front, back".
-#: src/Abilities/SetProductShowcase.php:220
+#: src/Abilities/SetProductShowcase.php:235
 #, php-format
 msgid "The product has no side \"%1$s\". It has: %2$s."
 msgstr "Das Produkt hat keine Seite „%1$s“. Es hat: %2$s."

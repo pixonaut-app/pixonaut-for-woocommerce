@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-28T07:03:14+00:00\n"
+"POT-Creation-Date: 2026-11-28T08:19:50+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: nb_NO\n"
@@ -898,12 +898,12 @@ msgstr ""
 "Viser hva Pixonaut-bildene til et personalisert produkt eller en variant "
 "lages på: bildet som lages uten eksempelsett (for en variant: dens eget "
 "valg), og hvert valgte eksempelsett, hvert på fotoet produktsiden viser "
-"først, på en visning og et foto av basisproduktet, eller flatt; "
-"visningene for sidens plassering med fotoene deres, scener medregnet; og, "
-"for et produkt, eksempelsettene malen tilbyr, altså id-ene "
-"`set-product-showcase` tar imot, og sidene dets, altså nøklene "
-"`set-product-showcase` tar imot i `side_pictures`, med dem galleriet "
-"viser. Velg dem med `set-product-picture-view`."
+"først, på en visning og et foto av basisproduktet, eller flatt; visningene "
+"for sidens plassering med fotoene deres, scener medregnet; og, for et "
+"produkt, eksempelsettene malen tilbyr, altså id-ene `set-product-showcase` "
+"tar imot, og sidene dets, altså nøklene `set-product-showcase` tar imot i "
+"`side_pictures`, med dem galleriet viser. Velg dem med `set-product-picture-"
+"view`."
 
 #: src/Abilities/GetProductPictureViews.php:53
 #: src/Abilities/SetProductPictureView.php:47
@@ -953,9 +953,9 @@ msgid ""
 "variable product is pictured as, which may be more than its own. Empty on a "
 "variation."
 msgstr ""
-"Sidene til produktet som galleriet kan vise, etter nøkkel: de til "
-"varianten et variabelt produkt vises som, som kan være flere enn "
-"produktets egne. Tom på en variant."
+"Sidene til produktet som galleriet kan vise, etter nøkkel: de til varianten "
+"et variabelt produkt vises som, som kan være flere enn produktets egne. Tom "
+"på en variant."
 
 #: src/Abilities/GetProductPictureViews.php:231
 msgid "The template the side is on, by its base id; null for none."
@@ -3357,17 +3357,17 @@ msgstr ""
 "En variant følger produktet for option_groups og group_numbers: angi dem på "
 "produktet."
 
-#: src/Abilities/SetProductShowcase.php:50
+#: src/Abilities/SetProductShowcase.php:51
 msgid "The sets the product's template offers, by id and name."
 msgstr "Settene produktets mal tilbyr, med id og navn."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/SetProductShowcase.php:54
+#: src/Abilities/SetProductShowcase.php:55
 msgid "Set a product's showcase pictures"
 msgstr "Velg eksempelbildene til et produkt"
 
 #. translators: 1: how many showcase pictures a product shows at most, e.g. 10; 2: how many pictures of its other sides, e.g. 9.
-#: src/Abilities/SetProductShowcase.php:57
+#: src/Abilities/SetProductShowcase.php:58
 #, php-format
 msgid ""
 "Sets which of its template's showcase sets a personalised simple or variable "
@@ -3386,29 +3386,28 @@ msgid ""
 "the ones it has, and left out keeps them. The pictures are drawn again. The "
 "answer lists the sets the template offers."
 msgstr ""
-"Angir hvilke av malens eksempelsett bildene av et personalisert enkelt "
-"eller variabelt produkt lages med, i rekkefølge, opptil %1$d; erstatter "
-"de nåværende, og en tom liste fjerner dem. Hvert sett lages på "
-"basisproduktets bilde (`mockup`) eller som flatt design (`preview`); et "
-"produkt uten basisprodukt har bare det flate designet. På fotoet angir "
-"`view` og `photo` en visning av basisproduktet og ett av fotoene til "
-"basisproduktet, også ett fra en scene, slik `get-product-picture-views` "
-"lister dem opp; `view` null er fotoet produktsiden starter på, og hvis "
-"begge utelates, beholder settet det det ble laget på tidligere. Et sett "
-"kan nevnes mer enn én gang, hver gang på en annen visning eller et annet "
-"foto, slik at et galleri kan vise samme sett på flere visninger. "
-"`side_pictures`, opptil %2$d, nevner produktets andre sider som galleriet "
-"viser etter dem, som en kalenders månedsside eller en skjortes bakside, "
-"hver laget med sidens mal og verdiene siden selges med, fra sidene "
-"`get-product-picture-views` lister opp; erstatter de nåværende, og "
-"utelatt beholdes de. Bildene lages på nytt. Svaret lister opp settene "
-"malen tilbyr."
+"Angir hvilke av malens eksempelsett bildene av et personalisert enkelt eller "
+"variabelt produkt lages med, i rekkefølge, opptil %1$d; erstatter de "
+"nåværende, og en tom liste fjerner dem. Hvert sett lages på basisproduktets "
+"bilde (`mockup`) eller som flatt design (`preview`); et produkt uten "
+"basisprodukt har bare det flate designet. På fotoet angir `view` og `photo` "
+"en visning av basisproduktet og ett av fotoene til basisproduktet, også ett "
+"fra en scene, slik `get-product-picture-views` lister dem opp; `view` null "
+"er fotoet produktsiden starter på, og hvis begge utelates, beholder settet "
+"det det ble laget på tidligere. Et sett kan nevnes mer enn én gang, hver "
+"gang på en annen visning eller et annet foto, slik at et galleri kan vise "
+"samme sett på flere visninger. `side_pictures`, opptil %2$d, nevner "
+"produktets andre sider som galleriet viser etter dem, som en kalenders "
+"månedsside eller en skjortes bakside, hver laget med sidens mal og verdiene "
+"siden selges med, fra sidene `get-product-picture-views` lister opp; "
+"erstatter de nåværende, og utelatt beholdes de. Bildene lages på nytt. "
+"Svaret lister opp settene malen tilbyr."
 
-#: src/Abilities/SetProductShowcase.php:76
+#: src/Abilities/SetProductShowcase.php:77
 msgid "One of the template's showcase sets, by id."
 msgstr "Ett av malens eksempelsett, angitt med id."
 
-#: src/Abilities/SetProductShowcase.php:85
+#: src/Abilities/SetProductShowcase.php:86
 msgid ""
 "On the photo, one of the views `get-product-picture-views` lists; null for "
 "the one the product page starts on. Left out with `photo`, the set keeps "
@@ -3418,7 +3417,7 @@ msgstr ""
 "den produktsiden starter på. Utelates den sammen med `photo`, beholder "
 "settet det det ble laget på tidligere."
 
-#: src/Abilities/SetProductShowcase.php:89
+#: src/Abilities/SetProductShowcase.php:90
 msgid ""
 "On the photo, one of the photos `get-product-picture-views` lists; its view "
 "is found when `view` is left out. Without it, the view's photo of the "
@@ -3428,7 +3427,7 @@ msgstr ""
 "finnes når `view` utelates. Uten foto brukes visningens foto av "
 "basisproduktvarianten som selges."
 
-#: src/Abilities/SetProductShowcase.php:104
+#: src/Abilities/SetProductShowcase.php:105
 msgid ""
 "One of the product's sides, by key, as `get-product-picture-views` lists "
 "them in `sides`."
@@ -3436,7 +3435,7 @@ msgstr ""
 "En av produktets sider, etter nøkkel, slik `get-product-picture-views` "
 "lister dem opp i `sides`."
 
-#: src/Abilities/SetProductShowcase.php:142
+#: src/Abilities/SetProductShowcase.php:143
 msgid ""
 "The product is not personalised with a template, so it has no showcase sets. "
 "Set it up first."
@@ -3444,25 +3443,37 @@ msgstr ""
 "Produktet er ikke personalisert med en mal, så det har ingen eksempelsett. "
 "Sett det opp først."
 
-#: src/Abilities/SetProductShowcase.php:147
+#: src/Abilities/SetProductShowcase.php:148
 msgid ""
 "Pixonaut could not be asked for the template's showcase sets. Try again "
 "later."
 msgstr "Kunne ikke hente malens eksempelsett fra Pixonaut. Prøv igjen senere."
 
 #. translators: 1: a showcase set's id; 2: the ids the template offers, e.g. "graduate, wedding".
-#: src/Abilities/SetProductShowcase.php:162
+#: src/Abilities/SetProductShowcase.php:163
 #, php-format
 msgid "The template has no showcase set \"%1$s\". It has: %2$s."
 msgstr "Malen har ikke noe eksempelsett «%1$s». Den har: %2$s."
 
-#: src/Abilities/SetProductShowcase.php:164
+#: src/Abilities/SetProductShowcase.php:165
 msgctxt "showcase sets a template offers"
 msgid "none"
 msgstr "ingen"
 
+#. translators: 1: how many pictures were asked for, e.g. 12; 2: how many a product shows at most, e.g. 10.
+#: src/Abilities/SetProductShowcase.php:199
+#, php-format
+msgid ""
+"That is %1$d pictures, and a product shows at most %2$d: its showcase sets, "
+"or its first side's picture, and the pictures of its other sides. Name "
+"fewer, or take side pictures off with `side_pictures`."
+msgstr ""
+"Det er %1$d bilder, og et produkt viser høyst %2$d: dets eksempelsett, "
+"eller bildet av første side, og bildene av de andre sidene. Nevn færre, "
+"eller ta sidebildene bort med `side_pictures`."
+
 #. translators: 1: a side's key; 2: the keys of the product's sides, e.g. "front, back".
-#: src/Abilities/SetProductShowcase.php:220
+#: src/Abilities/SetProductShowcase.php:235
 #, php-format
 msgid "The product has no side \"%1$s\". It has: %2$s."
 msgstr "Produktet har ingen side «%1$s». Det har: %2$s."
