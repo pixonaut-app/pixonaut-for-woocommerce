@@ -55,8 +55,8 @@ final class ProductIndex {
 	}
 
 	/**
-	 * The index rows a configuration has: one per template it uses, and one
-	 * for its blank.
+	 * The index rows a configuration has: one per template it uses, its
+	 * sides' page layouts' among them, and one for its blank.
 	 *
 	 * @param ProductConfig|null $config A stored configuration; null for none.
 	 * @return list<array{0: string, 1: string}> Meta key and value pairs.
@@ -67,9 +67,12 @@ final class ProductIndex {
 		}
 		$entries = array();
 		foreach ( $config->sides as $side ) {
-			$entry = array( self::TEMPLATE_META, $side->template_base_id );
-			if ( '' !== $side->template_base_id && ! in_array( $entry, $entries, true ) ) {
-				$entries[] = $entry;
+			// A template a side offers only as a page layout is one its products use too.
+			foreach ( $side->template_base_ids() as $base_id ) {
+				$entry = array( self::TEMPLATE_META, $base_id );
+				if ( ! in_array( $entry, $entries, true ) ) {
+					$entries[] = $entry;
+				}
 			}
 		}
 		if ( null !== $config->blank_id ) {

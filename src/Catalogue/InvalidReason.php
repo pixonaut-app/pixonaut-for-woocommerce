@@ -162,6 +162,35 @@ final class InvalidReason {
 	public const PRINTSHOP_NEEDS_BLANK = 'printshop_needs_blank';
 
 	/**
+	 * Page layouts on a side whose placement is not printed as pages, or on
+	 * a product without a blank: only a book's pages are designed one by one.
+	 */
+	public const PAGE_TEMPLATES_NOT_PAGED = 'page_templates_not_paged';
+
+	/**
+	 * A page layout whose template is not at the side's template's ratio,
+	 * so a page designed on it would not fill the page; a new version at
+	 * another ratio is one too.
+	 */
+	public const PAGE_TEMPLATE_RATIO = 'page_template_ratio';
+
+	/**
+	 * A page layout named twice, or the side's own template among them.
+	 */
+	public const DUPLICATE_PAGE_TEMPLATE = 'duplicate_page_template';
+
+	/**
+	 * More page layouts than a side offers (`PageTemplate::MAX`).
+	 */
+	public const TOO_MANY_PAGE_TEMPLATES = 'too_many_page_templates';
+
+	/**
+	 * Reasons about a side's page layouts, which `set-product-setup` refuses
+	 * rather than saves.
+	 */
+	public const PAGE_TEMPLATES = array( self::PAGE_TEMPLATES_NOT_PAGED, self::PAGE_TEMPLATE_RATIO, self::DUPLICATE_PAGE_TEMPLATE, self::TOO_MANY_PAGE_TEMPLATES );
+
+	/**
 	 * Reasons found in what the store manager entered rather than in what
 	 * Pixonaut answered: only saving the product again clears them.
 	 */
@@ -175,6 +204,8 @@ final class InvalidReason {
 		self::TOO_MANY_PRINT_SIZES,
 		self::MISSING_PRINT_SIZE,
 		self::PRINTSHOP_NEEDS_BLANK,
+		self::DUPLICATE_PAGE_TEMPLATE,
+		self::TOO_MANY_PAGE_TEMPLATES,
 	);
 
 	/**
@@ -416,6 +447,31 @@ final class InvalidReason {
 				return sprintf(
 					/* translators: %s: where the settings are, e.g. "the product's Pixonaut tab". */
 					__( 'The printshop prints only on a blank. Choose a blank, or a printshop that prints without one, in %s.', 'pixonaut-for-woocommerce' ),
+					$place
+				);
+			case self::PAGE_TEMPLATES_NOT_PAGED:
+				return sprintf(
+					/* translators: %s: where the settings are, e.g. "the product's Pixonaut tab". */
+					__( 'Page layouts are offered only on a print position printed as pages, such as a book’s inner pages. Remove the side’s page layouts, or choose such a print position, in %s.', 'pixonaut-for-woocommerce' ),
+					$place
+				);
+			case self::PAGE_TEMPLATE_RATIO:
+				return sprintf(
+					/* translators: %s: where the settings are, e.g. "the product's Pixonaut tab". */
+					__( 'A page layout’s template does not have the aspect ratio of the side’s template, so a page designed on it would not fill the page. Choose layouts at the side template’s ratio in %s.', 'pixonaut-for-woocommerce' ),
+					$place
+				);
+			case self::DUPLICATE_PAGE_TEMPLATE:
+				return sprintf(
+					/* translators: %s: where the settings are, e.g. "the product's Pixonaut tab". */
+					__( 'A page layout is chosen twice, or is the side’s own template, which every page starts on. Choose each layout once, besides the side’s template, in %s.', 'pixonaut-for-woocommerce' ),
+					$place
+				);
+			case self::TOO_MANY_PAGE_TEMPLATES:
+				return sprintf(
+					/* translators: 1: most page layouts one side can offer, 2: where the settings are, e.g. "the product's Pixonaut tab". */
+					__( 'A side offers at most %1$d page layouts besides its own template. Remove layouts in %2$s.', 'pixonaut-for-woocommerce' ),
+					PageTemplate::MAX,
 					$place
 				);
 			case ProductConfig::REASON_NEWER_SCHEMA:

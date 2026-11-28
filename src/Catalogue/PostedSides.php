@@ -80,7 +80,11 @@ final class PostedSides {
 	 *                    `pinned` (`1` to stay on one template version)
 	 *                    and `version`, the version it stays on, no later
 	 *                    than the one `template` names (its latest), and
-	 *                    `canvas_ratio`, a `CanvasRatio` choice.
+	 *                    `canvas_ratio`, a `CanvasRatio` choice, and
+	 *                    `page_templates`, the other templates a page may be
+	 *                    designed on, each `<baseId>@<version>`, the latest
+	 *                    as the template's is (a pinned side stays on the
+	 *                    versions given).
 	 *                    Rows with nothing chosen are skipped.
 	 */
 	public static function parse( mixed $rows ): self {
@@ -127,6 +131,11 @@ final class PostedSides {
 	 * The posted field of a side's size per attribute value.
 	 */
 	public const VALUE_SIZES = 'value_sizes';
+
+	/**
+	 * The posted field of a side's page layouts.
+	 */
+	public const PAGE_TEMPLATES = 'page_templates';
 
 	/**
 	 * Put before a key of digits alone, which PHP would read back from the
@@ -220,7 +229,45 @@ final class PostedSides {
 			$parsed?->version,
 			CanvasRatio::from_posted( self::text( $row, self::CANVAS_RATIO ) ),
 			self::value_sizes( $row[ self::VALUE_SIZES ] ?? null, $problems ),
+			self::page_templates( $row[ self::PAGE_TEMPLATES ] ?? null, $parsed, $problems ),
 		);
+	}
+
+	/**
+	 * A side's page layouts as entered, each a template version. One named
+	 * twice, the side's own template among them, or more than a side offers
+	 * is a problem kept with the side, never one dropped quietly; an id that
+	 * names no version is one too.
+	 *
+	 * @param mixed           $posted   The ids, in order.
+	 * @param TemplateId|null $template The side's own template.
+	 * @param string[]        $problems Problems found so far; appended to.
+	 * @return list<string>
+	 */
+	private static function page_templates( mixed $posted, ?TemplateId $template, array &$problems ): array {
+		$ids   = array();
+		$bases = null === $template ? array() : array( $template->base_id );
+		foreach ( is_array( $posted ) ? $posted : array() as $id ) {
+			$id = is_string( $id ) ? trim( $id ) : '';
+			if ( '' === $id ) {
+				continue;
+			}
+			$parsed = TemplateId::parse( $id );
+			if ( null === $parsed ) {
+				$problems[] = InvalidReason::UNKNOWN_TEMPLATE;
+				continue;
+			}
+			if ( in_array( $parsed->base_id, $bases, true ) ) {
+				$problems[] = InvalidReason::DUPLICATE_PAGE_TEMPLATE;
+				continue;
+			}
+			$bases[] = $parsed->base_id;
+			$ids[]   = (string) $parsed;
+		}
+		if ( count( $ids ) > PageTemplate::MAX ) {
+			$problems[] = InvalidReason::TOO_MANY_PAGE_TEMPLATES;
+		}
+		return $ids;
 	}
 
 	/**

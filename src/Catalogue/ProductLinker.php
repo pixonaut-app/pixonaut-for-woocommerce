@@ -56,6 +56,19 @@ final class ProductLinker {
 	private readonly StandingRows $rows;
 
 	/**
+	 * Rounding slack on a ratio's tolerance, so two ratios written alike in
+	 * other numbers, such as 2:3 and 200:300, are the same.
+	 */
+	private const RATIO_SLACK = 1e-9;
+
+	/**
+	 * The template versions read in this check, by `<baseId>@<version>`.
+	 *
+	 * @var array<string, array{status: string, offers_properties: bool|null, background_see_through: bool|null, preview_url: string|null, name: string|null, ratio: float|null, ratio_tolerance: float, layer_ids: list<string>}>
+	 */
+	private array $states = array();
+
+	/**
 	 * The constraints read in this check, by template, blank and placement,
 	 * so a side's default size and its misfit sizes are read once.
 	 *
@@ -86,6 +99,7 @@ final class ProductLinker {
 	 */
 	public function link( ProductConfig $current, bool $personalise, string $blank_id, PostedSides $posted ): ProductConfig {
 		$this->constraints = array();
+		$this->states      = array();
 		if ( ! $personalise ) {
 			// The link is kept, so switching personalisation back on restores it.
 			return $this->config( $current, false, $current->blank_id, $current->blank_name, $current->sides, null );
@@ -95,7 +109,102 @@ final class ProductLinker {
 		$linked = '' === $blank_id
 			? $this->template_only( $current, $posted->sides[0] ?? null, $posted->first_problem )
 			: $this->checked( $current, $blank_id, $posted->sides, $posted->problem );
-		return self::valued( $this->standing( $this->live( self::versioned( $linked, $current, $posted->sides ) ), $current ), $current, $posted->sides );
+		return self::valued( $this->standing( $this->laid_out( $this->live( self::versioned( self::with_layouts( $linked, $posted->sides ), $current, $posted->sides ) ) ), $current ), $current, $posted->sides );
+	}
+
+	/**
+	 * Each side with the page layouts entered for it, by key.
+	 *
+	 * @param ProductConfig $linked The configuration as checked.
+	 * @param SideInput[]   $inputs The sides as entered.
+	 * @phpstan-param list<SideInput> $inputs
+	 */
+	private static function with_layouts( ProductConfig $linked, array $inputs ): ProductConfig {
+		$entered = array();
+		foreach ( $inputs as $input ) {
+			$entered[ $input->key ] = $input->page_templates;
+		}
+		if ( array() === array_filter( $entered ) ) {
+			return $linked;
+		}
+		$sides = array();
+		foreach ( $linked->sides as $side ) {
+			$layouts = array();
+			foreach ( $entered[ $side->key ] ?? array() as $id ) {
+				$parsed = TemplateId::parse( $id );
+				if ( null !== $parsed ) {
+					$layouts[] = PageTemplate::of( $parsed );
+				}
+			}
+			$sides[] = $side->with_page_templates( $layouts );
+		}
+		return $linked->with_sides( $sides );
+	}
+
+	/**
+	 * A sellable configuration whose page layouts each are live and at the
+	 * ratio of their side's template, so every page designed on one fills
+	 * the page; each layout keeps its template's name as Pixonaut gives it.
+	 * Each template version is read once (`GET /v1/templates/{id}`).
+	 *
+	 * @param ProductConfig $config The configuration as checked.
+	 */
+	private function laid_out( ProductConfig $config ): ProductConfig {
+		if ( ! $config->valid && InvalidReason::MISSING_PRINT_SIZE !== $config->invalid_reason ) {
+			return $config;
+		}
+		$sides = array();
+		foreach ( $config->sides as $side ) {
+			if ( array() === $side->page_templates || null === $side->template_version ) {
+				$sides[] = $side;
+				continue;
+			}
+			$where = InvalidDetail::of( self::named_side( $config, $side ) );
+			try {
+				$own     = $this->template_state( (string) new TemplateId( $side->template_base_id, $side->template_version ) );
+				$layouts = array();
+				foreach ( $side->page_templates as $layout ) {
+					$read = $this->template_state( (string) $layout->id() );
+					if ( Catalogue::LIVE !== $read['status'] ) {
+						return $config->with_validity( false, InvalidReason::TEMPLATE_NOT_LIVE, $where );
+					}
+					if ( ! self::same_ratio( $own['ratio'], $own['ratio_tolerance'], $read['ratio'] ) ) {
+						return $config->with_validity( false, InvalidReason::PAGE_TEMPLATE_RATIO, $where );
+					}
+					$layouts[] = $layout->with_name( $read['name'] );
+				}
+			} catch ( ApiException $e ) {
+				return $config->with_validity( false, self::reason( $e, InvalidReason::UNKNOWN_TEMPLATE ), self::refusal( $e )?->on_side( self::named_side( $config, $side ) ) );
+			}
+			$sides[] = $side->with_page_templates( $layouts );
+		}
+		return $config->with_sides( $sides );
+	}
+
+	/**
+	 * A template version as `Catalogue::template_state()` reads it, once per
+	 * check.
+	 *
+	 * @param string $template_id `<baseId>@<version>`.
+	 * @return array{status: string, offers_properties: bool|null, background_see_through: bool|null, preview_url: string|null, name: string|null, ratio: float|null, ratio_tolerance: float, layer_ids: list<string>}
+	 *
+	 * @throws ApiException When Pixonaut refused or could not be reached.
+	 */
+	private function template_state( string $template_id ): array {
+		return $this->states[ $template_id ] ??= $this->catalogue->template_state( $template_id );
+	}
+
+	/**
+	 * Whether a layout's ratio is its side's, within the side template's
+	 * tolerance. A ratio Pixonaut did not say is taken to be the side's:
+	 * the layout is judged again on the next check.
+	 *
+	 * @param float|null $side      The side's template's width over height.
+	 * @param float      $tolerance How far, as a fraction of it, a print may differ from it.
+	 * @param float|null $layout    The layout's width over height.
+	 */
+	private static function same_ratio( ?float $side, float $tolerance, ?float $layout ): bool {
+		return null === $side || null === $layout || abs( $layout / $side - 1 ) <= $tolerance + self::RATIO_SLACK;
 	}
 
 	/**
@@ -138,11 +247,25 @@ final class ProductLinker {
 		foreach ( $posted->sides as $input ) {
 			$template = TemplateId::parse( $input->template_id );
 			$latest   = null === $template ? null : self::latest_known( $current, $template->base_id );
-			$inputs[] = $input->pinned || null === $template || null === $latest || $latest <= $template->version
+			$input    = $input->pinned || null === $template || null === $latest || $latest <= $template->version
 				? $input
 				: $input->with_template_id( (string) new TemplateId( $template->base_id, $latest ) );
+			$inputs[] = $input->pinned ? $input : $input->with_page_templates( array_map( static fn ( string $id ): string => self::followed( $current, $id ), $input->page_templates ) );
 		}
 		return $posted->with_sides( $inputs );
+	}
+
+	/**
+	 * A template version, moved on to the latest the product knows of the
+	 * template when that is later.
+	 *
+	 * @param ProductConfig $current What the product has now.
+	 * @param string        $id      `<baseId>@<version>`.
+	 */
+	private static function followed( ProductConfig $current, string $id ): string {
+		$template = TemplateId::parse( $id );
+		$latest   = null === $template ? null : self::latest_known( $current, $template->base_id );
+		return null === $template || null === $latest || $latest <= $template->version ? $id : (string) new TemplateId( $template->base_id, $latest );
 	}
 
 	/**
@@ -171,9 +294,35 @@ final class ProductLinker {
 			$previous = $before?->template_version === $side->template_version ? $before?->previous_version : $before?->template_version;
 			$listed   = $inputs[ $i ]->listed_version ?? 0;
 			$latest   = null === $side->template_version ? null : max( $side->template_version, $listed, self::latest_known( $current, $side->template_base_id ) ?? 0 );
-			$sides[]  = $side->with_versions( $inputs[ $i ]->pinned ?? false, $previous, $latest );
+			$sides[]  = $side->with_versions( $inputs[ $i ]->pinned ?? false, $previous, $latest )->with_page_templates( self::layouts_versioned( $side, $current ) );
 		}
 		return $linked->with_sides( $sides );
+	}
+
+	/**
+	 * A side's page layouts, each one moved off the version the side with
+	 * its key had it on keeping that one as its previous version, and each
+	 * knowing the latest version of its template.
+	 *
+	 * @param Side          $side    The side as checked.
+	 * @param ProductConfig $current What the product had.
+	 * @return list<PageTemplate>
+	 */
+	private static function layouts_versioned( Side $side, ProductConfig $current ): array {
+		$layouts = array();
+		foreach ( $side->page_templates as $layout ) {
+			$before = null;
+			foreach ( $current->sides as $had ) {
+				if ( $had->key === $side->key ) {
+					foreach ( $had->page_templates as $had_layout ) {
+						$before = $had_layout->base_id === $layout->base_id ? $had_layout : $before;
+					}
+				}
+			}
+			$previous  = null === $before || $before->version === $layout->version ? $before?->previous_version : $before->version;
+			$layouts[] = $layout->with_versions( $previous, max( $layout->version, self::latest_known( $current, $layout->base_id ) ?? 0 ) );
+		}
+		return $layouts;
 	}
 
 	/**
@@ -188,6 +337,11 @@ final class ProductLinker {
 		foreach ( $config->sides as $side ) {
 			if ( $side->template_base_id === $base_id && null !== $side->known_latest_version() ) {
 				$latest = max( $latest ?? 0, $side->known_latest_version() );
+			}
+			foreach ( $side->page_templates as $layout ) {
+				if ( $layout->base_id === $base_id ) {
+					$latest = max( $latest ?? 0, $layout->version, $layout->latest_version ?? 0 );
+				}
 			}
 		}
 		return $latest;
@@ -217,7 +371,7 @@ final class ProductLinker {
 			}
 			$id = (string) new TemplateId( $side->template_base_id, $side->template_version );
 			try {
-				$read[ $id ] ??= $this->catalogue->template_state( $id );
+				$read[ $id ] ??= $this->template_state( $id );
 			} catch ( ApiException $e ) {
 				return $config->with_validity( false, self::reason( $e, InvalidReason::UNKNOWN_TEMPLATE ), self::refusal( $e )?->on_side( self::named_side( $config, $side ) ) );
 			}
@@ -384,17 +538,20 @@ final class ProductLinker {
 	 */
 	public function recheck( ProductConfig $stored, array $live ): ProductConfig {
 		$this->constraints = array();
+		$this->states      = array();
 		if ( ! $stored->personalise ) {
 			return $stored;
 		}
 		$sides = array();
 		foreach ( $stored->sides as $side ) {
-			$sides[] = isset( $live[ $side->template_base_id ] ) ? $side->rolled_to( $live[ $side->template_base_id ] ) : $side;
+			$sides[] = ( isset( $live[ $side->template_base_id ] ) ? $side->rolled_to( $live[ $side->template_base_id ] ) : $side )->with_page_templates_rolled( $live );
 		}
 		$rolled = $stored->with_sides( $sides );
 		foreach ( $sides as $side ) {
-			if ( '' !== $side->template_base_id && ! isset( $live[ $side->template_base_id ] ) ) {
-				return $rolled->with_validity( false, InvalidReason::TEMPLATE_NOT_LIVE, InvalidDetail::of( self::named_side( $rolled, $side ) ) );
+			foreach ( $side->template_base_ids() as $base_id ) {
+				if ( ! isset( $live[ $base_id ] ) ) {
+					return $rolled->with_validity( false, InvalidReason::TEMPLATE_NOT_LIVE, InvalidDetail::of( self::named_side( $rolled, $side ) ) );
+				}
 			}
 		}
 
@@ -402,7 +559,7 @@ final class ProductLinker {
 		$problem = in_array( $stored->invalid_reason, InvalidReason::INPUT, true ) ? $stored->invalid_reason : null;
 		foreach ( $sides as $side ) {
 			$menu     = $side->menu();
-			$inputs[] = new SideInput( $side->key, $side->typed_label(), $side->placement_id ?? '', null === $side->template_version ? '' : (string) new TemplateId( $side->template_base_id, $side->template_version ), $side->template_name ?? '', $menu, $side->start_size, $side->mode, $side->form_groups, $side->pinned, null, $side->draw_at_template_ratio, $side->value_sizes );
+			$inputs[] = new SideInput( $side->key, $side->typed_label(), $side->placement_id ?? '', null === $side->template_version ? '' : (string) new TemplateId( $side->template_base_id, $side->template_version ), $side->template_name ?? '', $menu, $side->start_size, $side->mode, $side->form_groups, $side->pinned, null, $side->draw_at_template_ratio, $side->value_sizes, array_map( static fn ( PageTemplate $layout ): string => (string) $layout->id(), $side->page_templates ) );
 			if ( array() === $menu && null !== $side->placement_id ) {
 				// The side sells nothing and its menu is gone: only the last save can say why,
 				// unless Pixonaut did not answer it, which would keep the product retrying.
@@ -422,9 +579,11 @@ final class ProductLinker {
 			$menu   = $checked->valid || array() === $inputs[ $i ]->sizes ? null : $inputs[ $i ]->sizes;
 			// What was read of the template version stays while the side keeps it; a version it rolled to is read on the next save.
 			$kept[] = $side->with( $side->template_version, $before?->previous_version, $checked->valid ? $side->print_sizes : array(), $menu, null === $menu ? $side->start_size : $inputs[ $i ]->start )->with_offers_properties( $before?->offers_properties )
-				->with_versions( $before->pinned ?? false, $before?->previous_version, $before?->latest_version );
+				->with_versions( $before->pinned ?? false, $before?->previous_version, $before?->latest_version )
+				// Each layout as it rolled, with the version it left.
+				->with_page_templates( $before->page_templates ?? array() );
 		}
-		return self::valued( $this->standing( $checked->with_sides( $kept ), $stored ), $stored, $inputs );
+		return self::valued( $this->standing( $this->laid_out( $checked->with_sides( $kept ) ), $stored ), $stored, $inputs );
 	}
 
 	/**
@@ -480,6 +639,14 @@ final class ProductLinker {
 			$reasons[] = InvalidReason::MISSING_TEMPLATE;
 			$details[] = null;
 		}
+		// Only a placement printed as pages designs its pages one by one, each on a layout of its own.
+		$paged = self::paged_placements( $blank );
+		foreach ( $inputs as $i => $input ) {
+			if ( array() !== $input->page_templates && ! in_array( $input->placement_id, $paged, true ) ) {
+				$reasons[] = InvalidReason::PAGE_TEMPLATES_NOT_PAGED;
+				$details[] = InvalidDetail::of( count( $inputs ) > 1 ? $sides[ $i ]->label : null );
+			}
+		}
 
 		$failed = array_search( InvalidReason::CHECK_FAILED, $reasons, true );
 		if ( false === $failed && null !== $problem ) {
@@ -488,6 +655,23 @@ final class ProductLinker {
 		}
 		$first = false === $failed ? 0 : $failed;
 		return $this->config( $current, true, $blank_id, $blank_name, $sides, $reasons[ $first ] ?? null, $details[ $first ] ?? null );
+	}
+
+	/**
+	 * The ids of a blank's placements printed as pages (`pages` on the
+	 * placement), as `GET /v1/blanks/{id}` names them.
+	 *
+	 * @param array<string, mixed> $blank The blank as Pixonaut answered it.
+	 * @return list<string>
+	 */
+	private static function paged_placements( array $blank ): array {
+		$paged = array();
+		foreach ( is_array( $blank['placements'] ?? null ) ? $blank['placements'] : array() as $placement ) {
+			if ( is_array( $placement ) && is_string( $placement['id'] ?? null ) && is_array( $placement['pages'] ?? null ) ) {
+				$paged[] = $placement['id'];
+			}
+		}
+		return $paged;
 	}
 
 	/**
@@ -508,8 +692,10 @@ final class ProductLinker {
 		if ( null === $input || null === $template ) {
 			return $this->config( $current, true, null, null, array(), InvalidReason::MISSING_TEMPLATE );
 		}
-		$name    = '' === $input->template_name ? null : $input->template_name;
-		$entered = array();
+		// Without a blank no placement is printed as pages.
+		$problem ??= array() === $input->page_templates ? null : InvalidReason::PAGE_TEMPLATES_NOT_PAGED;
+		$name      = '' === $input->template_name ? null : $input->template_name;
+		$entered   = array();
 		// Where each size entered landed in `$entered`, by its index in the menu.
 		$entered_at = array();
 		foreach ( $input->sizes as $index => $size ) {

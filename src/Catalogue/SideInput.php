@@ -29,7 +29,9 @@ final class SideInput {
 	 * @param int|null           $listed_version The template's latest version as the product screen listed it; null when it did not.
 	 * @param bool|null          $draw_at_template_ratio Whether the designer draws the side at its template's ratio (`CanvasRatio`); null for the product's choice.
 	 * @param ValueSizes|null    $value_sizes   The side's size per value of an attribute, empty for none; null when not entered, which keeps the ones the side has.
+	 * @param string[]           $page_templates The other templates a page may be designed on, each `<baseId>@<version>`, in order; empty for none.
 	 * @phpstan-param list<PrintSize|null> $sizes
+	 * @phpstan-param list<string> $page_templates
 	 */
 	public function __construct(
 		public readonly string $key,
@@ -45,6 +47,7 @@ final class SideInput {
 		public readonly ?int $listed_version = null,
 		public readonly ?bool $draw_at_template_ratio = null,
 		public readonly ?ValueSizes $value_sizes = null,
+		public readonly array $page_templates = array(),
 	) {
 	}
 
@@ -54,6 +57,16 @@ final class SideInput {
 	 * @param string $template_id `<baseId>@<version>`.
 	 */
 	public function with_template_id( string $template_id ): self {
-		return new self( $this->key, $this->label, $this->placement_id, $template_id, $this->template_name, $this->sizes, $this->start, $this->mode, $this->form_groups, $this->pinned, $this->listed_version, $this->draw_at_template_ratio, $this->value_sizes );
+		return new self( $this->key, $this->label, $this->placement_id, $template_id, $this->template_name, $this->sizes, $this->start, $this->mode, $this->form_groups, $this->pinned, $this->listed_version, $this->draw_at_template_ratio, $this->value_sizes, $this->page_templates );
+	}
+
+	/**
+	 * A copy offering other page layouts.
+	 *
+	 * @param string[] $page_templates Each `<baseId>@<version>`, in order.
+	 * @phpstan-param list<string> $page_templates
+	 */
+	public function with_page_templates( array $page_templates ): self {
+		return new self( $this->key, $this->label, $this->placement_id, $this->template_id, $this->template_name, $this->sizes, $this->start, $this->mode, $this->form_groups, $this->pinned, $this->listed_version, $this->draw_at_template_ratio, $this->value_sizes, $page_templates );
 	}
 }

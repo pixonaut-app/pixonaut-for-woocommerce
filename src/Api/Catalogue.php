@@ -141,7 +141,7 @@ final class Catalogue {
 	 *
 	 * @param string $template_id `<baseId>@<version>`.
 	 *
-	 * @return array{status: string, offers_properties: bool|null, background_see_through: bool|null, preview_url: string|null, name: string|null} `status` is `live`, `paused`, or another state Pixonaut adds; `offers_properties` and `background_see_through` are null when Pixonaut does not say; `preview_url` works for an hour or two; `name` is null when Pixonaut sent none.
+	 * @return array{status: string, offers_properties: bool|null, background_see_through: bool|null, preview_url: string|null, name: string|null, ratio: float|null, ratio_tolerance: float, layer_ids: list<string>} `status` is `live`, `paused`, or another state Pixonaut adds; `offers_properties` and `background_see_through` are null when Pixonaut does not say; `preview_url` works for an hour or two; `name` is null when Pixonaut sent none; `ratio` is the artwork's width over its height, null when Pixonaut sent none, and `ratio_tolerance` how far, as a fraction of it, a print may differ from it; `layer_ids` are the ids of the template's layers, which its values are given by.
 	 *
 	 * @throws ApiException When Pixonaut refused (`404` for an unknown template), could not be reached, or answered without a status.
 	 */
@@ -155,14 +155,51 @@ final class Catalogue {
 		$offers     = $template['offersProperties'] ?? null;
 		$background = $template['backgroundSeeThrough'] ?? null;
 		$preview    = $template['previewUrl'] ?? null;
-		$name       = is_array( $template['template'] ?? null ) ? ( $template['template']['name'] ?? null ) : null;
+		$document   = is_array( $template['template'] ?? null ) ? $template['template'] : array();
+		$name       = $document['name'] ?? null;
+		$tolerance  = $document['ratioTolerance'] ?? null;
 		return array(
 			'status'                 => $status,
 			'offers_properties'      => is_bool( $offers ) ? $offers : null,
 			'background_see_through' => is_bool( $background ) ? $background : null,
 			'preview_url'            => is_string( $preview ) && '' !== $preview ? $preview : null,
 			'name'                   => is_string( $name ) && '' !== trim( $name ) ? trim( $name ) : null,
+			'ratio'                  => self::ratio( $document['ratio'] ?? null ),
+			'ratio_tolerance'        => is_int( $tolerance ) || is_float( $tolerance ) ? max( 0.0, (float) $tolerance ) : 0.0,
+			'layer_ids'              => self::layer_ids( $document['layers'] ?? null ),
 		);
+	}
+
+	/**
+	 * A template's ratio, `{w, h}`, as its width over its height; null for
+	 * anything else.
+	 *
+	 * @param mixed $ratio The answer's `ratio`.
+	 */
+	private static function ratio( mixed $ratio ): ?float {
+		$width  = is_array( $ratio ) ? ( $ratio['w'] ?? null ) : null;
+		$height = is_array( $ratio ) ? ( $ratio['h'] ?? null ) : null;
+		if ( ! ( is_int( $width ) || is_float( $width ) ) || ! ( is_int( $height ) || is_float( $height ) ) || $width <= 0 || $height <= 0 ) {
+			return null;
+		}
+		return (float) $width / (float) $height;
+	}
+
+	/**
+	 * The ids of a template's layers, in order.
+	 *
+	 * @param mixed $layers The answer's `template.layers`.
+	 * @return list<string>
+	 */
+	private static function layer_ids( mixed $layers ): array {
+		$ids = array();
+		foreach ( is_array( $layers ) ? $layers : array() as $layer ) {
+			$id = is_array( $layer ) ? ( $layer['id'] ?? null ) : null;
+			if ( is_string( $id ) && '' !== $id ) {
+				$ids[] = $id;
+			}
+		}
+		return $ids;
 	}
 
 	/**

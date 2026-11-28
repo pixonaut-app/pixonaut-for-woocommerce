@@ -10,6 +10,7 @@ namespace Pixonaut\WooCommerce\Tests\Unit\Catalogue;
 use Brain\Monkey\Functions;
 use Pixonaut\WooCommerce\Catalogue\CanvasRatio;
 use Pixonaut\WooCommerce\Catalogue\InvalidReason;
+use Pixonaut\WooCommerce\Catalogue\PageTemplate;
 use Pixonaut\WooCommerce\Catalogue\PostedSides;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductLinker;
@@ -405,6 +406,40 @@ final class PostedSidesTest extends TestCase {
 
 		$this->assertNull( $posted->problem );
 		$this->assertCount( 1, $posted->sides );
+	}
+
+	public function test_reads_a_sides_page_layouts_in_order(): void {
+		$side                                = self::side( 'pages', 'Pages' );
+		$side[ PostedSides::PAGE_TEMPLATES ] = array( 'two-photos@2', ' ', 'four-photos@1' );
+
+		$posted = PostedSides::parse( array( $side ) );
+
+		$this->assertNull( $posted->problem );
+		$this->assertSame( array( 'two-photos@2', 'four-photos@1' ), $posted->sides[0]->page_templates );
+		$this->assertSame( array(), PostedSides::parse( array( self::side( 'front', 'Front' ) ) )->sides[0]->page_templates );
+	}
+
+	public function test_a_page_layout_named_twice_or_the_sides_own_template_is_a_problem_never_dropped_quietly(): void {
+		$twice                                = self::side( 'pages', 'Pages' );
+		$twice[ PostedSides::PAGE_TEMPLATES ] = array( 'two-photos@2', 'two-photos@1' );
+		$own                                  = self::side( 'pages', 'Pages' );
+		$own[ PostedSides::PAGE_TEMPLATES ]   = array( 'mini-tee@1' );
+
+		$this->assertSame( InvalidReason::DUPLICATE_PAGE_TEMPLATE, PostedSides::parse( array( $twice ) )->problem );
+		$this->assertSame( InvalidReason::DUPLICATE_PAGE_TEMPLATE, PostedSides::parse( array( $own ) )->problem );
+		$this->assertContains( InvalidReason::DUPLICATE_PAGE_TEMPLATE, InvalidReason::INPUT );
+	}
+
+	public function test_more_page_layouts_than_a_side_offers_are_a_problem(): void {
+		$side                                = self::side( 'pages', 'Pages' );
+		$side[ PostedSides::PAGE_TEMPLATES ] = array_map( static fn ( int $n ): string => 'layout-' . $n . '@1', range( 1, PageTemplate::MAX + 1 ) );
+
+		$posted = PostedSides::parse( array( $side ) );
+
+		$this->assertSame( InvalidReason::TOO_MANY_PAGE_TEMPLATES, $posted->problem );
+		$this->assertCount( PageTemplate::MAX + 1, $posted->sides[0]->page_templates );
+		$side[ PostedSides::PAGE_TEMPLATES ] = array_slice( $side[ PostedSides::PAGE_TEMPLATES ], 0, PageTemplate::MAX );
+		$this->assertNull( PostedSides::parse( array( $side ) )->problem );
 	}
 
 	public function test_nothing_posted_is_no_sides(): void {
