@@ -78,9 +78,9 @@ final class Side {
 	 * @param bool|null           $draw_at_template_ratio Whether the designer draws the side's canvas at its template's
 	 *                                            ratio whatever print size is chosen (`CanvasRatio`); null for the
 	 *                                            product's choice.
-	 * @param RowSize[]           $row_sizes     A personalised side's size per row of its blank's print areas, on a blank whose
-	 *                                           areas change with an option: a variation sold at the placement's default
-	 *                                           prints at its variant's row. Empty on any other side.
+	 * @param RowSize[]           $row_sizes     A side's size per row of its blank's print areas, on a blank whose areas
+	 *                                           change with an option: a variation sold at the placement's default prints
+	 *                                           at its variant's row. Empty on any other side.
 	 * @param ValueSizes|null     $value_sizes   A personalised side's size per value of one of its variable product's
 	 *                                           attributes, which a variation with that value prints at; null for none.
 	 * @param LowResolutionSize[] $low_resolution The sizes judged, sold or refused, at which images of the template print
