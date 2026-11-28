@@ -52,6 +52,8 @@ final class SetProductValues implements Ability {
 	/**
 	 * Gives the layouts of a product's variations with a setup of their own
 	 * the product's new values (`LayoutValueSets`).
+	 *
+	 * @var LayoutValueSets
 	 */
 	private readonly LayoutValueSets $layout_sets;
 

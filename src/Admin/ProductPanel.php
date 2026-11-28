@@ -704,8 +704,8 @@ final class ProductPanel {
 	 * @return ProductConfig The configuration it has now.
 	 */
 	public function store( WC_Product $product, ProductConfig $config ): ProductConfig {
-		$slowed = SlowedCheck::slowed( $config );
-		$config = SlowedCheck::kept( $product, $config );
+		$slowed  = SlowedCheck::slowed( $config );
+		$config  = SlowedCheck::kept( $product, $config );
 		$pending = false;
 		try {
 			$config->save_to( $product );

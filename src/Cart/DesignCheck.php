@@ -69,9 +69,11 @@ final class DesignCheck {
 	 * @param string|null           $value_set_id    The side's own value set (`SideValues::set_of()`); null when it has none.
 	 * @param array<string, string> $layout_sets     The value set of each of the side's page layouts that has one, by its
 	 *                                               base id (`SideValues::sets_of()`); a layout without one has none.
-	 * @param list<string>          $layouts_pending The base ids of the side's page layouts whose set could not be made
+	 * @param string[]              $layouts_pending The base ids of the side's page layouts whose set could not be made
 	 *                                               yet (`SideValues::pending_of()`): a page on one is refused, as it
 	 *                                               was made without the side's values.
+	 *
+	 * @phpstan-param list<string> $layouts_pending
 	 *
 	 * @return string|null One of the class constants, or null.
 	 */

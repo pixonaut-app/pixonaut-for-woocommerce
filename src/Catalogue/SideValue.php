@@ -34,10 +34,11 @@ final class SideValue {
 	 * @param array<string, string>               $layout_sets      The set made of the values for each page layout of
 	 *                                                              the side, by the layout's base id; a layout that has
 	 *                                                              none of the values' layers has none.
-	 * @param list<string>                        $layouts_pending  The base ids of the page layouts whose set could not
+	 * @param string[]                            $layouts_pending  The base ids of the page layouts whose set could not
 	 *                                                              be made: Pixonaut refused the values or could not
 	 *                                                              be asked. A page on one would open without them,
 	 *                                                              so the side is not sold until it has its set.
+	 * @phpstan-param list<string> $layouts_pending
 	 */
 	public function __construct(
 		public readonly string $template_base_id,
@@ -52,7 +53,8 @@ final class SideValue {
 	 * A copy with other sets for the side's page layouts.
 	 *
 	 * @param array<string, string> $sets    The sets, by the layout's base id.
-	 * @param list<string>          $pending The layouts whose set could not be made, by base id.
+	 * @param string[]              $pending The layouts whose set could not be made, by base id.
+	 * @phpstan-param list<string> $pending
 	 */
 	public function with_layout_sets( array $sets, array $pending = array() ): self {
 		return new self( $this->template_base_id, $this->value_set_id, $this->values, $sets, $pending );
