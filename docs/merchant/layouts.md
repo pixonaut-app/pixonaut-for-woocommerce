@@ -320,7 +320,7 @@ Pixonaut's own site, in the designer language (see
 **Form layout** setting or the product's override says (see
 [Form layout](#form-layout)).
 
-- A product with a front and a back (up to ten sides) opens one designer
+- A product with a front and a back (up to 25 sides, such as a calendar's cover and months) opens one designer
   with a step per side; the customer approves every side before coming back.
 - On a product linked to a blank, the designer shows the design on the
   blank's photos in the colour of the blank variant being bought, and offers

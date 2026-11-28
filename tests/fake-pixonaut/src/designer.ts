@@ -12,7 +12,9 @@
 // A test approves a side as a book of pages by adding `pages=<count>` (the
 // only side of a link of one side) or `pages[<key>]=<count>` to the approve
 // address; else it makes as many as the link offers fewest. The approval then makes a proof per page, keeps every proof of the
-// approval as a proof set, and returns `proofSet` in place of tokens.
+// approval as a proof set, and returns `proofSet` in place of tokens. So
+// does an approval of more than `MAX_SIDES_RETURNED_AS_TOKENS` sides, whose
+// tokens would outgrow the address a store's server takes.
 import type { Context, Hono } from 'hono';
 import type { Fake } from './app';
 import {
@@ -38,6 +40,10 @@ function openLink(fake: Fake, token: string): DesignerLink | undefined {
 
 /** The query parameter carrying a trip's own `state`, there and back. */
 const TRIP_STATE_PARAM = 'state';
+
+/** The most sides an approval returns as a `proofToken[<key>]` each; past
+ *  it, one proof set. */
+const MAX_SIDES_RETURNED_AS_TOKENS = 10;
 
 /** The form a trip's `state` takes: 1 to 200 unreserved URL characters. */
 const TRIP_STATE_FORM = /^[A-Za-z0-9._~-]{1,200}$/;
@@ -185,7 +191,10 @@ export function registerHostedDesigner(app: Hono, fake: Fake): void {
 				made.push({ key: side.key, proof });
 			}
 		}
-		if (made.some(({ proof }) => proof.page !== undefined)) {
+		if (
+			made.some(({ proof }) => proof.page !== undefined) ||
+			link.sides.length > MAX_SIDES_RETURNED_AS_TOKENS
+		) {
 			const set = mintProofSet(fake.state, link.storeId, made);
 			url.searchParams.set('proofSet', set.ref);
 		} else {

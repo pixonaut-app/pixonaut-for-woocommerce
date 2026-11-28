@@ -935,7 +935,7 @@ include:
 
 - no template chosen, or no print position for a side;
 - two sides on the same print position, or with the same key;
-- more than ten sides, more than 50 print sizes on a side, or a custom
+- more than 25 sides, more than 50 print sizes on a side, or a custom
   size without a usable width and height;
 - no print size on a product without a blank, or, on a variable product,
   on a variation that has none of its own or from its attribute value;

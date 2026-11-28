@@ -22,7 +22,7 @@ final class PostedSidesTest extends TestCase {
 	/**
 	 * Most sides Pixonaut takes in one designer link (`maxItems` of `sides`).
 	 */
-	private const LINK_MAX_SIDES = 10;
+	private const LINK_MAX_SIDES = 25;
 
 	protected function setUp(): void {
 		parent::setUp();
@@ -375,7 +375,7 @@ final class PostedSidesTest extends TestCase {
 		$this->assertCount( PostedSides::MAX_SIDES, $posted->sides );
 	}
 
-	public function test_ten_sides_are_kept_past_the_recommended_four(): void {
+	public function test_as_many_sides_as_a_link_takes_are_kept_past_the_recommended_four(): void {
 		$rows = array();
 		for ( $i = 0; $i < self::LINK_MAX_SIDES; $i++ ) {
 			$rows[] = self::side( 'placement_' . $i, 'Side ' . $i );

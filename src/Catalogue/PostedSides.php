@@ -18,9 +18,10 @@ namespace Pixonaut\WooCommerce\Catalogue;
 final class PostedSides {
 
 	/**
-	 * Most sides a product has: a multi-side designer link takes ten.
+	 * Most sides a product has, as many as a multi-side designer link takes:
+	 * every page of a 24-month wall calendar, its cover and 24 months.
 	 */
-	public const MAX_SIDES = 10;
+	public const MAX_SIDES = 25;
 
 	/**
 	 * Most sides Pixonaut's designer is built for. A link with more is made,
