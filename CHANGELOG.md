@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.38.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.38.0...v1.38.1) (2026-11-28)
+
+
+### Bug Fixes
+
+* **catalogue:** a standing side on a blank whose areas vary is judged on its rows ([#436](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/436)) ([36b5aea](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/36b5aeadba556e0094ac475264d0f45cbdd22dac))
+
 ## [1.38.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.37.1...v1.38.0) (2026-11-28)
 
 
