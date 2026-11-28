@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Pixonaut for WooCommerce 1.38.0\n"
+"Project-Id-Version: Pixonaut for WooCommerce 1.38.1\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-28T10:09:21+00:00\n"
+"POT-Creation-Date: 2026-11-28T12:34:22+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pixonaut-for-woocommerce\n"
@@ -794,7 +794,7 @@ msgid "Link a product to a Pixonaut template"
 msgstr ""
 
 #: src/Abilities/LinkProduct.php:44
-msgid "Makes a simple or variable product personalisable with one Pixonaut template, optionally printed on a placement of a blank, and replaces the sides it had. Its variations with a setup of their own move onto the version linked where their side on that template is not pinned. Pixonaut checks the link; a product that fails a check is saved but cannot be bought, and the answer says why."
+msgid "Makes a simple or variable product personalisable with one Pixonaut template, optionally printed on a placement of a blank, and replaces the sides it had. Its variations with a setup of their own move onto the version linked where their side on that template is not pinned; linked to another template, those that differ from the product only in blank, blank variant or print size on the template it had move to the one linked, keeping their blank and print sizes. Pixonaut checks the link; a product that fails a check is saved but cannot be bought, and the answer says why."
 msgstr ""
 
 #: src/Abilities/LinkProduct.php:54
@@ -822,11 +822,11 @@ msgid "The template id is not one the template list gives."
 msgstr ""
 
 #: src/Abilities/LinkProduct.php:128
-msgid "How many of the product's variations with a setup of their own moved onto the template version linked: those with a side on that template that is not pinned. Each was checked with Pixonaut, as a re-check after a publish does."
+msgid "How many of the product's variations with a setup of their own moved onto the template version linked: those with a side on that template that is not pinned, and those that differ from the product only in blank, blank variant or print size on the template it had before. Each was checked with Pixonaut, as a re-check after a publish does."
 msgstr ""
 
 #: src/Abilities/LinkProduct.php:133
-msgid "How many such variations Pixonaut could not check now, so they move when the store checks them again, in the background; until then they keep the version they were on."
+msgid "How many such variations Pixonaut could not check now, so they move when the store checks them again, in the background; until then they keep the version they were on, and those from the template the product had are on the one linked but cannot be bought."
 msgstr ""
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
@@ -864,7 +864,7 @@ msgid "The page of each variable product's variations, from 1, %d to a page."
 msgstr ""
 
 #: src/Abilities/ListProducts.php:133
-#: src/Abilities/ProductLinks.php:285
+#: src/Abilities/ProductLinks.php:288
 msgid "Whether customers can buy it now, its blank variants and WooCommerce's own checks included."
 msgstr ""
 
@@ -1124,11 +1124,11 @@ msgstr ""
 msgid "No simple or variable product or variation has this id."
 msgstr ""
 
-#: src/Abilities/ProductLinks.php:281
+#: src/Abilities/ProductLinks.php:284
 msgid "For a variation, whether it has a setup of its own rather than following its product's, whose setup it then gives; false for a product."
 msgstr ""
 
-#: src/Abilities/ProductLinks.php:289
+#: src/Abilities/ProductLinks.php:292
 msgid "Which of the product's variations sell no variant of the blank, in words; null when each does. Set a variation's `variant` with `set-product-setup`."
 msgstr ""
 
