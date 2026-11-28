@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Pixonaut for WooCommerce 1.34.1\n"
+"Project-Id-Version: Pixonaut for WooCommerce 1.35.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-27T16:05:51+00:00\n"
+"POT-Creation-Date: 2026-11-28T04:49:19+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pixonaut-for-woocommerce\n"
@@ -1377,6 +1377,10 @@ msgstr ""
 msgid "The side's own values for its template's layers, by layer id and prop, set with `set-product-values`; null for none."
 msgstr ""
 
+#: src/Abilities/ProductSetup.php:416
+msgid "Whose values the side is sold with: `own`, those set on this product or variation; `product`, a variation's product's, which a variation with a setup of its own is sold with for a side on the same template that has none of its own; null without values."
+msgstr ""
+
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/ReadPluginSettings.php:39
 msgid "Read the Pixonaut settings"
@@ -1989,7 +1993,7 @@ msgid "Set a product's own values for its template"
 msgstr ""
 
 #: src/Abilities/SetProductValues.php:63
-msgid "Sets the values a simple or variable product, or a variation with a setup of its own (`variation_id`), gives its sides' template layers, by layer id and prop, e.g. `{\"title\": {\"content\": \"farmor\"}}`: one template then sells as many products, each in its own theme or for its own recipient. A value on a prop the customer may change is where the designer starts; one on a fixed prop is printed as given. Each side named by its `key` takes its `values`, or null (or an empty object) to take them off; a side left out keeps its own. Pixonaut judges the values against the side's template version: a layer or prop the template does not have, or a value its rules refuse, refuses the whole call, and the answer names each by side, layer and prop. So does a side the product does not have, a side without a template, a product without a Pixonaut setup, and a variation that follows its product. The answer is every side with its `template_id`, the `value_set_id` Pixonaut made of its values, and its `values`, null where it has none."
+msgid "Sets the values a simple or variable product, or a variation with a setup of its own (`variation_id`), gives its sides' template layers, by layer id and prop, e.g. `{\"title\": {\"content\": \"farmor\"}}`: one template then sells as many products, each in its own theme or for its own recipient. A value on a prop the customer may change is where the designer starts; one on a fixed prop is printed as given. Each side named by its `key` takes its `values`, or null (or an empty object) to take them off; a side left out keeps its own. Pixonaut judges the values against the side's template version: a layer or prop the template does not have, or a value its rules refuse, refuses the whole call, and the answer names each by side, layer and prop. So does a side the product does not have, a side without a template, a product without a Pixonaut setup, and a variation that follows its product. A product's values reach its variations: those that follow it, and, for a side they have no values of their own for, those with a setup of their own whose side is on the same template as the product's. The answer is every side with its `template_id`, the `value_set_id` Pixonaut made of the values it is sold with, its `values`, null where it has none, and `values_from`, whose they are."
 msgstr ""
 
 #: src/Abilities/SetProductValues.php:74
@@ -2467,7 +2471,7 @@ msgid "The store downloads the file from `fields.source_url`, a public URL."
 msgstr ""
 
 #: src/Abilities/Store/ResourceAbility.php:287
-msgid "Each also gives `pixonaut_setup`: the `blank_id` and `sides` (`key`, `template_id`, `template_pinned`, `placement_id`, `label`, `mode`, and the side's own `value_set_id` and `values`, null for none) it is set up with. Change it with `set-product-setup`, and the values with `set-product-values`."
+msgid "Each also gives `pixonaut_setup`: the `blank_id` and `sides` (`key`, `template_id`, `template_pinned`, `placement_id`, `label`, `mode`, and the `value_set_id` and `values` the side is sold with, null for none, with `values_from`: `own`, or `product` for a variation's product's) it is set up with. Change it with `set-product-setup`, and the values with `set-product-values`."
 msgstr ""
 
 #: src/Abilities/Store/ResourceAbility.php:290
@@ -2475,7 +2479,7 @@ msgid "Each variation also gives `pixonaut_variant`, the variant of its blank it
 msgstr ""
 
 #: src/Abilities/Store/ResourceAbility.php:290
-msgid "And `pixonaut_setup`: `own_setup` true when the variation has a Pixonaut setup of its own, false when it follows its product; `blank_id` and `sides` (`key`, `template_id`, `template_pinned`, `placement_id`, `label`, `mode`, and the side's own `value_set_id` and `values`, null for none) are those it is sold under, its product's when it follows it. Change it with `set-product-setup`, and the values with `set-product-values`."
+msgid "And `pixonaut_setup`: `own_setup` true when the variation has a Pixonaut setup of its own, false when it follows its product; `blank_id` and `sides` (`key`, `template_id`, `template_pinned`, `placement_id`, `label`, `mode`, and the `value_set_id` and `values` the side is sold with, null for none, with `values_from`: `own`, or `product` for a variation's product's) are those it is sold under, its product's when it follows it. Change it with `set-product-setup`, and the values with `set-product-values`."
 msgstr ""
 
 #: src/Abilities/Store/ResourceAbility.php:308
