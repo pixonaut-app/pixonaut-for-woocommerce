@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.40.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.39.1...v1.40.0) (2026-11-28)
+
+
+### Features
+
+* **catalogue:** a photo book's pages may each be laid in a template the side offers ([#448](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/448)) ([0fd5d4a](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/0fd5d4ad646d00f0dbc874300a518c21ee69b54a))
+
 ## [1.39.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.39.0...v1.39.1) (2026-11-28)
 
 
