@@ -115,6 +115,42 @@ final class LinkProductVariationsTest extends WP_UnitTestCase {
 		$this->assertSame( 'POST /v1/templates/kids-tee@5/print-size', $this->requested()[3] );
 	}
 
+	public function test_a_link_checks_only_a_few_variations_before_answering_and_queues_the_rest(): void {
+		$product = $this->variable_product();
+		$ids     = array();
+		for ( $i = 0; $i < ProductRecheck::FOLLOW_INLINE_MAX + 2; $i++ ) {
+			$ids[] = $this->variation( $product, self::own_setup( false ) );
+		}
+		$this->script_link();
+		$this->live_list( self::NEW_VERSION );
+		for ( $i = 0; $i < ProductRecheck::FOLLOW_INLINE_MAX; $i++ ) {
+			// The template was read for the product's own check.
+			$this->script_verdict();
+		}
+
+		$answer = $this->link( $product );
+
+		$this->assertIsArray( $answer );
+		$this->assertSame( array( ProductRecheck::FOLLOW_INLINE_MAX, 2 ), array( $answer['variations_moved'], $answer['variations_moved_later'] ) );
+		$versions = array_map( fn ( int $id ): ?int => $this->stored( $id )->sides[0]->template_version, $ids );
+		$this->assertSame( ProductRecheck::FOLLOW_INLINE_MAX, count( array_keys( $versions, self::NEW_VERSION, true ) ) );
+		$this->assertSame( 2, count( array_keys( $versions, self::OLD_VERSION, true ) ), 'The rest keep their version until their re-check.' );
+		$queued = ActionSchedulerRunner::pending( ProductRecheck::ACTION );
+		$this->assertCount( 1, $queued );
+		$this->assertSame( ProductRecheck::LINKED_PRIORITY, \ActionScheduler::store()->fetch_action( (string) $queued[0] )->get_priority() );
+
+		$this->live_list( self::NEW_VERSION );
+		$this->script_verdict();
+		$this->script_verdict();
+		\ActionScheduler::runner()->process_action( (int) $queued[0], 'test' );
+
+		foreach ( $ids as $id ) {
+			$config = $this->stored( $id );
+			$this->assertSame( self::NEW_VERSION, $config->sides[0]->template_version );
+			$this->assertTrue( $config->valid );
+		}
+	}
+
 	public function test_a_variation_pixonaut_refuses_for_too_many_requests_moves_in_the_recheck_queued_for_it(): void {
 		$product = $this->variable_product();
 		$own     = $this->variation( $product, self::own_setup( false ) );
@@ -228,6 +264,13 @@ final class LinkProductVariationsTest extends WP_UnitTestCase {
 	private function script_link(): void {
 		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
+	}
+
+	/**
+	 * Scripts a print size's verdict: legal.
+	 */
+	private function script_verdict(): void {
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 	}
 
 	/**

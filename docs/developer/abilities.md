@@ -314,9 +314,13 @@ many sides, each with the key of the product's side at its place, on the
 template that side was on, in the same mode, not pinned, with no values of
 its own for that template). A
 moved variation keeps its blank, variant, placements and print sizes, and
-takes the product's values. `variations_moved` counts those Pixonaut checked
-at once; `variations_moved_later` those it checks in the background, which
-cannot be bought meanwhile when they came from another template.
+takes the product's values. A link checks at most two of them with
+Pixonaut before it answers, and none once another check would take it past
+three seconds; it queues the rest at once, ahead of the bulk re-checks.
+`variations_moved` counts those Pixonaut checked at once;
+`variations_moved_later` those it checks in the background, which keep the
+version they were on meanwhile, or, when they came from another template,
+cannot be bought until then.
 A product with several sides, print-size menus or standing designs is set
 up with `set-product-setup`.
 
