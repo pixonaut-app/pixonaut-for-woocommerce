@@ -114,6 +114,7 @@ import {
 } from './value-sets';
 import { showVariant, startingVariant, variantRef } from './variant';
 import {
+	type ChoiceReader,
 	followChoices,
 	NO_VARIATION,
 	readVariations,
@@ -343,8 +344,11 @@ export class ProductDesigner {
 	 *  price is shown of; `NO_VARIATION` until its choices name one. */
 	private held = NO_VARIATION;
 
-	/** Reads the form's variation at once, rather than once it settles. */
-	private readVariation: () => void = () => undefined;
+	/** Reads the form's variation at once, rather than once it settles;
+	 *  its `settled()` waits for a pending choice to be followed. */
+	private readVariation: ChoiceReader = Object.assign(() => undefined, {
+		settled: () => Promise.resolve(),
+	});
 
 	/** Every switch, one after the other; an add to cart waits for them. */
 	private switching: Promise<void> = Promise.resolve();
@@ -2220,6 +2224,10 @@ export class ProductDesigner {
 		let changes = 0;
 		let variant: string | undefined;
 		try {
+			// The variation chosen just before the click is the one proofed: a
+			// count picked in the designer selects it in the form, which holds
+			// it only once its choices settle.
+			await this.readVariation.settled();
 			if (!(await this.applyVariation())) {
 				throw new Error('The designer could not switch to the variation.');
 			}

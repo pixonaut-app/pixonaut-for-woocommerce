@@ -7,6 +7,7 @@ import {
 	fakeDesigner,
 	fakeSdk,
 	MOUNTS,
+	modalDialogs,
 	PagesChangedError,
 	PROOF,
 	pageDeps,
@@ -56,8 +57,13 @@ function start({
 	mounts = MOUNTED as object,
 	variations = BOOK as object | null,
 	pageCount = undefined as string | undefined,
+	checkbox = false,
+	fieldDelay = 0,
 } = {}) {
-	const page = productPage(mounts, variations === null ? {} : { variations });
+	const page = productPage(mounts, {
+		...(variations === null ? {} : { variations }),
+		checkbox,
+	});
 	if (pageCount !== undefined) {
 		page.container.dataset.pixonautPageCount = pageCount;
 	}
@@ -67,13 +73,21 @@ function start({
 	const field = page.form.querySelector<HTMLInputElement>(
 		'[name="variation_id"]',
 	);
-	// As WooCommerce does once the attributes name a variation.
+	// As WooCommerce does once the attributes name a variation; the block
+	// form after `fieldDelay`.
 	size?.addEventListener('change', () => {
 		const found = Object.entries(variations ?? {}).find(
 			([, { attributes }]) => attributes.attribute_size === size.value,
 		);
-		if (field !== null) {
-			field.value = found?.[0] ?? '0';
+		const hold = () => {
+			if (field !== null) {
+				field.value = found?.[0] ?? '0';
+			}
+		};
+		if (fieldDelay > 0) {
+			setTimeout(hold, fieldDelay);
+		} else {
+			hold();
 		}
 	});
 	const designer = new ProductDesigner(page.container, {
@@ -176,6 +190,40 @@ describe('the pages of a book', () => {
 		expect(page.book.getPages()?.count).toBe(60);
 		expect(page.field?.value).toBe('12');
 	});
+
+	it.each([
+		['as it is chosen', 0],
+		['a moment after it is chosen', VARIATION_SETTLE_MS / 2],
+	])(
+		'proofs the pages picked when the proof is opened before the form settles, its field holding the variation %s',
+		async (_, fieldDelay) => {
+			modalDialogs();
+			const book = Object.fromEntries(
+				Object.entries(BOOK).map(([id, variation]) => [
+					id,
+					{ ...variation, approvalMode: 'checkbox' },
+				]),
+			);
+			const page = start({ variations: book, checkbox: true, fieldDelay });
+			await settled();
+			await choose(page, '11');
+			const proofed: (number | undefined)[] = [];
+			page.book.approve.mockImplementation(() => {
+				proofed.push(page.book.getPages()?.count);
+				return Promise.resolve(PROOF);
+			});
+
+			page.book.setPageCount(60);
+			await settle();
+			page.container
+				.querySelector<HTMLButtonElement>('.pixonaut-approval__proof')
+				?.click();
+			await settled();
+
+			expect(page.field?.value).toBe('12');
+			expect(proofed).toEqual([60]);
+		},
+	);
 
 	it('changes nothing when a page is turned', async () => {
 		const page = start();

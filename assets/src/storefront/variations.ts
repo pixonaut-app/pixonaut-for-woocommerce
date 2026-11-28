@@ -126,21 +126,40 @@ export function watchVariation(
 	return followChoices(form, read);
 }
 
+/** Calls a form's `settled` at once; its `settled()` waits until the
+ *  choices made so far have settled and been followed. */
+export type ChoiceReader = {
+	(): void;
+	settled: () => Promise<void>;
+};
+
 /**
  * Calls `settled` each time the form's choices may have changed, once they
  * settled, and once at the start: after the classic form's jQuery events
  * (a choice, its reset, the variation found or lost) and the block form's
- * own DOM events. Returns a function that calls it at once.
+ * own DOM events. Returns a function that calls it at once, which also
+ * tells when a pending choice is followed.
  */
 export function followChoices(
 	form: HTMLFormElement,
 	settled: () => void,
-): () => void {
+): ChoiceReader {
 	let timer: ReturnType<typeof setTimeout> | undefined;
-	const now = () => {
+	let waiting: (() => void)[] = [];
+	const now = (() => {
 		clearTimeout(timer);
+		timer = undefined;
 		settled();
-	};
+		const followed = waiting;
+		waiting = [];
+		for (const resolve of followed) {
+			resolve();
+		}
+	}) as ChoiceReader;
+	now.settled = () =>
+		timer === undefined
+			? Promise.resolve()
+			: new Promise((resolve) => waiting.push(resolve));
 	const settle = () => {
 		clearTimeout(timer);
 		timer = setTimeout(now, VARIATION_SETTLE_MS);
