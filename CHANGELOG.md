@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.37.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.36.1...v1.37.0) (2026-11-28)
+
+
+### Features
+
+* **values:** a product's values reach its own-setup variations on the same template ([#431](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/431)) ([840f7cf](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/840f7cffb14ebbc5d4c697e4a610aba806f115a2))
+
 ## [1.36.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.36.0...v1.36.1) (2026-11-28)
 
 
