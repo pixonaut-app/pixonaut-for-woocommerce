@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-28T08:19:50+00:00\n"
+"POT-Creation-Date: 2026-11-28T12:34:22+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -1517,17 +1517,23 @@ msgid ""
 "Makes a simple or variable product personalisable with one Pixonaut "
 "template, optionally printed on a placement of a blank, and replaces the "
 "sides it had. Its variations with a setup of their own move onto the version "
-"linked where their side on that template is not pinned. Pixonaut checks the "
-"link; a product that fails a check is saved but cannot be bought, and the "
-"answer says why."
+"linked where their side on that template is not pinned; linked to another "
+"template, those that differ from the product only in blank, blank variant or "
+"print size on the template it had move to the one linked, keeping their "
+"blank and print sizes. Pixonaut checks the link; a product that fails a "
+"check is saved but cannot be bought, and the answer says why."
 msgstr ""
 "Macht ein einfaches oder variables Produkt mit einer Pixonaut-Vorlage "
 "personalisierbar, wahlweise auf eine Druckposition eines Rohlings gedruckt, "
 "und ersetzt die Seiten, die es bisher hatte. Seine Varianten mit eigener "
 "Einrichtung werden auf die verknüpfte Version umgestellt, wenn ihre Seite "
-"auf dieser Vorlage nicht fixiert ist. Pixonaut prüft die Verknüpfung; ein "
-"Produkt, das eine Prüfung nicht besteht, wird gespeichert, kann aber nicht "
-"gekauft werden, und die Antwort nennt den Grund."
+"auf dieser Vorlage nicht fixiert ist; wird das Produkt mit einer anderen "
+"Vorlage verknüpft, werden die, die sich auf der bisherigen Vorlage nur in "
+"Rohling, Rohling-Variante oder Druckgrösse vom Produkt unterscheiden, auf "
+"die verknüpfte umgestellt und behalten ihren Rohling und ihre Druckgrössen. "
+"Pixonaut prüft die Verknüpfung; ein Produkt, das eine Prüfung nicht besteht, "
+"wird gespeichert, kann aber nicht gekauft werden, und die Antwort nennt den "
+"Grund."
 
 #: src/Abilities/LinkProduct.php:54
 msgid ""
@@ -1576,22 +1582,28 @@ msgstr "Diese Vorlagen-ID kommt in der Vorlagenliste nicht vor."
 msgid ""
 "How many of the product's variations with a setup of their own moved onto "
 "the template version linked: those with a side on that template that is not "
-"pinned. Each was checked with Pixonaut, as a re-check after a publish does."
+"pinned, and those that differ from the product only in blank, blank variant "
+"or print size on the template it had before. Each was checked with Pixonaut, "
+"as a re-check after a publish does."
 msgstr ""
 "Wie viele der Varianten des Produkts mit eigener Einrichtung auf die "
 "verknüpfte Vorlagenversion umgestellt wurden: die mit einer Seite auf dieser "
-"Vorlage, die nicht fixiert ist. Jede wurde mit Pixonaut geprüft, so wie es "
-"eine erneute Prüfung nach einer Veröffentlichung tut."
+"Vorlage, die nicht fixiert ist, und die, die sich auf der bisherigen Vorlage "
+"nur in Rohling, Rohling-Variante oder Druckgrösse vom Produkt unterscheiden. "
+"Jede wurde mit Pixonaut geprüft, so wie es eine erneute Prüfung nach einer "
+"Veröffentlichung tut."
 
 #: src/Abilities/LinkProduct.php:133
 msgid ""
 "How many such variations Pixonaut could not check now, so they move when the "
 "store checks them again, in the background; until then they keep the version "
-"they were on."
+"they were on, and those from the template the product had are on the one "
+"linked but cannot be bought."
 msgstr ""
 "Wie viele solcher Varianten Pixonaut jetzt nicht prüfen konnte; sie werden "
 "umgestellt, wenn der Shop sie im Hintergrund erneut prüft, und behalten bis "
-"dahin die Version, auf der sie waren."
+"dahin die Version, auf der sie waren, und die von der bisherigen Vorlage des "
+"Produkts liegen auf der verknüpften, können aber nicht gekauft werden."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/ListProducts.php:70
@@ -1648,7 +1660,7 @@ msgstr "Die Seite, beginnend bei 1."
 msgid "The page of each variable product's variations, from 1, %d to a page."
 msgstr "Die Seite der Varianten jedes variablen Produkts, ab 1, %d pro Seite."
 
-#: src/Abilities/ListProducts.php:133 src/Abilities/ProductLinks.php:285
+#: src/Abilities/ListProducts.php:133 src/Abilities/ProductLinks.php:288
 msgid ""
 "Whether customers can buy it now, its blank variants and WooCommerce's own "
 "checks included."
@@ -2112,7 +2124,7 @@ msgstr "Das Produkt hat keine Variante mit dieser ID: %s."
 msgid "No simple or variable product or variation has this id."
 msgstr "Kein einfaches oder variables Produkt und keine Variante hat diese ID."
 
-#: src/Abilities/ProductLinks.php:281
+#: src/Abilities/ProductLinks.php:284
 msgid ""
 "For a variation, whether it has a setup of its own rather than following its "
 "product's, whose setup it then gives; false for a product."
@@ -2121,7 +2133,7 @@ msgstr ""
 "Produkts zu folgen, dessen Einrichtung sie dann nennt; false bei einem "
 "Produkt."
 
-#: src/Abilities/ProductLinks.php:289
+#: src/Abilities/ProductLinks.php:292
 msgid ""
 "Which of the product's variations sell no variant of the blank, in words; "
 "null when each does. Set a variation's `variant` with `set-product-setup`."
@@ -3625,8 +3637,8 @@ msgid ""
 msgstr ""
 "Das sind %1$d Bilder, und ein Produkt zeigt höchstens %2$d: seine "
 "Beispielsets oder das Bild seiner ersten Seite und die Bilder seiner "
-"weiteren Seiten. Nennen Sie weniger oder entfernen Sie die Seitenbilder "
-"mit `side_pictures`."
+"weiteren Seiten. Nennen Sie weniger oder entfernen Sie die Seitenbilder mit "
+"`side_pictures`."
 
 #. translators: 1: a side's key; 2: the keys of the product's sides, e.g. "front, back".
 #: src/Abilities/SetProductShowcase.php:235
@@ -11127,7 +11139,7 @@ msgid "Options"
 msgstr "Optionen"
 
 #. translators: Why Pixonaut refused a product, filling in %2$s of a message on the admin product page. Ends a sentence; lower case.
-#: src/Storefront/KeptDesignerLinks.php:772
+#: src/Storefront/KeptDesignerLinks.php:775
 msgid ""
 "one of the print sizes it offers does not fit its template or its position "
 "on the blank. Change the sizes in its Pixonaut tab."
@@ -11137,7 +11149,7 @@ msgstr ""
 "Produkts."
 
 #. translators: Why Pixonaut refused a product, filling in %2$s of a message on the admin product page. Ends a sentence; lower case.
-#: src/Storefront/KeptDesignerLinks.php:774
+#: src/Storefront/KeptDesignerLinks.php:777
 msgid ""
 "its blank no longer has a position one of its sides prints on. Pick the "
 "positions again in its Pixonaut tab."
@@ -11146,13 +11158,13 @@ msgstr ""
 "druckt. Wählen Sie die Druckpositionen im Pixonaut-Tab des Produkts erneut."
 
 #. translators: %s: the error code Pixonaut answered, e.g. `invalid_input`.
-#: src/Storefront/KeptDesignerLinks.php:776
+#: src/Storefront/KeptDesignerLinks.php:779
 #, php-format
 msgid "Pixonaut answered %s."
 msgstr "Pixonaut antwortete %s."
 
 #. translators: 1: the product's name, 2: why Pixonaut refused its link.
-#: src/Storefront/KeptDesignerLinks.php:780
+#: src/Storefront/KeptDesignerLinks.php:783
 #, php-format
 msgid "Customers cannot open the designer for %1$s: %2$s"
 msgstr "Kunden können den Designer für %1$s nicht öffnen: %2$s"
@@ -14698,6 +14710,43 @@ msgid "%s view"
 msgid_plural "%s views"
 msgstr[0] "%s Ansicht"
 msgstr[1] "%s Ansichten"
+
+#~ msgid ""
+#~ "Makes a simple or variable product personalisable with one Pixonaut "
+#~ "template, optionally printed on a placement of a blank, and replaces the "
+#~ "sides it had. Its variations with a setup of their own move onto the "
+#~ "version linked where their side on that template is not pinned. Pixonaut "
+#~ "checks the link; a product that fails a check is saved but cannot be "
+#~ "bought, and the answer says why."
+#~ msgstr ""
+#~ "Macht ein einfaches oder variables Produkt mit einer Pixonaut-Vorlage "
+#~ "personalisierbar, wahlweise auf eine Druckposition eines Rohlings "
+#~ "gedruckt, und ersetzt die Seiten, die es bisher hatte. Seine Varianten "
+#~ "mit eigener Einrichtung werden auf die verknüpfte Version umgestellt, "
+#~ "wenn ihre Seite auf dieser Vorlage nicht fixiert ist. Pixonaut prüft die "
+#~ "Verknüpfung; ein Produkt, das eine Prüfung nicht besteht, wird "
+#~ "gespeichert, kann aber nicht gekauft werden, und die Antwort nennt den "
+#~ "Grund."
+
+#~ msgid ""
+#~ "How many of the product's variations with a setup of their own moved onto "
+#~ "the template version linked: those with a side on that template that is "
+#~ "not pinned. Each was checked with Pixonaut, as a re-check after a publish "
+#~ "does."
+#~ msgstr ""
+#~ "Wie viele der Varianten des Produkts mit eigener Einrichtung auf die "
+#~ "verknüpfte Vorlagenversion umgestellt wurden: die mit einer Seite auf "
+#~ "dieser Vorlage, die nicht fixiert ist. Jede wurde mit Pixonaut geprüft, "
+#~ "so wie es eine erneute Prüfung nach einer Veröffentlichung tut."
+
+#~ msgid ""
+#~ "How many such variations Pixonaut could not check now, so they move when "
+#~ "the store checks them again, in the background; until then they keep the "
+#~ "version they were on."
+#~ msgstr ""
+#~ "Wie viele solcher Varianten Pixonaut jetzt nicht prüfen konnte; sie "
+#~ "werden umgestellt, wenn der Shop sie im Hintergrund erneut prüft, und "
+#~ "behalten bis dahin die Version, auf der sie waren."
 
 #~ msgid ""
 #~ "And `pixonaut_setup`: `own_setup` true when the variation has a Pixonaut "
