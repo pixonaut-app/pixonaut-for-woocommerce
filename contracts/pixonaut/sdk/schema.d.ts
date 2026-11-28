@@ -32966,6 +32966,24 @@ export interface operations {
                                      * @enum {string}
                                      */
                                     kind: "garment-cut";
+                                } | {
+                                    /** @description How far its boards pass its pages, mm. */
+                                    boardOverhangMm: number;
+                                    /** @description The edge it is bound on. */
+                                    boundOn: string;
+                                    /** @description Its cover's wrap round the boards, mm. */
+                                    foldMm: number;
+                                    /** @description Its pages' height, mm. */
+                                    heightMm: number;
+                                    /**
+                                     * @description A hard-cover book.
+                                     * @enum {string}
+                                     */
+                                    kind: "book";
+                                    /** @description Its spine at its fewest pages, mm. */
+                                    spineMm: number;
+                                    /** @description Its pages' width, mm. */
+                                    widthMm: number;
                                 };
                                 /** @description A value for each `modelVariesBy` option, by option name; {} for none. */
                                 row: {
@@ -33927,6 +33945,24 @@ export interface operations {
                                  * @enum {string}
                                  */
                                 kind: "garment-cut";
+                            } | {
+                                /** @description How far its boards pass its pages, mm. */
+                                boardOverhangMm: number;
+                                /** @description The edge it is bound on. */
+                                boundOn: string;
+                                /** @description Its cover's wrap round the boards, mm. */
+                                foldMm: number;
+                                /** @description Its pages' height, mm. */
+                                heightMm: number;
+                                /**
+                                 * @description A hard-cover book.
+                                 * @enum {string}
+                                 */
+                                kind: "book";
+                                /** @description Its spine at its fewest pages, mm. */
+                                spineMm: number;
+                                /** @description Its pages' width, mm. */
+                                widthMm: number;
                             };
                             /** @description A value for each `modelVariesBy` option, by option name; {} for none. */
                             row: {
@@ -54467,6 +54503,24 @@ export interface operations {
                                      * @enum {string}
                                      */
                                     kind: "garment-cut";
+                                } | {
+                                    /** @description How far its boards pass its pages, mm. */
+                                    boardOverhangMm: number;
+                                    /** @description The edge it is bound on. */
+                                    boundOn: string;
+                                    /** @description Its cover's wrap round the boards, mm. */
+                                    foldMm: number;
+                                    /** @description Its pages' height, mm. */
+                                    heightMm: number;
+                                    /**
+                                     * @description A hard-cover book.
+                                     * @enum {string}
+                                     */
+                                    kind: "book";
+                                    /** @description Its spine at its fewest pages, mm. */
+                                    spineMm: number;
+                                    /** @description Its pages' width, mm. */
+                                    widthMm: number;
                                 };
                                 /** @description A value for each `modelVariesBy` option, by option name; {} for none. */
                                 row: {
@@ -55380,6 +55434,24 @@ export interface operations {
                                      * @enum {string}
                                      */
                                     kind: "garment-cut";
+                                } | {
+                                    /** @description How far its boards pass its pages, mm. */
+                                    boardOverhangMm: number;
+                                    /** @description The edge it is bound on. */
+                                    boundOn: string;
+                                    /** @description Its cover's wrap round the boards, mm. */
+                                    foldMm: number;
+                                    /** @description Its pages' height, mm. */
+                                    heightMm: number;
+                                    /**
+                                     * @description A hard-cover book.
+                                     * @enum {string}
+                                     */
+                                    kind: "book";
+                                    /** @description Its spine at its fewest pages, mm. */
+                                    spineMm: number;
+                                    /** @description Its pages' width, mm. */
+                                    widthMm: number;
                                 };
                                 /** @description A value for each `modelVariesBy` option, by option name; {} for none. */
                                 row: {
@@ -56630,7 +56702,7 @@ export interface operations {
                 /** @description A blank's id: each scene then says, in `offers`, which of that blank's rows it can show. It narrows nothing. */
                 forBlank?: string;
                 /** @description A product kind, for a product that is no blank yet or to list only what fits a blank's: only scenes that can show a product of this kind (a setting with an anchor it sits at, a studio style with a camera it is drawn from, a garment's cut-out and a scene photographing a stock item of the kind), each saying where in `offers`. Sizes are judged only with `forBlank`. */
-                forKind?: "flat-sheet" | "framed-sheet" | "canvas" | "cylinder" | "garment-cut";
+                forKind?: "flat-sheet" | "framed-sheet" | "canvas" | "cylinder" | "garment-cut" | "book";
                 /** @description With `forKind=garment-cut`, the garment's cut: only scenes and cut-outs of that garment. Left out, every garment's. */
                 forCut?: "tee" | "hoodie" | "pullover-hoodie" | "sweatshirt";
                 /** @description `picker`: the list as a picker reads it once, to narrow by product, setting, person and pose itself with no further request. It is lighter: no scene says its `geometry` or its `layerUrls` (both null) and no refused row its `reason`. `forKind` then narrows nothing: every scene is listed with every place it can show a product, each place saying in `fitsKind` whether a product of that kind fits there, and `makeCredits` says what composing a scene would cost. Left out, the whole list. */
@@ -57102,6 +57174,24 @@ export interface operations {
                                  * @enum {string}
                                  */
                                 kind: "garment-cut";
+                            } | {
+                                /** @description How far its boards pass its pages, mm. */
+                                boardOverhangMm: number;
+                                /** @description The edge it is bound on. */
+                                boundOn: string;
+                                /** @description Its cover's wrap round the boards, mm. */
+                                foldMm: number;
+                                /** @description Its pages' height, mm. */
+                                heightMm: number;
+                                /**
+                                 * @description A hard-cover book.
+                                 * @enum {string}
+                                 */
+                                kind: "book";
+                                /** @description Its spine at its fewest pages, mm. */
+                                spineMm: number;
+                                /** @description Its pages' width, mm. */
+                                widthMm: number;
                             };
                             name: string;
                         }[];
