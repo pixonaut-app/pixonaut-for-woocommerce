@@ -114,7 +114,9 @@ final class ProductLinks {
 	 * blank, in the size given or else the placement's default size. It
 	 * replaces the sides it had. Without a blank and a size the product is
 	 * saved but cannot be bought. Its variations with a setup of their own
-	 * whose side follows the template move onto the version linked.
+	 * whose side follows the template move onto the version linked, and,
+	 * linked to another template, those that differ from it only in blank,
+	 * variant or print size on the template it left move to the one linked.
 	 *
 	 * @param WC_Product     $product      The product.
 	 * @param TemplateId     $template     The template version.
@@ -137,6 +139,7 @@ final class ProductLinks {
 			'placement' => '' === $blank_id ? '' : $placement_id,
 			'sizes'     => array( $size_row ),
 		);
+		$before   = ProductConfig::stored_on( $product );
 		$this->save(
 			$product,
 			array(
@@ -145,7 +148,7 @@ final class ProductLinks {
 				PanelFields::SIDES       => array( $side ),
 			)
 		);
-		$followed = $this->recheck->follow_link( $product, $template );
+		$followed = $this->recheck->follow_link( $product, $template, $before );
 		return $this->summary( $product ) + array(
 			'variations_moved'       => $followed['moved'],
 			'variations_moved_later' => $followed['later'],

@@ -398,13 +398,21 @@ final class ProductRecheck {
 	 * versions then. A template that is not live moves nothing: the
 	 * re-check its event queued stops those variations' sales.
 	 *
-	 * @param WC_Product $product  The product linked.
-	 * @param TemplateId $template The template version it is linked to.
+	 * A product linked to another template takes along the variations
+	 * whose setup of their own is its own but for the blank, variant or
+	 * print size, from the template it left (`OwnSetupsOnLeftTemplate`):
+	 * they are stored on the version linked, unchecked, and then checked as
+	 * those following the template are, now or in their re-check later.
+	 *
+	 * @param WC_Product         $product  The product linked.
+	 * @param TemplateId         $template The template version it is linked to.
+	 * @param ProductConfig|null $before   What the product had before the link; null moves none across templates.
 	 * @return array{moved: int, later: int} How many variations moved, and how many were queued to be re-checked later instead.
 	 */
-	public function follow_link( WC_Product $product, TemplateId $template ): array {
+	public function follow_link( WC_Product $product, TemplateId $template, ?ProductConfig $before = null ): array {
 		$started = microtime( true );
-		$ids     = self::following_own_setups( $product, $template );
+		$across  = null === $before ? array() : OwnSetupsOnLeftTemplate::move( $product, $before, $template );
+		$ids     = array_values( array_unique( array_merge( $across, self::following_own_setups( $product, $template ) ) ) );
 		$none    = array(
 			'moved' => 0,
 			'later' => 0,
@@ -429,7 +437,11 @@ final class ProductRecheck {
 			);
 		}
 		if ( ! isset( $live[ $template->base_id ] ) ) {
-			return $none;
+			// Those moved across are not sold until checked; their re-check finds the template not live.
+			return array(
+				'moved' => 0,
+				'later' => array() === $across ? 0 : $this->queue_later( $across, 0 ),
+			);
 		}
 		$live[ $template->base_id ] = $template->version;
 

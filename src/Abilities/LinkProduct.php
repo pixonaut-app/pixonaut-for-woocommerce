@@ -41,7 +41,7 @@ final class LinkProduct implements Ability {
 		return array(
 			/* translators: Name of an ability an AI assistant or an MCP client can use on the store. */
 			'label'               => __( 'Link a product to a Pixonaut template', 'pixonaut-for-woocommerce' ),
-			'description'         => __( 'Makes a simple or variable product personalisable with one Pixonaut template, optionally printed on a placement of a blank, and replaces the sides it had. Its variations with a setup of their own move onto the version linked where their side on that template is not pinned. Pixonaut checks the link; a product that fails a check is saved but cannot be bought, and the answer says why.', 'pixonaut-for-woocommerce' ),
+			'description'         => __( 'Makes a simple or variable product personalisable with one Pixonaut template, optionally printed on a placement of a blank, and replaces the sides it had. Its variations with a setup of their own move onto the version linked where their side on that template is not pinned; linked to another template, those that differ from the product only in blank, blank variant or print size on the template it had move to the one linked, keeping their blank and print sizes. Pixonaut checks the link; a product that fails a check is saved but cannot be bought, and the answer says why.', 'pixonaut-for-woocommerce' ),
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
@@ -125,12 +125,12 @@ final class LinkProduct implements Ability {
 			'variations_moved'       => array(
 				'type'        => 'integer',
 				'minimum'     => 0,
-				'description' => __( 'How many of the product\'s variations with a setup of their own moved onto the template version linked: those with a side on that template that is not pinned. Each was checked with Pixonaut, as a re-check after a publish does.', 'pixonaut-for-woocommerce' ),
+				'description' => __( 'How many of the product\'s variations with a setup of their own moved onto the template version linked: those with a side on that template that is not pinned, and those that differ from the product only in blank, blank variant or print size on the template it had before. Each was checked with Pixonaut, as a re-check after a publish does.', 'pixonaut-for-woocommerce' ),
 			),
 			'variations_moved_later' => array(
 				'type'        => 'integer',
 				'minimum'     => 0,
-				'description' => __( 'How many such variations Pixonaut could not check now, so they move when the store checks them again, in the background; until then they keep the version they were on.', 'pixonaut-for-woocommerce' ),
+				'description' => __( 'How many such variations Pixonaut could not check now, so they move when the store checks them again, in the background; until then they keep the version they were on, and those from the template the product had are on the one linked but cannot be bought.', 'pixonaut-for-woocommerce' ),
 			),
 		);
 		return $schema;
