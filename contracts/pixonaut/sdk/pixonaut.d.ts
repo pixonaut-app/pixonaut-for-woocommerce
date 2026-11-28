@@ -532,6 +532,16 @@ export declare class DesignerProduct {
      *  page never shown starts from the template's own. `on("pages")`
      *  reports it. */
     setPage(page: number): void;
+    /** Fill the empty pictures of the side printed as pages with `files`,
+     *  while it is the side shown, else a `TypeError`: each photo goes to the
+     *  next picture the shopper may upload to that holds none of theirs,
+     *  page by page in the order handed, a page's pictures in the form's
+     *  order. Each lands on its page as its upload ends, a few at a time;
+     *  `approve()` and `commit()` wait for them all. Leaving that side or
+     *  switching its template stops it (`stopped`). Answers what was placed,
+     *  what failed, the photos not placed, and the fewest pages that would
+     *  hold them too (`setPageCount()`, then `fillPages()` with them again). */
+    fillPages(files: readonly File[], options?: FillPagesOptions): Promise<PagesFilled>;
     /** Choose the repeat's layout (`null`: not repeated, where the shopper
      *  may turn it off), size or arrangement; `on("repeat")` reports it. A
      *  `TypeError` with none offered and for a choice outside the offer. */
@@ -714,6 +724,12 @@ export declare const FILL_PROPERTIES: {
         readonly fallback: "transparent";
     };
 };
+
+/** What `fillPages()` is told as it goes. */
+export declare interface FillPagesOptions {
+    /** Called as each photo's upload ends, placed or not. */
+    progress?(done: number, of: number): void;
+}
 
 /** A custom property a host may set on its element, and the value used when
  *  it sets none. */
@@ -2035,6 +2051,18 @@ declare interface PageMessages {
     "pages.next": string;
     /** Under the picker: how a page is designed and printed. */
     "pages.note": string;
+    /** Choosing several photos at once, under the picker (`fillPages()`). */
+    "pages.fill": string;
+    "pages.fill-note": string;
+    "pages.fill-uploading": string;
+    "pages.fill-placed": string;
+    "pages.fill-failed": string;
+    /** Photos no empty page was left for, and the count that holds them. */
+    "pages.fill-left": string;
+    "pages.fill-left-max": string;
+    /** Photos not placed as the shopper left the pages while they uploaded. */
+    "pages.fill-stopped": string;
+    "pages.fill-count": string;
 }
 
 /** What `approve()` and `commit()` reject with when `setPageCount()`
@@ -2042,6 +2070,33 @@ declare interface PageMessages {
  *  pages before it, not the item the customer would now get. */
 export declare class PagesChangedError extends Error {
     constructor(message?: string);
+}
+
+/** What `fillPages()` did with the photos it was handed. */
+export declare interface PagesFilled {
+    /** Each photo placed, in the order picked: its file's name and the page
+     *  it is on. */
+    placed: {
+        fileName: string;
+        page: number;
+    }[];
+    /** Each photo whose upload was refused or failed, with why: its page's
+     *  picture stays as it was. */
+    failed: {
+        fileName: string;
+        error: unknown;
+    }[];
+    /** The photos not placed, in the order picked: no empty picture was
+     *  left for them, the shopper chose its picture while it uploaded, or
+     *  the fill stopped. */
+    left: File[];
+    /** The fewest pages offered whose empty pictures hold the photos left
+     *  too; undefined when none is left for want of room, or even the most
+     *  pages offered would not hold them. */
+    countForAll?: number;
+    /** The fill stopped: the side printed as pages was left, or switched to
+     *  another template, while it ran. */
+    stopped?: true;
 }
 
 /** The side printed as pages, as `getPages()` answers and `on("pages")`
@@ -2360,8 +2415,7 @@ export declare class PixonautDesigner extends DesignerProduct {
     private previewTables;
     /** `renderTemplate()`'s pictures, drawn by the pipeline (#1365). */
     private thumbnails;
-    /** DOM/canvas layer: preview img and overlay host (owns those live nodes;
-     *  exposes them via getters) */
+    /** DOM/canvas layer: preview img and overlay host, owned, via getters */
     private dom;
     /** generated-form machinery: field renderers, upload flow, headless
      *  schema/value API (deps: schema/template/values + the place control) */
@@ -2558,9 +2612,8 @@ export declare class PixonautDesigner extends DesignerProduct {
     /** Resolves once every upload and improvement under way has written its
      *  value, however it ended: `getState()` then holds what they landed. */
     settled(): Promise<void>;
-    /** upload a customer image for an image layer and set its `src`.
-     *  Returns the assetId plus any print-quality warning from the API
-     *  (machine `warningKey` + `warningParams`, and the English `warning`). */
+    /** upload a customer image for an image layer and set its `src`: its
+     *  assetId and any print warning (`warningKey`, `warningParams`, `warning`). */
     uploadAsset(file: File, layerId: string): Promise<UploadResult>;
     /** How the picture uploaded for a layer measures at the chosen print size
      *  against the template's floor, as the upload's own check measures it: on
