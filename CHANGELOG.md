@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.36.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.35.0...v1.36.0) (2026-11-28)
+
+
+### Features
+
+* **catalogue:** a product holds up to 25 sides, a wall calendar's every page ([#429](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/429)) ([66b97da](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/66b97dad62d4ef888f8f16de7d92c6099c375721))
+
 ## [1.35.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.34.2...v1.35.0) (2026-11-27)
 
 
