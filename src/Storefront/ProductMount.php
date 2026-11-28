@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Storefront;
 
+use Pixonaut\WooCommerce\Catalogue\PageTemplate;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\Side;
@@ -22,7 +23,9 @@ final class ProductMount {
 
 	/**
 	 * `blankId`, `placementId`, `placements`, `views`, `initialView` and
-	 * `variants` with a blank, `printSizes` with a size menu, and
+	 * `variants` with a blank, the placement's `pageTemplates` on a side
+	 * printed as pages that offers page layouts, `printSizes` with a size
+	 * menu, and
 	 * `drawAtTemplateRatio` when the side or its configuration chooses the
 	 * canvas: left out, the template's own setting decides.
 	 *
@@ -39,7 +42,12 @@ final class ProductMount {
 			$options['blankId']     = $config->blank_id;
 			$options['placementId'] = $side->placement_id;
 			// Each side is its own design, so its designer sells its own placement alone, printed with the mount's template.
-			$options['placements'] = array( array( 'placementId' => $side->placement_id ) );
+			$placement = array( 'placementId' => $side->placement_id );
+			if ( array() !== $side->page_templates ) {
+				// The other templates a page may be designed on; the SDK draws their picker under its page picker.
+				$placement['pageTemplates'] = array_map( static fn ( PageTemplate $layout ): string => (string) $layout->id(), $side->page_templates );
+			}
+			$options['placements'] = array( $placement );
 			$options['views']      = $config->views;
 			if ( null !== $config->initial_view ) {
 				// The SDK opens a side on it only when it is that side's placement's.

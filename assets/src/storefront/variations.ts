@@ -1,5 +1,6 @@
 import type { ProductPlacement } from '../types/sdk';
 import type { ArrangedGroups } from './form-groups';
+import type { ValueSets } from './value-sets';
 
 /** What a variation switches one side to: the server's mount options for
  *  it, with its print sizes as indexes into the side's mounted menu. A side
@@ -33,6 +34,10 @@ export type VariationSide = {
 	/** The value set of the side's own values its template opens on;
 	 *  absent for none. A variation on another set mounts the side again. */
 	valueSet?: string;
+	/** Every set the side opens its templates on, by base id: its own and
+	 *  each of its page layouts' that has one; absent when only `valueSet`
+	 *  is. Mounted with in place of `valueSet`. */
+	valueSets?: ValueSets;
 };
 
 /** A variation as the server prints it: personalised, bought without a

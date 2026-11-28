@@ -120,6 +120,13 @@ const VARIATIONS = {
 	'33': personalised('V', {
 		front: { ...FRONT, printSizes: [1], valueSet: MORMOR },
 	}),
+	'34': personalised('V', {
+		front: {
+			...FRONT,
+			valueSet: FARMOR,
+			valueSets: { 'mini-tee': FARMOR, 'two-photos': MORMOR },
+		},
+	}),
 };
 
 /** Two variations alike but for the variant they are sold as, both
@@ -937,6 +944,21 @@ describe('ProductDesigner on a variable product', () => {
 		});
 		expect(options(mount, 2)).toHaveProperty('templateId', 'mini-tee@2');
 		expect(options(mount, 3)).not.toHaveProperty('valueSets');
+	});
+
+	it('mounts the side again with its page layouts’ value sets for a variation that gives them', async () => {
+		const { form, mount } = start();
+		await settle();
+
+		await choose(form, '29');
+		await choose(form, '34');
+		await choose(form, '29');
+
+		expect(mount).toHaveBeenCalledTimes(4);
+		expect(options(mount, 2)).toMatchObject({
+			valueSets: { 'mini-tee': FARMOR, 'two-photos': MORMOR },
+		});
+		expect(options(mount, 3).valueSets).toEqual({ 'mini-tee': FARMOR });
 	});
 
 	it('keeps the side mounted on its value set for a variation on the same set', async () => {

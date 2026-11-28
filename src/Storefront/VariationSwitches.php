@@ -171,6 +171,10 @@ final class VariationSwitches {
 				// A variation on another set mounts the side again on it.
 				$side['valueSet'] = $value_set;
 			}
+			if ( is_array( $options['valueSets'] ?? null ) && count( $options['valueSets'] ) > 1 ) {
+				// Its page layouts' sets beside it, which a switch to the variation mounts with too.
+				$side['valueSets'] = $options['valueSets'];
+			}
 			if ( isset( $labels[ $key ] ) ) {
 				// A variation set up apart may name the side otherwise; the tab follows it.
 				$side['label'] = $labels[ $key ];

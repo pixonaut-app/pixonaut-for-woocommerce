@@ -1413,7 +1413,12 @@ export class ProductDesigner {
 				: (starting ?? size);
 		const otherTemplate = previous.templateId !== target.templateId;
 		// The SDK reads a set at its mount: another set mounts the side again.
-		const otherValueSet = valueSetOf(previous) !== target.valueSet;
+		const targetSets =
+			target.valueSets ??
+			valueSetsFor(target.templateId, target.valueSet).valueSets;
+		const otherValueSet =
+			valueSetOf(previous) !== target.valueSet ||
+			!sameValueSets(previous.valueSets, targetSets);
 		const remounted =
 			otherValueSet ||
 			previous.blankId !== target.blankId ||
@@ -1478,7 +1483,7 @@ export class ProductDesigner {
 			...(target.drawAtTemplateRatio === undefined
 				? {}
 				: { drawAtTemplateRatio: target.drawAtTemplateRatio }),
-			...valueSetsFor(target.templateId, target.valueSet),
+			...(targetSets === undefined ? {} : { valueSets: targetSets }),
 			selectedPrintSizeIndex: nextSize,
 		} as SideOptions;
 		const inPlace = !remounted && designer !== undefined && this.sdk !== null;

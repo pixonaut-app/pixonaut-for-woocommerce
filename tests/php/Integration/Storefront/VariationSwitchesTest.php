@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Tests\Integration\Storefront;
 
 use Pixonaut\WooCommerce\ApprovalMode;
+use Pixonaut\WooCommerce\Catalogue\PageTemplate;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
@@ -396,6 +397,35 @@ final class VariationSwitchesTest extends WP_UnitTestCase {
 		$this->assertSame( self::MORMOR, $switches[ $variations['S']->get_id() ]['sides']['front']['valueSet'] );
 		$this->assertSame( self::FARMOR, $switches[ $variations['T']->get_id() ]['sides']['front']['valueSet'], 'a variation of its own on the product’s template without values opens on the product’s' );
 		$this->assertArrayNotHasKey( 'valueSet', $switches[ $variations['U']->get_id() ]['sides']['front'], 'a variation of its own on another template opens on that template’s own' );
+	}
+
+	public function test_a_book_side_mounts_its_page_layouts_each_on_its_value_set_and_a_variation_switches_to_them(): void {
+		$book                     = self::front();
+		$book                     = $book->with_sides( array( $book->sides[0]->with_page_templates( array( new PageTemplate( 'two-photos', 2 ), new PageTemplate( 'four-photos', 1 ) ) ) ) );
+		[ $product, $variations ] = self::variable( $book, array( 'M' => null ) );
+		SideValues::replace_on( $product, array( 'front' => new SideValue( 'mini-tee', self::FARMOR, array( 'title' => array( 'content' => 'farmor' ) ), array( 'two-photos' => self::MORMOR ) ) ), null );
+
+		$html  = $this->form_html( $product );
+		$mount = self::data( $html, 'mounts' )['front'];
+
+		$this->assertSame(
+			array(
+				array(
+					'placementId'   => 'front',
+					'pageTemplates' => array( 'two-photos@2', 'four-photos@1' ),
+				),
+			),
+			$mount['placements']
+		);
+		$this->assertSame(
+			array(
+				'mini-tee'   => self::FARMOR,
+				'two-photos' => self::MORMOR,
+			),
+			$mount['valueSets'],
+			'a layout with none of the values\' layers opens on its own'
+		);
+		$this->assertSame( $mount['valueSets'], self::data( $html, 'variations' )[ $variations['M']->get_id() ]['sides']['front']['valueSets'] );
 	}
 
 	public function test_a_variation_without_a_design_is_plain_and_one_that_cannot_mount_unavailable(): void {
