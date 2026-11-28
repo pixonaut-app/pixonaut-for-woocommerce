@@ -34,6 +34,8 @@ final class DesignerLinkBodyTest extends TestCase {
 
 	private const LINK_URL = 'http://pixonaut.test/designer/dl_1';
 
+	private const VALUE_SET = 'vs_0123456789abcdef01234567';
+
 
 	public function test_one_side_goes_at_the_top_level(): void {
 		$link = DesignerLinkBody::for_config( self::config( array( self::front() ) ), self::RETURN_URL, 'en' );
@@ -103,6 +105,20 @@ final class DesignerLinkBodyTest extends TestCase {
 		$this->assertArrayNotHasKey( 'pages', $several->body['sides'][0] );
 		$this->assertSame( $pages, $several->body['sides'][1]['pages'] );
 		$this->assertArrayNotHasKey( 'pages', $plain->body );
+	}
+
+	public function test_each_side_names_the_value_set_it_is_sold_with(): void {
+		$one     = DesignerLinkBody::for_config( self::config( array( self::front() ) ), self::RETURN_URL, 'en', value_sets: array( self::VALUE_SET ) );
+		$several = DesignerLinkBody::for_config( self::config( array( self::front(), self::back( 'mini-poster' ) ) ), self::RETURN_URL, 'en', value_sets: array( null, self::VALUE_SET ) );
+		$plain   = DesignerLinkBody::for_config( self::config( array( self::front() ) ), self::RETURN_URL, 'en' );
+
+		$this->assertNotNull( $one );
+		$this->assertNotNull( $several );
+		$this->assertNotNull( $plain );
+		$this->assertSame( self::VALUE_SET, $one->body['valueSet'] );
+		$this->assertArrayNotHasKey( 'valueSet', $several->body['sides'][0] );
+		$this->assertSame( self::VALUE_SET, $several->body['sides'][1]['valueSet'] );
+		$this->assertArrayNotHasKey( 'valueSet', $plain->body );
 	}
 
 	public function test_a_side_on_the_first_sides_template_names_none(): void {

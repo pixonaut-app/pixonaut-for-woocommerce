@@ -11,6 +11,8 @@ use Pixonaut\WooCommerce\Api\DesignerLinks;
 use Pixonaut\WooCommerce\Api\WcLogger;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
+use Pixonaut\WooCommerce\Catalogue\SideValue;
+use Pixonaut\WooCommerce\Catalogue\SideValues;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\FormLayout;
 use Pixonaut\WooCommerce\Layout;
@@ -199,6 +201,26 @@ final class KeptDesignerLinksTest extends PersonalisedCartTestCase {
 		$minted = array_values( array_filter( $this->recorder->requests, static fn ( array $sent ): bool => 'POST' === $sent['method'] ) );
 		$this->assertCount( 2, $minted );
 		$this->assertTrue( json_decode( (string) $minted[1]['body'], true )['printAreaFrame'] );
+	}
+
+	public function test_the_products_values_reach_the_link_and_a_change_of_them_mints_it_again(): void {
+		$set = 'vs_3f2e9a1b7c4d5e6f8a9b0c1d';
+		$this->assertTrue( SideValues::replace_on( $this->product(), array( 'front' => new SideValue( DesignFixture::TEMPLATE_BASE_ID, $set, array( 'title' => array( 'content' => 'farmor' ) ) ) ), null ) );
+		$this->script_link();
+		$this->links->saved( $this->product_id );
+		$this->assertSame( $set, json_decode( (string) $this->recorder->requests[0]['body'], true )['valueSet'] );
+
+		$other = 'vs_0a1b2c3d4e5f6a7b8c9d0e1f';
+		$this->assertTrue( SideValues::replace_on( $this->product(), array( 'front' => new SideValue( DesignFixture::TEMPLATE_BASE_ID, $other, array( 'title' => array( 'content' => 'morfar' ) ) ) ), SideValues::document_on( $this->product() ) ) );
+		$this->recorder->json( 200, PersonaliseButtonTest::listed( self::LINK_ID, null ) );
+		$this->script_link( 'shl_2', 'http://fake-pixonaut.test/designer/dl_2' );
+		$this->recorder->json( 204, array() );
+		$this->links->saved( $this->product_id );
+
+		$this->assertSame( 'shl_2', $this->kept( $this->product_id )['en']['id'] );
+		$minted = array_values( array_filter( $this->recorder->requests, static fn ( array $sent ): bool => 'POST' === $sent['method'] ) );
+		$this->assertCount( 2, $minted );
+		$this->assertSame( $other, json_decode( (string) $minted[1]['body'], true )['valueSet'] );
 	}
 
 	public function test_the_form_layout_setting_and_a_products_override_reach_the_link(): void {
