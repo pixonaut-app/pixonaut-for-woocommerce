@@ -74,6 +74,50 @@ add_filter(
 );
 
 /**
+ * A product marked so, or a variation of one, has no picture drawing
+ * queued: its cards and lists show its own images whatever the test saves,
+ * as before its pictures are drawn. The request that queues a drawing to
+ * start at once starts the pictures' runners as it ends, so a drawing
+ * queued would be drawn before the test reads the page.
+ */
+const PIXONAUT_E2E_PICTURES_HELD_META = '_pixonaut_e2e_pictures_held';
+
+add_filter(
+	'pre_as_enqueue_async_action',
+	'pixonaut_e2e_hold_picture',
+	10,
+	3
+);
+add_filter(
+	'pre_as_schedule_single_action',
+	static fn ( $pre, $timestamp, $hook, $args ) => pixonaut_e2e_hold_picture( $pre, $hook, $args ),
+	10,
+	4
+);
+
+/**
+ * Queues nothing for a drawing of a product whose pictures are held
+ * (`PIXONAUT_E2E_PICTURES_HELD_META`); leaves every other job be.
+ *
+ * @param mixed $pre  Null to queue the job; an id to return in its place.
+ * @param mixed $hook The job's hook.
+ * @param mixed $args The job's arguments: a drawing's product first.
+ * @return mixed 0 for a held drawing, else `$pre`.
+ */
+function pixonaut_e2e_hold_picture( $pre, $hook, $args ) {
+	if ( null !== $pre || \Pixonaut\WooCommerce\Catalogue\ProductPictures::ACTION !== $hook || ! is_array( $args ) ) {
+		return $pre;
+	}
+	$product_id = (int) ( $args[0] ?? 0 );
+	foreach ( array_filter( array( $product_id, (int) wp_get_post_parent_id( $product_id ) ) ) as $id ) {
+		if ( '' !== get_post_meta( $id, PIXONAUT_E2E_PICTURES_HELD_META, true ) ) {
+			return 0;
+		}
+	}
+	return $pre;
+}
+
+/**
  * Cookie that lets one browser context set the browser's and the studio's
  * Pixonaut addresses in the developer tools, as on a site without the
  * constants the tests site sets. WordPress keeps reaching the fake through
@@ -782,6 +826,11 @@ add_action(
 							'type' => 'string',
 							'enum' => array( 'filtered' ),
 						),
+						// `held`: the poster's pictures are never drawn (`PIXONAUT_E2E_PICTURES_HELD_META`).
+						'pictures' => array(
+							'type' => 'string',
+							'enum' => array( 'held' ),
+						),
 					),
 					'callback'            => static function ( WP_REST_Request $request ) {
 						$key        = (string) $request['key'];
@@ -836,6 +885,9 @@ add_action(
 						$poster->set_category_ids( array( $category_id ) );
 						$poster->set_attributes( $attributes );
 						$poster->save();
+						if ( 'held' === $request['pictures'] ) {
+							update_post_meta( $poster->get_id(), PIXONAUT_E2E_PICTURES_HELD_META, '1' );
+						}
 						foreach ( array( array( 'med-bild', '30x40', '19.00' ), array( 'med-bild', '50x70', '29.00' ), array( 'utan-bild', '30x40', '15.00' ) ) as list( $picture, $size, $price ) ) {
 							$variation = new WC_Product_Variation();
 							$variation->set_parent_id( $poster->get_id() );
