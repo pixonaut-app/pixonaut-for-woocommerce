@@ -279,7 +279,7 @@ final class InlineProducts {
 			return $this->mounts( $variation, $config, $variants );
 		}
 		// Alike with the values they are sold with: a variation of its own may have other values than its twin.
-		$values           = SideValues::document_on( SideValues::holder( $variation ) );
+		$values           = array_map( static fn ( Side $side ): ?string => SideValues::set_of( $variation, $side ), $config->sides );
 		$key              = md5( serialize( array( $config, $values ) ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize -- compares two configurations, never stored.
 		$shared[ $key ] ??= $this->mounts( $variation, $config, $variants );
 		return $shared[ $key ];

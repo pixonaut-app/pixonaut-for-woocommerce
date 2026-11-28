@@ -381,7 +381,8 @@ final class VariationSwitchesTest extends WP_UnitTestCase {
 			array(
 				'M' => null,
 				'S' => self::front(),
-				'T' => self::front(),
+				'T' => self::front( array( 'size' => new PrintSize( 200.0, 240.0, '20×24' ) ) ),
+				'U' => self::front( array( 'template' => 'mini-mug' ) ),
 			)
 		);
 		SideValues::replace_on( $product, array( 'front' => new SideValue( 'mini-tee', self::FARMOR, array( 'title' => array( 'content' => 'farmor' ) ) ) ), null );
@@ -393,7 +394,8 @@ final class VariationSwitchesTest extends WP_UnitTestCase {
 		$this->assertSame( array( 'mini-tee' => self::FARMOR ), self::data( $html, 'mounts' )['front']['valueSets'] );
 		$this->assertSame( self::FARMOR, $switches[ $variations['M']->get_id() ]['sides']['front']['valueSet'], 'a variation following its product opens on the product’s' );
 		$this->assertSame( self::MORMOR, $switches[ $variations['S']->get_id() ]['sides']['front']['valueSet'] );
-		$this->assertArrayNotHasKey( 'valueSet', $switches[ $variations['T']->get_id() ]['sides']['front'], 'a variation of its own without values opens on the template’s own' );
+		$this->assertSame( self::FARMOR, $switches[ $variations['T']->get_id() ]['sides']['front']['valueSet'], 'a variation of its own on the product’s template without values opens on the product’s' );
+		$this->assertArrayNotHasKey( 'valueSet', $switches[ $variations['U']->get_id() ]['sides']['front'], 'a variation of its own on another template opens on that template’s own' );
 	}
 
 	public function test_a_variation_without_a_design_is_plain_and_one_that_cannot_mount_unavailable(): void {

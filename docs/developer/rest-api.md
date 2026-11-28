@@ -96,8 +96,8 @@ offered to a user:
 The product and variation tools answer as the store abilities of the same
 names ([Abilities](../abilities/)), and `list-products` gives each product as
 `get-product` does: each product and variation read carries
-`pixonaut_validity` and `pixonaut_setup`, each side with its own
-`value_set_id` and `values`, and each variation `pixonaut_variant` too.
+`pixonaut_validity` and `pixonaut_setup`, each side with the
+`value_set_id` and `values` it is sold with and `values_from`, and each variation `pixonaut_variant` too.
 
 Pixonaut asks for changes to the switch with the webhook events
 `store_access.requested`, ignored once it was turned off in WordPress, and
