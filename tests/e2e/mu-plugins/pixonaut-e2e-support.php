@@ -105,7 +105,8 @@ add_filter(
  * @return mixed 0 for a held drawing, else `$pre`.
  */
 function pixonaut_e2e_hold_picture( $pre, $hook, $args ) {
-	if ( null !== $pre || \Pixonaut\WooCommerce\Catalogue\ProductPictures::ACTION !== $hook || ! is_array( $args ) ) {
+	// The plugin is not active yet while the site is set up, when WooCommerce queues its own jobs.
+	if ( null !== $pre || ! is_array( $args ) || ! class_exists( \Pixonaut\WooCommerce\Catalogue\ProductPictures::class ) || \Pixonaut\WooCommerce\Catalogue\ProductPictures::ACTION !== $hook ) {
 		return $pre;
 	}
 	$product_id = (int) ( $args[0] ?? 0 );
