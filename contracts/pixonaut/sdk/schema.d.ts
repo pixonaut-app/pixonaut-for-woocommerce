@@ -34345,6 +34345,17 @@ export interface operations {
                                         exact: boolean;
                                         /** @description The photo's mask, opened with no key. */
                                         maskUrl: string;
+                                        /** @description On a book lying open at a spread, the window of the spread's odd page, on the same piece: `printWindowMm` is then the even page's. A spread shows an even page and the odd page after it, so the first printed on both sides is pages 2 and 3. A reader that knows none of it draws the print in `printWindowMm` alone. */
+                                        oddPageWindowMm?: {
+                                            /** @description The window's height, in mm. */
+                                            heightMm: number;
+                                            /** @description The window's width, in mm. */
+                                            widthMm: number;
+                                            /** @description The window's left edge, in mm from the piece's left. */
+                                            xMm: number;
+                                            /** @description The window's top edge, in mm from the piece's top. */
+                                            yMm: number;
+                                        };
                                         photoSizePx: {
                                             h: number;
                                             w: number;
@@ -34561,6 +34572,17 @@ export interface operations {
                                     };
                                     /** @description The placements this photo carries a print of, in the order they are drawn, each with the window of its own print area. */
                                     regions: {
+                                        /** @description On a book lying open at a spread, the window of the spread's odd page, on the same piece: `printWindowMm` is then the even page's. A spread shows an even page and the odd page after it, so the first printed on both sides is pages 2 and 3. A reader that knows none of it draws the print in `printWindowMm` alone. */
+                                        oddPageWindowMm?: {
+                                            /** @description The window's height, in mm. */
+                                            heightMm: number;
+                                            /** @description The window's width, in mm. */
+                                            widthMm: number;
+                                            /** @description The window's left edge, in mm from the piece's left. */
+                                            xMm: number;
+                                            /** @description The window's top edge, in mm from the piece's top. */
+                                            yMm: number;
+                                        };
                                         /** @description A pattern piece of the view's UV pass, 1 to 253: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
                                         piece?: number;
                                         /** @description The print size on the model of the piece the region's `printWindowMm` lies on, in mm. Present with a print window only. */
