@@ -1553,15 +1553,13 @@ export class ProductDesigner {
 	/** Gives each page of a book the values it held in `kept`, on the template
 	 *  the designer shows now. */
 	private carryPages(designer: PixonautDesigner, kept: KeptPages): void {
-		try {
-			carryPageValues(designer, kept, (count) => {
-				// Before the SDK reports it, so it is not taken for a pick.
-				this.pageCounts.set(designer, count);
-				designer.setPageCount(count);
-			});
-		} catch (error) {
+		carryPageValues(designer, kept, (count) => {
+			// Before the SDK reports it, so it is not taken for a pick.
+			this.pageCounts.set(designer, count);
+			designer.setPageCount(count);
+		}).catch((error: unknown) => {
 			console.error('Pixonaut: a page could not be carried over.', error);
-		}
+		});
 	}
 
 	/** Keeps what the customer designed on the side for its next mount. */

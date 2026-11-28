@@ -75,13 +75,15 @@ export function withKeptPages(
  * the template the designer shows now: a field of a key takes the key's
  * value, any other the value of its layer. The SDK carries the page shown
  * alone, and keeps every other for the way back. Pages past the count are
- * reached by `setPageCount`, which is left at the count it found.
+ * reached by `setPageCount`, which is left at the count it found. Each
+ * page is shown before it is given its values: a page laid in a template of
+ * its own is shown once that template is drawn.
  */
-export function carryPageValues(
+export async function carryPageValues(
 	designer: PixonautDesigner,
 	{ saved, templateId, keys }: KeptPages,
 	setPageCount: (count: number) => void,
-): void {
+): Promise<void> {
 	const opened = designer.getPages();
 	if (
 		opened === null ||
@@ -111,12 +113,12 @@ export function carryPageValues(
 	try {
 		for (const { number, values } of designed) {
 			if (raised || number <= opened.count) {
-				designer.setPage(number);
+				await designer.setPage(number);
 				givePage(designer, values, keys);
 			}
 		}
 	} finally {
-		designer.setPage(opened.page);
+		await designer.setPage(opened.page);
 		if (raised) {
 			setPageCount(opened.count);
 		}
