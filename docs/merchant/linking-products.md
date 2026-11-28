@@ -163,6 +163,18 @@ fixed design and a variation's own sides have no Groups setting: a
 variation with its own configuration shows the groups of the product's side
 of the same key.
 
+### Page layouts
+
+On a print position printed as pages, such as a photo book's inner pages,
+a side has a **Page layouts** field under its template: up to eight other
+templates, at the template's aspect ratio, that customers may design a page
+on, such as two or four photos. Every page starts on the side's template,
+and customers pick a layout per page in the designer. Each layout follows
+its template's new versions as the side's template does, or stays on its
+version while the side stays on one. A layout at another ratio, or on a
+print position not printed as pages, stops the product being bought until
+it is fixed.
+
 ### Print sizes
 
 Each side has a table of print sizes. Customers choose from it when they

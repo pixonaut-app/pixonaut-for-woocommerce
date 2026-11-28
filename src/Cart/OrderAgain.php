@@ -169,7 +169,7 @@ final class OrderAgain {
 				$copy            = $this->copy( $product, $source );
 				$copies[ $slot ] = $copy;
 				$design          = Design::get( $this->pixonaut, $copy );
-				$mismatch        = DesignCheck::mismatch( $design, $side, $config->blank_id, SideValues::set_of( $product, $side ) )
+				$mismatch        = DesignCheck::mismatch( $design, $side, $config->blank_id, SideValues::set_of( $product, $side ), SideValues::sets_of( $product, $side ), SideValues::pending_of( $product, $side ) )
 					?? ( DesignCheck::pages_match( $design, $page, $held[ $side->key ], $book ) ? null : DesignCheck::PAGES );
 				if ( null !== $mismatch ) {
 					$this->logger->warning(

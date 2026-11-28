@@ -10,6 +10,7 @@ namespace Pixonaut\WooCommerce\Tests\Unit\Catalogue;
 use Brain\Monkey\Functions;
 use Pixonaut\WooCommerce\Catalogue\FormGroups;
 use Pixonaut\WooCommerce\Catalogue\LayoutAdjustment;
+use Pixonaut\WooCommerce\Catalogue\PageTemplate;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\Side;
 use Pixonaut\WooCommerce\Catalogue\StandingRow;
@@ -316,6 +317,44 @@ final class SideTest extends TestCase {
 		$this->assertSame( 'Mini tee', Side::followed_label( null, 'Mini tee', 'front' ) );
 		$this->assertSame( 'Mini tee', Side::followed_label( '', 'Mini tee', 'front' ) );
 		$this->assertSame( 'front', Side::followed_label( null, null, 'front' ) );
+	}
+
+	public function test_page_layouts_are_stored_with_the_side_and_one_stored_without_them_offers_none(): void {
+		$side = self::side( self::LIVE_VERSION, null )->with_page_templates( array( new PageTemplate( 'two-photos', 2, 1, 3, 'Two photos' ), new PageTemplate( 'four-photos', 1 ) ) );
+
+		$read = Side::from_array( $side->to_array() );
+
+		$this->assertEquals( $side->page_templates, $read?->page_templates );
+		$stored = $side->to_array();
+		unset( $stored['pageTemplates'] );
+		$this->assertSame( array(), Side::from_array( $stored )?->page_templates );
+		$this->assertSame( array( 'mini-tee', 'two-photos', 'four-photos' ), $side->template_base_ids() );
+	}
+
+	public function test_page_layouts_follow_their_live_versions_unless_the_side_is_pinned(): void {
+		$layouts = array( new PageTemplate( 'two-photos', 2 ), new PageTemplate( 'four-photos', 1 ) );
+		$live    = array(
+			'two-photos'  => 3,
+			'four-photos' => 1,
+		);
+
+		$followed = self::side( self::LIVE_VERSION, null )->with_page_templates( $layouts )->with_page_templates_rolled( $live );
+		$pinned   = self::side( self::LIVE_VERSION, null )->with_versions( true, null, self::LIVE_VERSION )->with_page_templates( $layouts )->with_page_templates_rolled( $live );
+
+		$this->assertSame( array( 3, 2, 3 ), array( $followed->page_templates[0]->version, $followed->page_templates[0]->previous_version, $followed->page_templates[0]->latest_version ) );
+		$this->assertSame( $layouts[1], $followed->page_templates[1] );
+		$this->assertSame( array( 2, null, 3 ), array( $pinned->page_templates[0]->version, $pinned->page_templates[0]->previous_version, $pinned->page_templates[0]->latest_version ) );
+		$this->assertSame( array( 3, 2 ), $followed->page_templates[0]->accepted_versions() );
+	}
+
+	public function test_a_renamed_template_renames_the_page_layout_on_it(): void {
+		$side = self::side( self::LIVE_VERSION, null )->with_page_templates( array( new PageTemplate( 'two-photos', 2 ) ) );
+
+		$renamed = $side->with_template_renamed( 'two-photos', 'pair-of-photos' );
+
+		$this->assertSame( 'pair-of-photos', $renamed->page_templates[0]->base_id );
+		$this->assertSame( 'mini-tee', $renamed->template_base_id );
+		$this->assertSame( $side, $side->with_template_renamed( 'other', 'another' ) );
 	}
 
 	/**

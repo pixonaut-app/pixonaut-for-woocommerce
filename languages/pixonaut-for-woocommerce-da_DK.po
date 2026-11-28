@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-28T12:34:22+00:00\n"
+"POT-Creation-Date: 2026-11-28T13:24:16+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: da_DK\n"
@@ -48,7 +48,7 @@ msgstr ""
 #. translators: The plugin's item in the admin menu, shown to the merchant; the product name, keep it as it is.
 #. translators: Heading of the Pixonaut fields on a variation of a variable product, shown to the merchant; the product name, keep it as it is.
 #: pixonaut-for-woocommerce.php src/Abilities/Abilities.php:63
-#: src/Admin/OrderBox.php:118 src/Admin/ProductPanel.php:224
+#: src/Admin/OrderBox.php:118 src/Admin/ProductPanel.php:228
 #: src/Settings/SettingsPage.php:278 templates/admin/product-variation.php:42
 msgid "Pixonaut"
 msgstr "Pixonaut"
@@ -803,7 +803,7 @@ msgstr ""
 "kunne spørges). Angiv den med `set-product-form`."
 
 #: src/Abilities/GetProductForm.php:59 src/Abilities/SetProductForm.php:71
-#: src/Abilities/SetProductValues.php:69
+#: src/Abilities/SetProductValues.php:82
 msgid "A simple or variable product."
 msgstr "En simpel vare eller en varevariant."
 
@@ -914,7 +914,7 @@ msgstr ""
 
 #: src/Abilities/GetProductPictureViews.php:53
 #: src/Abilities/SetProductPictureView.php:47
-#: src/Abilities/SetProductSetup.php:60 src/Abilities/UseProductPicture.php:47
+#: src/Abilities/SetProductSetup.php:69 src/Abilities/UseProductPicture.php:47
 msgid "A simple or variable product, or a variation."
 msgstr "En simpel vare eller varevariant eller en variant."
 
@@ -1599,7 +1599,7 @@ msgstr "Siden, fra 1."
 msgid "The page of each variable product's variations, from 1, %d to a page."
 msgstr "Siden med hver varevariants varianter, fra 1, %d pr. side."
 
-#: src/Abilities/ListProducts.php:133 src/Abilities/ProductLinks.php:288
+#: src/Abilities/ListProducts.php:133 src/Abilities/ProductLinks.php:314
 msgid ""
 "Whether customers can buy it now, its blank variants and WooCommerce's own "
 "checks included."
@@ -2048,7 +2048,7 @@ msgstr "Varen har ingen variant med dette id: %s."
 msgid "No simple or variable product or variation has this id."
 msgstr "Ingen simpel vare, varevariant eller variant har dette id."
 
-#: src/Abilities/ProductLinks.php:284
+#: src/Abilities/ProductLinks.php:310
 msgid ""
 "For a variation, whether it has a setup of its own rather than following its "
 "product's, whose setup it then gives; false for a product."
@@ -2056,7 +2056,7 @@ msgstr ""
 "For en variant: om den har sin egen opsætning i stedet for at følge varens, "
 "hvis opsætning den så angiver; false for en vare."
 
-#: src/Abilities/ProductLinks.php:292
+#: src/Abilities/ProductLinks.php:318
 msgid ""
 "Which of the product's variations sell no variant of the blank, in words; "
 "null when each does. Set a variation's `variant` with `set-product-setup`."
@@ -2368,7 +2368,7 @@ msgstr ""
 "Den godkendelsesmåde for korrektur, den bruger i stedet for webshoppens; "
 "null for webshoppens."
 
-#: src/Abilities/ProductSetup.php:178 src/Abilities/SetProductSetup.php:89
+#: src/Abilities/ProductSetup.php:178 src/Abilities/SetProductSetup.php:98
 msgid "The blank's views the designer shows, by id; empty for all."
 msgstr ""
 "Basisproduktets visninger, som designværktøjet viser, efter id; tom for alle."
@@ -2385,7 +2385,7 @@ msgstr ""
 "Det trykkeri, en vare uden basisprodukt sender sine ordrer til; null for "
 "arbejdsområdets standardtrykkeri."
 
-#: src/Abilities/ProductSetup.php:189 src/Abilities/SetProductSetup.php:86
+#: src/Abilities/ProductSetup.php:189 src/Abilities/SetProductSetup.php:95
 msgid "empty for the template's own setting"
 msgstr "tom for skabelonens egen indstilling"
 
@@ -2512,7 +2512,31 @@ msgstr ""
 "Sidens egne værdier for skabelonens lag, efter lag-id og egenskab, angivet "
 "med `set-product-values`; null hvis der ingen er."
 
-#: src/Abilities/ProductSetup.php:416
+#: src/Abilities/ProductSetup.php:415
+msgid ""
+"On a side with page layouts: the value set Pixonaut made of the values for "
+"each layout's layers, by the layout's template id without its version; a "
+"layout with none of the layers has none, and so does every layout without "
+"values. Absent on a side without layouts."
+msgstr ""
+"På en side med sidelayouts: det værdisæt, som Pixonaut har lavet af "
+"værdierne for hvert layouts lag, efter layoutets skabelon-id uden "
+"version; et layout uden nogen af lagene har intet, og det har heller "
+"intet layout uden værdier. Mangler på en side uden layouts."
+
+#: src/Abilities/ProductSetup.php:421
+msgid ""
+"On a side with page layouts: the layouts, by template id without version, "
+"whose value set Pixonaut refused or could not be asked for. While one is "
+"listed the product cannot be bought; a re-check makes the set again. Absent "
+"on a side without layouts."
+msgstr ""
+"På en side med sidelayouts: de layouts, efter skabelon-id uden version, "
+"hvis værdisæt Pixonaut har afvist eller ikke har kunnet bede om. Så længe "
+"et layout er opført, kan produktet ikke købes; en ny kontrol laver sættet "
+"igen. Mangler på en side uden layouts."
+
+#: src/Abilities/ProductSetup.php:426
 msgid ""
 "Whose values the side is sold with: `own`, those set on this product or "
 "variation; `product`, a variation's product's, which a variation with a "
@@ -2987,15 +3011,15 @@ msgstr ""
 "afviser hele kaldet, og svaret nævner hver af dem. Svaret er varens "
 "formular, som den er nu, sådan som `get-product-form` giver den."
 
-#: src/Abilities/SetProductForm.php:82 src/Abilities/SetProductValues.php:86
+#: src/Abilities/SetProductForm.php:82 src/Abilities/SetProductValues.php:99
 msgid "One of the product's sides, by its key."
 msgstr "En af varens sider, angivet med dens nøgle."
 
-#: src/Abilities/SetProductForm.php:90 src/Abilities/SetProductSetup.php:81
+#: src/Abilities/SetProductForm.php:90 src/Abilities/SetProductSetup.php:90
 msgid "The product page layout; empty for the store's."
 msgstr "Layoutet for varesiden; tomt for webshoppens."
 
-#: src/Abilities/SetProductForm.php:91 src/Abilities/SetProductSetup.php:82
+#: src/Abilities/SetProductForm.php:91 src/Abilities/SetProductSetup.php:91
 msgid "The form layout; empty for the store's."
 msgstr "Formularlayoutet; tomt for webshoppens."
 
@@ -3037,19 +3061,19 @@ msgstr ""
 "ændret. Læs den igen med `get-product-form`, og angiv den derefter."
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductForm.php:165 src/Abilities/SetProductValues.php:221
+#: src/Abilities/SetProductForm.php:165 src/Abilities/SetProductValues.php:239
 #, php-format
 msgid "the product has no side `%s`"
 msgstr "varen har ingen side `%s`"
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductForm.php:170 src/Abilities/SetProductValues.php:226
+#: src/Abilities/SetProductForm.php:170 src/Abilities/SetProductValues.php:244
 #, php-format
 msgid "side `%s` is given twice"
 msgstr "side `%s` er angivet to gange"
 
 #. translators: %s: every problem found, joined by semicolons. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductForm.php:187 src/Abilities/SetProductValues.php:323
+#: src/Abilities/SetProductForm.php:187 src/Abilities/SetProductValues.php:393
 #, php-format
 msgid "Nothing was saved: %s."
 msgstr "Intet blev gemt: %s."
@@ -3287,11 +3311,12 @@ msgid "`price_changes` is one of %1$s for #%2$d."
 msgstr "`price_changes` er en af %1$s for #%2$d."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/SetProductSetup.php:53
+#: src/Abilities/SetProductSetup.php:62
 msgid "Set up a product for Pixonaut"
 msgstr "Sæt en vare op til Pixonaut"
 
-#: src/Abilities/SetProductSetup.php:54
+#: src/Abilities/SetProductSetup.php:63
+#
 msgid ""
 "Sets up a simple or variable product, or one variation, as its Pixonaut tab "
 "does: the blank, every side (template, placement, print sizes, start size, "
@@ -3301,20 +3326,22 @@ msgid ""
 "products` and send what changes. A variation given any setup field gets a "
 "setup of its own; `own_setup` false makes it follow its product again. "
 "Pixonaut checks the setup; one that fails a check is saved but cannot be "
-"bought, and the answer says why."
+"bought, and the answer says why. Page layouts that cannot be offered refuse "
+"the call instead, and nothing is saved."
 msgstr ""
 "Sætter en simpel vare eller varevariant, eller én variant, op, som dens "
 "Pixonaut-fane gør: basisproduktet, hver side (skabelon, placering, "
-"trykstørrelser, startstørrelse, formularordning, personaliseret eller fast), "
-"layout, formularlayout, godkendelsesmåde, lærredsform, designværktøjets "
-"visninger, trykkeriet og basisproduktvarianten. Et udeladt felt beholder sin "
-"værdi, så læs opsætningen med `list-products`, og send det, der ændres. En "
-"variant, der får et opsætningsfelt, får sin egen opsætning; `own_setup` "
-"false får den til at følge sin vare igen. Pixonaut kontrollerer opsætningen; "
-"en vare, der ikke består en kontrol, gemmes, men kan ikke købes, og svaret "
-"forklarer hvorfor."
+"trykstørrelser, startstørrelse, formularordning, personaliseret eller "
+"fast), layout, formularlayout, godkendelsesmåde, lærredsform, "
+"designværktøjets visninger, trykkeriet og basisproduktvarianten. Et "
+"udeladt felt beholder sin værdi, så læs opsætningen med `list-products`, "
+"og send det, der ændres. En variant, der får et opsætningsfelt, får sin "
+"egen opsætning; `own_setup` false får den til at følge sin vare igen. "
+"Pixonaut kontrollerer opsætningen; en vare, der ikke består en kontrol, "
+"gemmes, men kan ikke købes, og svaret forklarer hvorfor. Sidelayouts, der "
+"ikke kan tilbydes, afviser i stedet kaldet, og intet gemmes."
 
-#: src/Abilities/SetProductSetup.php:65
+#: src/Abilities/SetProductSetup.php:74
 msgid ""
 "Whether customers personalise it; false keeps the setup, unused. Left out, "
 "true when `sides` are given, else as it is."
@@ -3322,7 +3349,7 @@ msgstr ""
 "Om kunderne personaliserer den; false beholder opsætningen, ubrugt. Udeladt: "
 "true, når `sides` er angivet, ellers uændret."
 
-#: src/Abilities/SetProductSetup.php:69
+#: src/Abilities/SetProductSetup.php:78
 msgid ""
 "For a variation: true for a setup of its own, false to follow its product's "
 "again, keeping its own for later."
@@ -3330,7 +3357,7 @@ msgstr ""
 "For en variant: true for sin egen opsætning, false for at følge varens igen "
 "og gemme sin egen til senere."
 
-#: src/Abilities/SetProductSetup.php:73
+#: src/Abilities/SetProductSetup.php:82
 msgid ""
 "The blank the design is printed on; empty for a product without a blank, "
 "which has one side."
@@ -3338,15 +3365,15 @@ msgstr ""
 "Det basisprodukt, designet trykkes på; tomt for en vare uden basisprodukt, "
 "som har én side."
 
-#: src/Abilities/SetProductSetup.php:77
+#: src/Abilities/SetProductSetup.php:86
 msgid "Every side, in order; replaces the sides it has."
 msgstr "Alle sider i rækkefølge; erstatter de sider, den har."
 
-#: src/Abilities/SetProductSetup.php:83
+#: src/Abilities/SetProductSetup.php:92
 msgid "How customers approve their proofs; empty for the store's."
 msgstr "Hvordan kunderne godkender deres korrektur; tom for webshoppens."
 
-#: src/Abilities/SetProductSetup.php:84
+#: src/Abilities/SetProductSetup.php:93
 msgid ""
 "Where the product's options stand in the form, on a side whose groups were "
 "not arranged by hand: `on_top`, unnumbered, or each in a group of its own, "
@@ -3358,7 +3385,7 @@ msgstr ""
 "`first` eller `last`; tom for webshoppens. Kun for varer: en variant følger "
 "sin vare."
 
-#: src/Abilities/SetProductSetup.php:85
+#: src/Abilities/SetProductSetup.php:94
 msgid ""
 "Whether the form numbers its groups; empty for the store's. A product's "
 "only: a variation follows its product."
@@ -3366,12 +3393,12 @@ msgstr ""
 "Om formularen nummererer sine grupper; tom for webshoppens. Kun for varer: "
 "en variant følger sin vare."
 
-#: src/Abilities/SetProductSetup.php:94
+#: src/Abilities/SetProductSetup.php:103
 msgid "The view the designer starts on, one of `views`; empty for the first."
 msgstr ""
 "Den visning, designværktøjet åbner på, en af `views`; tom for den første."
 
-#: src/Abilities/SetProductSetup.php:98
+#: src/Abilities/SetProductSetup.php:107
 msgid ""
 "The printshop a product without a blank sends its orders to; empty for the "
 "workspace's default."
@@ -3379,7 +3406,7 @@ msgstr ""
 "Det trykkeri, en vare uden basisprodukt sender sine ordrer til; tomt for "
 "arbejdsområdets standardtrykkeri."
 
-#: src/Abilities/SetProductSetup.php:102
+#: src/Abilities/SetProductSetup.php:111
 msgid ""
 "For a simple product or a variation on a blank: the blank's variant it "
 "sells, by its `v_…` id; empty to match it by the product's options."
@@ -3388,7 +3415,7 @@ msgstr ""
 "basisproduktvariant, den sælger, angivet med dens `v_…`-id; tom for at "
 "matche den ud fra varens egenskaber."
 
-#: src/Abilities/SetProductSetup.php:136
+#: src/Abilities/SetProductSetup.php:152
 msgid ""
 "A variation follows its product for option_groups and group_numbers: set "
 "them on the product."
@@ -3673,11 +3700,12 @@ msgid "The image of card %s is not a public URL."
 msgstr "Billedet for kort %s er ikke en offentlig URL."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/SetProductValues.php:62
+#: src/Abilities/SetProductValues.php:75
 msgid "Set a product's own values for its template"
 msgstr "Angiv en vares egne værdier for dens skabelon"
 
-#: src/Abilities/SetProductValues.php:63
+#: src/Abilities/SetProductValues.php:76
+#
 msgid ""
 "Sets the values a simple or variable product, or a variation with a setup of "
 "its own (`variation_id`), gives its sides' template layers, by layer id and "
@@ -3686,58 +3714,63 @@ msgid ""
 "a prop the customer may change is where the designer starts; one on a fixed "
 "prop is printed as given. Each side named by its `key` takes its `values`, "
 "or null (or an empty object) to take them off; a side left out keeps its "
-"own. Pixonaut judges the values against the side's template version: a layer "
-"or prop the template does not have, or a value its rules refuse, refuses the "
-"whole call, and the answer names each by side, layer and prop. So does a "
-"side the product does not have, a side without a template, a product without "
-"a Pixonaut setup, and a variation that follows its product. A product's "
-"values reach its variations: those that follow it, and, for a side they have "
-"no values of their own for, those with a setup of their own whose side is on "
-"the same template as the product's. The answer is every side with its "
-"`template_id`, the `value_set_id` Pixonaut made of the values it is sold "
-"with, its `values`, null where it has none, and `values_from`, whose they "
-"are."
+"own. On a side with page layouts the values reach every layout: each layout "
+"is given those for the layers it has, and a layer neither the side's "
+"template nor any layout has refuses the call. Pixonaut judges the values "
+"against the side's template version: a layer or prop the template does not "
+"have, or a value its rules refuse, refuses the whole call, and the answer "
+"names each by side, layer and prop. So does a side the product does not "
+"have, a side without a template, a product without a Pixonaut setup, and a "
+"variation that follows its product. A product's values reach its variations: "
+"those that follow it, and, for a side they have no values of their own for, "
+"those with a setup of their own whose side is on the same template as the "
+"product's. The answer is every side with its `template_id`, the "
+"`value_set_id` Pixonaut made of the values it is sold with, its `values`, "
+"null where it has none, and `values_from`, whose they are."
 msgstr ""
 "Angiver de værdier, som en simpel vare eller en varevariant, eller en "
-"variant med egen opsætning (`variation_id`), giver skabelonens lag på sine "
-"sider, efter lag-id og egenskab, fx `{\"title\": {\"content\": \"farmor\"}}"
-"`: én skabelon sælger så lige så mange varer, hver i sit eget tema eller til "
-"sin egen modtager. En værdi på en egenskab, som kunden må ændre, er der, "
-"hvor designværktøjet starter; en værdi på en fast egenskab trykkes, som den "
-"er angivet. Hver side, der er nævnt med sin `key`, får sine `values`, eller "
-"null (eller et tomt objekt) for at fjerne dem; en side, der udelades, "
-"beholder sine egne. Pixonaut vurderer værdierne mod sidens skabelonversion: "
-"et lag eller en egenskab, som skabelonen ikke har, eller en værdi, som dens "
-"regler afviser, får hele kaldet afvist, og svaret nævner hver af dem efter "
-"side, lag og egenskab. Det samme gælder en side, som varen ikke har, en side "
-"uden skabelon, en vare uden Pixonaut-opsætning og en variant, der følger sin "
-"vare. En vares værdier når frem til dens varianter: dem, der følger den, og, "
-"for en side, de ikke har egne værdier for, dem med egen opsætning, hvis side "
-"ligger på samme skabelon som varens. Svaret er hver side med sit "
-"`template_id`, det `value_set_id`, som Pixonaut har lavet af de værdier, den "
-"sælges med, dens `values`, null hvor den ingen har, og `values_from`, hvis "
-"de er."
+"variant med egen opsætning (`variation_id`), giver skabelonens lag på "
+"sine sider, efter lag-id og egenskab, fx `{\"title\": {\"content\": "
+"\"farmor\"}}`: én skabelon sælger så lige så mange varer, hver i sit eget "
+"tema eller til sin egen modtager. En værdi på en egenskab, som kunden må "
+"ændre, er der, hvor designværktøjet starter; en værdi på en fast egenskab "
+"trykkes, som den er angivet. Hver side, der er nævnt med sin `key`, får "
+"sine `values`, eller null (eller et tomt objekt) for at fjerne dem; en "
+"side, der udelades, beholder sine egne. På en side med sidelayouts gælder "
+"værdierne for hvert layout: hvert layout får dem for de lag, det har, og "
+"et lag, som hverken sidens skabelon eller noget layout har, afviser "
+"kaldet. Pixonaut vurderer værdierne mod sidens skabelonversion: et lag "
+"eller en egenskab, som skabelonen ikke har, eller en værdi, som dens "
+"regler afviser, får hele kaldet afvist, og svaret nævner hver af dem "
+"efter side, lag og egenskab. Det samme gælder en side, som varen ikke "
+"har, en side uden skabelon, en vare uden Pixonaut-opsætning og en "
+"variant, der følger sin vare. En vares værdier når frem til dens "
+"varianter: dem, der følger den, og, for en side, de ikke har egne værdier "
+"for, dem med egen opsætning, hvis side ligger på samme skabelon som "
+"varens. Svaret er hver side med sit `template_id`, det `value_set_id`, "
+"som Pixonaut har lavet af de værdier, den sælges med, dens `values`, null "
+"hvor den ingen har, og `values_from`, hvis de er."
 
-#: src/Abilities/SetProductValues.php:74
+#: src/Abilities/SetProductValues.php:87
 msgid ""
 "One of the product's variations with a setup of its own; left out for the "
 "product."
 msgstr "En af varens varianter med egen opsætning; udelades for varen."
 
-#: src/Abilities/SetProductValues.php:90
+#: src/Abilities/SetProductValues.php:103
 msgid ""
 "The values by layer id, each an object of props; null to take the side's off."
 msgstr ""
 "Værdierne efter lag-id, hver et objekt med egenskaber; null for at fjerne "
 "sidens."
 
-#: src/Abilities/SetProductValues.php:132
+#: src/Abilities/SetProductValues.php:145
 msgid ""
 "The template version the side is on, e.g. `mini-mug@3`; null without a "
 "template."
 msgstr "Den skabelonversion, siden er på, fx `mini-mug@3`; null uden skabelon."
 
-#: src/Abilities/SetProductValues.php:157
+#: src/Abilities/SetProductValues.php:170
 msgid ""
 "The product has no Pixonaut setup, so it has no sides to give values. Link "
 "it to a template first."
@@ -3745,7 +3778,7 @@ msgstr ""
 "Varen har ingen Pixonaut-opsætning, så den har ingen sider at give værdier. "
 "Knyt den til en skabelon først."
 
-#: src/Abilities/SetProductValues.php:161
+#: src/Abilities/SetProductValues.php:174
 msgid ""
 "The product's values come from a newer version of the plugin, so they are "
 "not changed. Update the plugin."
@@ -3753,7 +3786,7 @@ msgstr ""
 "Varens værdier stammer fra en nyere version af pluginet, så de ændres ikke. "
 "Opdatér pluginet."
 
-#: src/Abilities/SetProductValues.php:175
+#: src/Abilities/SetProductValues.php:188
 msgid ""
 "The product's values or its Pixonaut setup were changed while these were "
 "saved, so nothing was changed. Read the product again, then set them."
@@ -3761,11 +3794,11 @@ msgstr ""
 "Varens værdier eller dens Pixonaut-opsætning blev ændret, mens disse blev "
 "gemt, så intet blev ændret. Læs varen igen, og angiv derefter værdierne."
 
-#: src/Abilities/SetProductValues.php:194
+#: src/Abilities/SetProductValues.php:212
 msgid "The product has no variation with this id."
 msgstr "Varen har ingen variant med dette id."
 
-#: src/Abilities/SetProductValues.php:197
+#: src/Abilities/SetProductValues.php:215
 msgid ""
 "The variation follows its product's Pixonaut setup, so it is sold with its "
 "product's values: set them on the product, or give the variation a setup of "
@@ -3775,7 +3808,7 @@ msgstr ""
 "værdier: angiv dem på varen, eller giv varianten sin egen opsætning først."
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductValues.php:233
+#: src/Abilities/SetProductValues.php:251
 #, php-format
 msgid ""
 "the values of side `%s` are not an object of layers, each an object of props"
@@ -3784,18 +3817,18 @@ msgstr ""
 "egenskaber"
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductValues.php:238
+#: src/Abilities/SetProductValues.php:256
 #, php-format
 msgid "side `%s` has no template to give values"
 msgstr "side `%s` har ingen skabelon at give værdier"
 
 #. translators: 1: a side's key; 2: a template version, e.g. `mini-mug@3`. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductValues.php:275
+#: src/Abilities/SetProductValues.php:298
 #, php-format
 msgid "Pixonaut has no template `%2$s` for side `%1$s`"
 msgstr "Pixonaut har ingen skabelon `%2$s` til side `%1$s`"
 
-#: src/Abilities/SetProductValues.php:280
+#: src/Abilities/SetProductValues.php:303
 msgid ""
 "The Pixonaut this store is connected to does not keep a product's own values "
 "yet, so nothing was saved. Try again once Pixonaut is updated."
@@ -3803,7 +3836,7 @@ msgstr ""
 "Den Pixonaut, denne webshop er forbundet til, gemmer endnu ikke en vares "
 "egne værdier, så intet blev gemt. Prøv igen, når Pixonaut er opdateret."
 
-#: src/Abilities/SetProductValues.php:282
+#: src/Abilities/SetProductValues.php:305
 msgid ""
 "Pixonaut could not be asked to judge the values, so nothing was saved. Try "
 "again."
@@ -3811,26 +3844,46 @@ msgstr ""
 "Pixonaut kunne ikke bedes om at vurdere værdierne, så intet blev gemt. Prøv "
 "igen."
 
+#. translators: 1: a side's key; 2: a layer's id. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetProductValues.php:340
+#, php-format
+msgid ""
+"side `%1$s`, layer `%2$s`: neither the side's template nor any of its page "
+"layouts has it"
+msgstr ""
+"side `%1$s`, lag `%2$s`: hverken sidens skabelon eller nogen af dens "
+"sidelayouts har det"
+
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductValues.php:300
+#: src/Abilities/SetProductValues.php:345
+#, php-format
+msgid ""
+"the template of side `%s` has none of the layers given, which every page "
+"starts on"
+msgstr ""
+"skabelonen for side `%s`, som hver side starter på, har ingen af de "
+"angivne lag"
+
+#. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetProductValues.php:370
 #, php-format
 msgid "the template of side `%s` does not take its values"
 msgstr "skabelonen til side `%s` tager ikke imod sine værdier"
 
 #. translators: 1: a side's key; 2: why, e.g. `unknown_prop`. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductValues.php:305
+#: src/Abilities/SetProductValues.php:375
 #, php-format
 msgid "the template of side `%1$s` does not take its values (`%2$s`)"
 msgstr "skabelonen til side `%1$s` tager ikke imod sine værdier (`%2$s`)"
 
 #. translators: 1: a side's key; 2: a layer's id; 3: why, e.g. `unknown_layer`. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductValues.php:308
+#: src/Abilities/SetProductValues.php:378
 #, php-format
 msgid "side `%1$s`, layer `%2$s`: `%3$s`"
 msgstr "side `%1$s`, lag `%2$s`: `%3$s`"
 
 #. translators: 1: a side's key; 2: a layer's id; 3: a prop, e.g. `content`; 4: why, e.g. `unknown_prop`. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductValues.php:310
+#: src/Abilities/SetProductValues.php:380
 #, php-format
 msgid "side `%1$s`, layer `%2$s`, prop `%3$s`: `%4$s`"
 msgstr "side `%1$s`, lag `%2$s`, egenskab `%3$s`: `%4$s`"
@@ -3939,7 +3992,7 @@ msgstr ""
 "af kurven. Angiv omkostningen eksklusive moms, eller vælg en "
 "forsendelsesmomsklasse i WooCommerces momsindstillinger."
 
-#: src/Abilities/SetupFields.php:165
+#: src/Abilities/SetupFields.php:168
 msgid ""
 "The side's key, unique on the product, e.g. `front`; left out for one made "
 "from the placement."
@@ -3947,7 +4000,7 @@ msgstr ""
 "Sidens nøgle, unik på varen, f.eks. `front`; udeladt for en nøgle dannet ud "
 "fra placeringen."
 
-#: src/Abilities/SetupFields.php:170
+#: src/Abilities/SetupFields.php:173
 msgid ""
 "The name customers see, e.g. \"Front\"; left out for the placement's or the "
 "template's name."
@@ -3955,7 +4008,7 @@ msgstr ""
 "Det navn, kunderne ser, f.eks. \"Forside\"; udeladt for placeringens eller "
 "skabelonens navn."
 
-#: src/Abilities/SetupFields.php:175
+#: src/Abilities/SetupFields.php:178
 msgid ""
 "The template, as the template list gives it: a version such as `mini-tee@2`, "
 "or the id alone (`mini-tee`) for its live version. The side follows the "
@@ -3966,7 +4019,7 @@ msgstr ""
 "eller kun id'et (`mini-tee`) for dens aktive version. Siden følger derefter "
 "skabelonens senest udgivne version, medmindre `template_pinned` er true."
 
-#: src/Abilities/SetupFields.php:179
+#: src/Abilities/SetupFields.php:182
 msgid ""
 "True to keep the side on the version `template_id` gives when a new version "
 "is published; false or left out to follow the latest."
@@ -3974,14 +4027,14 @@ msgstr ""
 "True for at lade siden blive på den version, `template_id` angiver, når en "
 "ny version udgives; false eller udeladt for at følge den seneste."
 
-#: src/Abilities/SetupFields.php:184
+#: src/Abilities/SetupFields.php:187
 msgid ""
 "Where on the blank it is printed; needed with a blank, ignored without one."
 msgstr ""
 "Hvor på basisproduktet den trykkes; påkrævet med et basisprodukt, ignoreres "
 "uden."
 
-#: src/Abilities/SetupFields.php:188
+#: src/Abilities/SetupFields.php:191
 msgid ""
 "`personalised` when the customer fills in the template, `standing` when the "
 "template is printed as its author left it, from one design for every sale."
@@ -3989,7 +4042,7 @@ msgstr ""
 "`personalised`, når kunden udfylder skabelonen, `standing`, når skabelonen "
 "trykkes, som dens ophavsperson efterlod den, fra ét design til hvert salg."
 
-#: src/Abilities/SetupFields.php:194
+#: src/Abilities/SetupFields.php:197
 msgid ""
 "The sizes customers choose between, in millimetres, in order; empty or left "
 "out for the placement's default size. An entry with `placement_default` true "
@@ -4001,15 +4054,15 @@ msgstr ""
 "true er denne standardstørrelse. Uden basisprodukt skal hver passe til "
 "skabelonens størrelsesforhold."
 
-#: src/Abilities/SetupFields.php:209 src/Abilities/SetVariationPrintSize.php:92
+#: src/Abilities/SetupFields.php:212 src/Abilities/SetVariationPrintSize.php:92
 msgid "The name customers see, e.g. \"A3\"; left out for the millimetres."
 msgstr "Det navn, kunderne ser, f.eks. \"A3\"; udeladt for millimetermålene."
 
-#: src/Abilities/SetupFields.php:213
+#: src/Abilities/SetupFields.php:216
 msgid "The placement's default size; its width and height are then ignored."
 msgstr "Placeringens standardstørrelse; bredde og højde ignoreres da."
 
-#: src/Abilities/SetupFields.php:220
+#: src/Abilities/SetupFields.php:223
 msgid ""
 "The size the designer starts on, by its place in `print_sizes` from 0. A "
 "standing side is printed at it."
@@ -4017,7 +4070,7 @@ msgstr ""
 "Den størrelse, designværktøjet starter med, angivet med dens plads i "
 "`print_sizes` fra 0. En fast side trykkes i den størrelse."
 
-#: src/Abilities/SetupFields.php:226
+#: src/Abilities/SetupFields.php:229
 msgid ""
 "How the designer's form is arranged on the product page, as `list-products` "
 "gives it: `{groups: [{id, title, items}]}`, an item being `{field: "
@@ -4030,12 +4083,32 @@ msgstr ""
 "`{attribute: <attribute slug>}`. Null eller udeladt for skabelonens egen "
 "ordning."
 
-#: src/Abilities/SetupFields.php:228
+#: src/Abilities/SetupFields.php:231
 msgid "empty or left out for the product's choice"
 msgstr "tom eller udeladt for varens valg"
 
+#. translators: %d: most page layouts one side offers.
+#: src/Abilities/SetupFields.php:235
+#, php-format
+msgid ""
+"On a side whose placement is printed as pages, such as a photo book's inner "
+"pages: the other templates a page may be designed on (layouts such as two or "
+"four photos), as `template_id` takes them, in the order the shopper sees "
+"them; every page starts on `template_id`. Each follows its latest published "
+"version, or stays on the version given when `template_pinned` is true. At "
+"most %d, each at the ratio of `template_id`, none twice and not "
+"`template_id` itself; any other is refused. Empty or left out for none."
+msgstr ""
+"På en side, hvis trykposition trykkes som sider, f.eks. en fotobogs "
+"indlæg: de andre skabeloner, en side må designes på (layouts som to eller "
+"fire fotos), som `template_id` tager dem, i den rækkefølge kunden ser "
+"dem; hver side starter på `template_id`. Hver følger sin seneste udgivne "
+"version eller bliver på den angivne version, når `template_pinned` er "
+"true. Højst %d, hver i `template_id`s billedformat, ingen to gange og "
+"ikke `template_id` selv; alle andre afvises. Tom eller udeladt for ingen."
+
 #. translators: %s: what the empty choice follows, e.g. "empty for the template's own setting".
-#: src/Abilities/SetupFields.php:245
+#: src/Abilities/SetupFields.php:254
 #, php-format
 msgid ""
 "The shape customers design on when a print size's proportions are not the "
@@ -4048,7 +4121,7 @@ msgstr ""
 "størrelser, og trykket beskæres til størrelsen, sådan som skabelonen "
 "tilpasses den; `print_size` skifter form med hver størrelse; %s."
 
-#: src/Abilities/SetupFields.php:268
+#: src/Abilities/SetupFields.php:302
 msgid ""
 "Pixonaut could not be asked for the template's live version. Give the "
 "version, as the template list gives it, or try again later."
@@ -4057,7 +4130,7 @@ msgstr ""
 "som skabelonlisten angiver den, eller prøv igen senere."
 
 #. translators: %s: a template's id, e.g. "mini-tee".
-#: src/Abilities/SetupFields.php:274
+#: src/Abilities/SetupFields.php:308
 #, php-format
 msgid "No live template has the id \"%s\"."
 msgstr "Ingen aktiv skabelon har id'et \"%s\"."
@@ -5334,7 +5407,7 @@ msgstr "Egen gruppe"
 
 #. translators: Button that removes a group the merchant added. Admin product page.
 #. translators: Button that removes one print size row from a side. Admin product page.
-#: src/Admin/GroupsStrings.php:49 templates/admin/product-side.php:67
+#: src/Admin/GroupsStrings.php:49 templates/admin/product-side.php:68
 msgid "Remove"
 msgstr "Fjern"
 
@@ -5503,17 +5576,17 @@ msgstr ""
 
 #. translators: Shown to the merchant on the product edit page as the printshop of a blank: the default printshop of the Pixonaut workspace.
 #. translators: Choice of the printshop dropdown on the product edit page: send the product's orders to the default printshop of the Pixonaut workspace.
-#: src/Admin/LinkedBlank.php:343 src/Admin/ProductPanel.php:856
+#: src/Admin/LinkedBlank.php:343 src/Admin/ProductPanel.php:864
 msgid "Workspace default"
 msgstr "Arbejdsområdets standard"
 
 #. translators: %s: the workspace's default printshop.
-#: src/Admin/LinkedBlank.php:345 src/Admin/ProductPanel.php:859
+#: src/Admin/LinkedBlank.php:345 src/Admin/ProductPanel.php:867
 #, php-format
 msgid "Workspace default (%s)"
 msgstr "Arbejdsområdets standard (%s)"
 
-#: src/Admin/LinkedBlank.php:348 src/Admin/ProductPanel.php:871
+#: src/Admin/LinkedBlank.php:348 src/Admin/ProductPanel.php:879
 msgid "A printshop no longer connected to the workspace"
 msgstr "Et trykkeri, der ikke længere er forbundet med arbejdsområdet"
 
@@ -5529,7 +5602,7 @@ msgstr "Pixonaut kunne ikke spørges om, hvilket trykkeri dette er."
 
 #. translators: 1: a product side's name, e.g. "Front", 2: what is wrong with an image on it. Admin product page.
 #. translators: 1: where on the product, e.g. "Side “Front” at 300 × 400 mm", 2: what is wrong there and how to fix it.
-#: src/Admin/LowResolutionWarnings.php:116 src/Catalogue/InvalidReason.php:228
+#: src/Admin/LowResolutionWarnings.php:116 src/Catalogue/InvalidReason.php:259
 #, php-format
 msgid "%1$s: %2$s"
 msgstr "%1$s: %2$s"
@@ -6053,53 +6126,53 @@ msgstr ""
 msgid "%s %%"
 msgstr "%s %%"
 
-#: src/Admin/ProductPanel.php:444
+#: src/Admin/ProductPanel.php:448
 msgid ""
 "This variation cannot be bought until its Pixonaut configuration is fixed:"
 msgstr "Denne variant kan ikke købes, før dens Pixonaut-opsætning er rettet:"
 
-#: src/Admin/ProductPanel.php:445
+#: src/Admin/ProductPanel.php:449
 msgid ""
 "This product cannot be bought until its Pixonaut configuration is fixed:"
 msgstr "Denne vare kan ikke købes, før dens Pixonaut-opsætning er rettet:"
 
-#: src/Admin/ProductPanel.php:450
+#: src/Admin/ProductPanel.php:454
 msgid "Customers design this variation with a Pixonaut template."
 msgstr "Kunderne designer denne variant med en Pixonaut-skabelon."
 
-#: src/Admin/ProductPanel.php:451
+#: src/Admin/ProductPanel.php:455
 msgid "Customers design this product with a Pixonaut template."
 msgstr "Kunderne designer denne vare med en Pixonaut-skabelon."
 
 #. translators: Option of a product side's Canvas shape dropdown: the side draws its canvas as the product's Canvas shape setting says. Admin product page.
 #. translators: Option of a variation's Layout dropdown: the variation uses the layout of its product. Admin product page.
-#: src/Admin/ProductPanel.php:492 src/Admin/ProductPanel.php:772
+#: src/Admin/ProductPanel.php:496 src/Admin/ProductPanel.php:780
 msgid "As the product says"
 msgstr "Som varen angiver"
 
 #. translators: Option of the product's Canvas shape dropdown: the designer draws the canvas as the template's own setting says. Admin product page.
-#: src/Admin/ProductPanel.php:494
+#: src/Admin/ProductPanel.php:498
 msgid "As the template says"
 msgstr "Som skabelonen angiver"
 
 #. translators: %s: the store's default choice, e.g. a layout or an approval mode.
-#: src/Admin/ProductPanel.php:789
+#: src/Admin/ProductPanel.php:797
 #, php-format
 msgid "Store setting: %s"
 msgstr "Butiksindstilling: %s"
 
 #. translators: %s: the workspace's default printshop, such as Gelato, that prints only on a blank. Choice of the printshop dropdown of a product without a blank. Admin product page.
-#: src/Admin/ProductPanel.php:863
+#: src/Admin/ProductPanel.php:871
 #, php-format
 msgid "Workspace default (%s): prints only on a blank"
 msgstr "Arbejdsområdets standard (%s): trykker kun på et basisprodukt"
 
-#: src/Admin/ProductPanel.php:868
+#: src/Admin/ProductPanel.php:876
 msgid "The printshop chosen before"
 msgstr "Det tidligere valgte trykkeri"
 
 #. translators: %s: a printshop, such as Gelato, that prints only on a blank. Choice of the printshop dropdown of a product without a blank, kept because it was chosen before. Admin product page.
-#: src/Admin/ProductPanel.php:870
+#: src/Admin/ProductPanel.php:878
 #, php-format
 msgid "%s (prints only on a blank)"
 msgstr "%s (trykker kun på et basisprodukt)"
@@ -6704,7 +6777,7 @@ msgid "Proof by email after payment"
 msgstr "Korrektur på e-mail efter betaling"
 
 #. translators: 1: product name, 2: Pixonaut's refusal code
-#: src/Cart/AddToCart.php:851
+#: src/Cart/AddToCart.php:852
 #, php-format
 msgid ""
 "Customers cannot add \"%1$s\" to the cart: Pixonaut will not route its "
@@ -6888,27 +6961,27 @@ msgid "Side “%1$s” at %2$s"
 msgstr "Siden »%1$s« i størrelsen %2$s"
 
 #. translators: Where a variation's Pixonaut settings are changed, used after "in" in messages such as "Choose a template in %s." Admin product page.
-#: src/Catalogue/InvalidReason.php:210
+#: src/Catalogue/InvalidReason.php:241
 msgid "the variation’s Pixonaut fields"
 msgstr "i variantens Pixonaut-felter"
 
 #. translators: Where a product's Pixonaut settings are changed, used after "in" in messages such as "Choose a template in %s." Admin product page.
-#: src/Catalogue/InvalidReason.php:212
+#: src/Catalogue/InvalidReason.php:243
 msgid "the product’s Pixonaut tab"
 msgstr "på varens Pixonaut-fane"
 
-#: src/Catalogue/InvalidReason.php:276
+#: src/Catalogue/InvalidReason.php:307
 msgid "Pixonaut cannot print this configuration."
 msgstr "Pixonaut kan ikke trykke denne opsætning."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:280
+#: src/Catalogue/InvalidReason.php:311
 #, php-format
 msgid "No template is chosen. Choose one in %s."
 msgstr "Der er ikke valgt nogen skabelon. Vælg en %s."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:286
+#: src/Catalogue/InvalidReason.php:317
 #, php-format
 msgid ""
 "No print position is chosen for where on the blank the design is printed. "
@@ -6918,14 +6991,14 @@ msgstr ""
 "trykkes. Vælg en %s."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:292
+#: src/Catalogue/InvalidReason.php:323
 #, php-format
 msgid "The blank no longer exists in Pixonaut. Choose another blank in %s."
 msgstr ""
 "Basisproduktet findes ikke længere i Pixonaut. Vælg et andet basisprodukt %s."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:298
+#: src/Catalogue/InvalidReason.php:329
 #, php-format
 msgid ""
 "The blank is deleted in Pixonaut. Restore it in the Pixonaut studio, or "
@@ -6935,7 +7008,7 @@ msgstr ""
 "vælg et andet basisprodukt %s."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:304
+#: src/Catalogue/InvalidReason.php:335
 #, php-format
 msgid ""
 "The blank no longer has this print position, or Pixonaut cannot size a print "
@@ -6945,7 +7018,7 @@ msgstr ""
 "tilpasse et tryk til den. Vælg en anden trykposition %s."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:310
+#: src/Catalogue/InvalidReason.php:341
 #, php-format
 msgid ""
 "The template is not published in Pixonaut, or no longer exists. Publish it "
@@ -6955,7 +7028,7 @@ msgstr ""
 "Pixonaut-studiet, eller vælg en anden skabelon %s."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:316
+#: src/Catalogue/InvalidReason.php:347
 #, php-format
 msgid ""
 "The template is paused or deleted in Pixonaut. Make it live again in the "
@@ -6965,13 +7038,13 @@ msgstr ""
 "Pixonaut-studiet, eller vælg en anden skabelon %s."
 
 #. translators: 1: most sides a product can have, 2: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:322
+#: src/Catalogue/InvalidReason.php:353
 #, php-format
 msgid "A product has at most %1$d sides. Remove sides in %2$s."
 msgstr "En vare har højst %1$d sider. Fjern sider %2$s."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:329
+#: src/Catalogue/InvalidReason.php:360
 #, php-format
 msgid ""
 "Two sides use the same print position, and each print position can be one "
@@ -6981,13 +7054,13 @@ msgstr ""
 "side. Vælg en anden trykposition til en af dem %s."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:335
+#: src/Catalogue/InvalidReason.php:366
 #, php-format
 msgid "Two sides have the same key. Give each side its own in %s."
 msgstr "To sider har samme nøgle. Giv hver side sin egen %s."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:341
+#: src/Catalogue/InvalidReason.php:372
 #, php-format
 msgid ""
 "A custom print size has no width or height, or one that is not above zero. "
@@ -6997,7 +7070,7 @@ msgstr ""
 "er ikke over nul. Angiv begge i millimeter under sidens trykstørrelser %s."
 
 #. translators: 1: most print sizes one side can offer, 2: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:347
+#: src/Catalogue/InvalidReason.php:378
 #, php-format
 msgid ""
 "A side offers at most %1$d print sizes. Remove sizes under the side’s print "
@@ -7007,7 +7080,7 @@ msgstr ""
 "trykstørrelser %2$s."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:354
+#: src/Catalogue/InvalidReason.php:385
 #, php-format
 msgid ""
 "The side has no print size, and without a blank there is no print position "
@@ -7018,7 +7091,7 @@ msgstr ""
 "et basisprodukt."
 
 #. translators: %s: where the product's settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:360
+#: src/Catalogue/InvalidReason.php:391
 #, php-format
 msgid ""
 "Some variations have no print size. Add one in millimetres in %s, or one for "
@@ -7030,7 +7103,7 @@ msgstr ""
 "varianters Pixonaut-felter."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:366
+#: src/Catalogue/InvalidReason.php:397
 #, php-format
 msgid ""
 "The print size is larger than the print position can print. Enter a smaller "
@@ -7040,7 +7113,7 @@ msgstr ""
 "størrelse, eller vælg trykpositionens størrelse, %s."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:372
+#: src/Catalogue/InvalidReason.php:403
 #, php-format
 msgid ""
 "The print size does not match the template’s aspect ratio. Enter a size at "
@@ -7050,7 +7123,7 @@ msgstr ""
 "i skabelonens format, eller vælg trykpositionens størrelse, %s."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:378
+#: src/Catalogue/InvalidReason.php:409
 #, php-format
 msgid ""
 "The print position is printed across its whole print area, so the print size "
@@ -7060,7 +7133,7 @@ msgstr ""
 "det område. Vælg i stedet trykpositionens størrelse %s."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:384
+#: src/Catalogue/InvalidReason.php:415
 #, php-format
 msgid ""
 "An image in the template prints below its recommended resolution at this "
@@ -7071,7 +7144,7 @@ msgstr ""
 "størrelse, og Pixonaut-arbejdsområdet afviser sådanne størrelser. Opskalér "
 "billedet i Pixonaut-studiet, eller vælg en mindre trykstørrelse %s."
 
-#: src/Catalogue/InvalidReason.php:388
+#: src/Catalogue/InvalidReason.php:419
 msgid ""
 "The template cannot be printed at the print area of this variation’s blank "
 "variant. Choose a template that fits, or another variant, in the variation’s "
@@ -7082,7 +7155,7 @@ msgstr ""
 "basisproduktvariant i variantens Pixonaut-felter, eller stop med at sælge "
 "varianten."
 
-#: src/Catalogue/InvalidReason.php:390
+#: src/Catalogue/InvalidReason.php:421
 msgid ""
 "The variation’s own print size has not been checked since the product "
 "changed. Update the product to check it again."
@@ -7091,7 +7164,7 @@ msgstr ""
 "ændret. Opdatér varen for at tjekke den igen."
 
 #
-#: src/Catalogue/InvalidReason.php:392
+#: src/Catalogue/InvalidReason.php:423
 msgid ""
 "Pixonaut could not check the configuration. It is checked again in a while; "
 "if this stays, check the connection on the Pixonaut settings page, then "
@@ -7102,7 +7175,7 @@ msgstr ""
 "derefter varen."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:396
+#: src/Catalogue/InvalidReason.php:427
 #, php-format
 msgid ""
 "Pixonaut refused the print size without saying why. Choose another print "
@@ -7113,7 +7186,7 @@ msgstr ""
 "trykstørrelse %s, eller opdatér varen for at spørge igen; hvis det bliver "
 "ved, så kontakt Pixonaut."
 
-#: src/Catalogue/InvalidReason.php:400
+#: src/Catalogue/InvalidReason.php:431
 msgid ""
 "The print size has not been checked with Pixonaut yet. It is checked in a "
 "while, and this notice clears once it is."
@@ -7122,7 +7195,7 @@ msgstr ""
 "meddelelsen forsvinder, når den er tjekket."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:404
+#: src/Catalogue/InvalidReason.php:435
 #, php-format
 msgid ""
 "Pixonaut would not make the design of a fixed-design side. Check the side’s "
@@ -7131,7 +7204,7 @@ msgstr ""
 "Pixonaut ville ikke lave designet til en fast side. Tjek sidens skabelon, "
 "trykposition og trykstørrelse %s, og opdatér derefter varen."
 
-#: src/Catalogue/InvalidReason.php:408
+#: src/Catalogue/InvalidReason.php:439
 msgid ""
 "Pixonaut would not make the design of a fixed-design side: the store may not "
 "create and approve designs. Check the connection’s permissions in the "
@@ -7142,7 +7215,7 @@ msgstr ""
 "studiet, og opdatér derefter varen."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:412
+#: src/Catalogue/InvalidReason.php:443
 #, php-format
 msgid ""
 "The template of a fixed-design side does not fit the print position at any "
@@ -7154,7 +7227,7 @@ msgstr ""
 "der passer, %s."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:418
+#: src/Catalogue/InvalidReason.php:449
 #, php-format
 msgid ""
 "The printshop prints only on a blank. Choose a blank, or a printshop that "
@@ -7163,7 +7236,51 @@ msgstr ""
 "Trykkeriet trykker kun på et basisprodukt. Vælg et basisprodukt eller et "
 "trykkeri, der trykker uden basisprodukt, %s."
 
-#: src/Catalogue/InvalidReason.php:422
+#. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/InvalidReason.php:455
+#, php-format
+msgid ""
+"Page layouts are offered only on a print position printed as pages, such as "
+"a book’s inner pages. Remove the side’s page layouts, or choose such a print "
+"position, in %s."
+msgstr ""
+"Sidelayouts tilbydes kun på en trykposition, der trykkes som sider, "
+"f.eks. en bogs indlæg. Fjern sidens sidelayouts, eller vælg en sådan "
+"trykposition, i %s."
+
+#. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/InvalidReason.php:461
+#, php-format
+msgid ""
+"A page layout’s template does not have the aspect ratio of the side’s "
+"template, so a page designed on it would not fill the page. Choose layouts "
+"at the side template’s ratio in %s."
+msgstr ""
+"Et sidelayouts skabelon har ikke samme billedformat som sidens skabelon, "
+"så en side designet på den ville ikke fylde siden. Vælg layouts i sidens "
+"skabelons billedformat i %s."
+
+#. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/InvalidReason.php:467
+#, php-format
+msgid ""
+"A page layout is chosen twice, or is the side’s own template, which every "
+"page starts on. Choose each layout once, besides the side’s template, in %s."
+msgstr ""
+"Et sidelayout er valgt to gange eller er sidens egen skabelon, som hver "
+"side starter på. Vælg hvert layout én gang, ud over sidens skabelon, i %s."
+
+#. translators: 1: most page layouts one side can offer, 2: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/InvalidReason.php:473
+#, php-format
+msgid ""
+"A side offers at most %1$d page layouts besides its own template. Remove "
+"layouts in %2$s."
+msgstr ""
+"En side tilbyder højst %1$d sidelayouts ud over sin egen skabelon. Fjern "
+"layouts i %2$s."
+
+#: src/Catalogue/InvalidReason.php:478
 msgid ""
 "The configuration was saved by a newer version of Pixonaut for WooCommerce. "
 "Update the plugin."
@@ -7172,13 +7289,13 @@ msgstr ""
 "Opdatér pluginet."
 
 #. translators: %s: why, and what to do, e.g. "Pixonaut had a problem of its own. Update the product again in a while."
-#: src/Catalogue/InvalidReason.php:440
+#: src/Catalogue/InvalidReason.php:496
 #, php-format
 msgid "Pixonaut would not make the design of a fixed-design side. %s"
 msgstr "Pixonaut ville ikke lave designet til en fast side. %s"
 
 #. translators: %s: the code Pixonaut answered, e.g. "too_small", kept as it is.
-#: src/Catalogue/InvalidReason.php:453
+#: src/Catalogue/InvalidReason.php:509
 #, php-format
 msgid ""
 "Pixonaut cannot print this configuration, and answered “%s”. Update Pixonaut "
@@ -11914,7 +12031,7 @@ msgstr ""
 #. translators: Button in developer tools that restores a field's default value; here Reset is a verb.
 #. translators: Link that puts an option whose layout was adjusted by hand back on the side's own layout. Admin product page.
 #: templates/admin/developer-tools.php:91
-#: templates/admin/developer-tools.php:115 templates/admin/product-side.php:280
+#: templates/admin/developer-tools.php:115 templates/admin/product-side.php:303
 msgid "Reset"
 msgstr "Nulstil"
 
@@ -12295,7 +12412,7 @@ msgstr "Trykordre %1$s, \"%2$s\" i Pixonaut"
 
 #. translators: Link on the order screen to the item's printshop order in the Pixonaut studio.
 #. translators: Link beside a product side's template picker to that template's page in the Pixonaut studio. Admin product page.
-#: templates/admin/order-box.php:98 templates/admin/product-side.php:121
+#: templates/admin/order-box.php:98 templates/admin/product-side.php:123
 msgid "Open in Pixonaut"
 msgstr "Åbn i Pixonaut"
 
@@ -12554,7 +12671,7 @@ msgid "Options in the form"
 msgstr "Muligheder i formularen"
 
 #. translators: Label of the dropdown choosing whether the designer's canvas keeps the template's proportions or takes the chosen print size's, asked as a question. Admin product page.
-#: templates/admin/product-fields.php:247 templates/admin/product-side.php:345
+#: templates/admin/product-fields.php:247 templates/admin/product-side.php:368
 msgid "When a print size has other proportions"
 msgstr "Når en trykstørrelse har andre proportioner"
 
@@ -12908,118 +13025,140 @@ msgid "Without a blank, each picture is the design alone."
 msgstr "Uden basisprodukt er hvert billede designet alene."
 
 #. translators: Radio button on a print size: this size is chosen when the designer opens. Admin product page.
-#: templates/admin/product-side.php:49
+#: templates/admin/product-side.php:50
 msgid "Selected when the designer opens"
 msgstr "Valgt, når designværktøjet åbnes"
 
 #. translators: A print size row: the size the print position (placement) itself defines. Admin product page.
-#: templates/admin/product-side.php:53
+#: templates/admin/product-side.php:54
 msgid "The print position’s size"
 msgstr "Trykpositionens størrelse"
 
 #. translators: Placeholder of the field naming a print size, which customers see. Admin product page.
-#: templates/admin/product-side.php:59
+#: templates/admin/product-side.php:60
 msgid "Name, e.g. A3"
 msgstr "Navn, f.eks. A3"
 
 #. translators: Screen reader label of the field naming a print size. Admin product page.
-#: templates/admin/product-side.php:59
+#: templates/admin/product-side.php:60
 #: templates/admin/variation-print-size.php:55
 msgid "Label customers see"
 msgstr "Navn, som kunderne ser"
 
 #. translators: Screen reader label of the custom print size's width field. Admin product page.
-#: templates/admin/product-side.php:60
+#: templates/admin/product-side.php:61
 #: templates/admin/variation-print-size.php:48
 msgid "Width in millimetres"
 msgstr "Bredde i millimeter"
 
 #. translators: Screen reader label of the custom print size's height field. Admin product page.
-#: templates/admin/product-side.php:62
+#: templates/admin/product-side.php:63
 #: templates/admin/variation-print-size.php:52
 msgid "Height in millimetres"
 msgstr "Højde i millimeter"
 
 #. translators: Unit after a custom print size's width and height: millimetres. Admin product page.
 #. translators: %s: an attribute's value, e.g. "30×40 cm". Screen reader label of the height of that value's print size. Admin product page.
-#: templates/admin/product-side.php:63 templates/admin/product-side.php:188
+#: templates/admin/product-side.php:64 templates/admin/product-side.php:211
 #: templates/admin/variation-print-size.php:54
 msgid "mm"
 msgstr "mm"
 
-#: templates/admin/product-side.php:76
+#: templates/admin/product-side.php:77
 msgid "Customers fill in"
 msgstr "Kunderne udfylder"
 
-#: templates/admin/product-side.php:77
+#: templates/admin/product-side.php:78
 msgid "Fixed design"
 msgstr "Fast design"
 
-#: templates/admin/product-side.php:78
+#: templates/admin/product-side.php:79
 msgid "follows new template versions"
 msgstr "følger nye skabelonversioner"
 
 #. translators: %d: the template version a product side stays on, e.g. 2. Summary of a side's settings. Admin product page.
-#: templates/admin/product-side.php:80
+#: templates/admin/product-side.php:81
 #, php-format
 msgid "stays on version %d"
 msgstr "bliver på version %d"
 
-#: templates/admin/product-side.php:83
+#: templates/admin/product-side.php:84
 msgid "Choose a template for this side."
 msgstr "Vælg en skabelon til denne side."
 
-#: templates/admin/product-side.php:84
+#: templates/admin/product-side.php:85
 msgid "Choose where on the blank this side is printed."
 msgstr "Vælg, hvor på basisproduktet denne side skal trykkes."
 
-#: templates/admin/product-side.php:85
+#: templates/admin/product-side.php:86
 msgid "Enter the width and height in millimetres."
 msgstr "Angiv bredde og højde i millimeter."
 
 #. translators: Shown under a custom print size's width and height. %1$s: the largest width, %2$s: the largest height the side's print position prints, both in millimetres. Admin product page.
-#: templates/admin/product-side.php:86
+#: templates/admin/product-side.php:87
 #, php-format
 msgid "Up to %1$s × %2$s mm"
 msgstr "Op til %1$s × %2$s mm"
 
 #. translators: Error under a custom print size larger than the print position prints. %1$s: the largest width, %2$s: the largest height, both in millimetres. Admin product page.
-#: templates/admin/product-side.php:87
+#: templates/admin/product-side.php:88
 #, php-format
 msgid "This print position prints at most %1$s × %2$s mm."
 msgstr "Denne trykposition kan højst trykke %1$s × %2$s mm."
 
-#: templates/admin/product-side.php:91
+#: templates/admin/product-side.php:92
 msgctxt "product side such as front or back"
 msgid "Side"
 msgstr "Side"
 
 #. translators: Button that removes a whole side from the product. Admin product page.
-#: templates/admin/product-side.php:93
+#: templates/admin/product-side.php:94
 msgid "Remove side"
 msgstr "Fjern side"
 
 #. translators: Label of the dropdown that picks the spot on the blank (placement) a side is printed on, such as chest or back. Admin product page.
-#: templates/admin/product-side.php:96
+#: templates/admin/product-side.php:97
 msgid "Print position"
 msgstr "Trykposition"
 
 #. translators: First option of the print position dropdown, nothing chosen yet. Admin product page.
-#: templates/admin/product-side.php:99
+#: templates/admin/product-side.php:100
 msgid "Choose a print position"
 msgstr "Vælg en trykposition"
 
-#: templates/admin/product-side.php:111
+#: templates/admin/product-side.php:113
 msgctxt "Pixonaut template that customers fill in"
 msgid "Template"
 msgstr "Skabelon"
 
 #. translators: Placeholder of the template search dropdown. Admin product page.
-#: templates/admin/product-side.php:113
+#: templates/admin/product-side.php:115
 msgid "Search for a template"
 msgstr "Søg efter en skabelon"
 
-#: templates/admin/product-side.php:126
+#. translators: Label of the field picking the other templates (layouts, such as two or four photos) a page of a book may be designed on. Admin product page.
+#: templates/admin/product-side.php:128
+#
+msgid "Page layouts"
+msgstr "Sidelayouts"
+
+#. translators: Placeholder of the search dropdown picking a book page's other layouts. Admin product page.
+#: templates/admin/product-side.php:132
+#
+msgid "Search for templates"
+msgstr "Søg efter skabeloner"
+
+#. translators: %d: most page layouts a side offers. Help under the Page layouts field. Admin product page.
+#: templates/admin/product-side.php:142
+#, php-format
+msgid ""
+"Up to %d other templates, at the template’s aspect ratio, that customers may "
+"design a page on. Every page starts on the template above."
+msgstr ""
+"Op til %d andre skabeloner, i skabelonens billedformat, som kunder må "
+"designe en side på. Hver side starter på skabelonen ovenfor."
+
+#: templates/admin/product-side.php:149
 msgid ""
 "This template’s background shows through, and this product has no blank: "
 "customers see the design on white paper in the designer, and it prints on "
@@ -13034,41 +13173,41 @@ msgstr ""
 "stadig købe produktet."
 
 #. translators: Label of the list of print sizes customers choose from for a side. Admin product page.
-#: templates/admin/product-side.php:133
+#: templates/admin/product-side.php:156
 msgid "Print sizes"
 msgstr "Trykstørrelser"
 
 #. translators: Column heading over the radio buttons marking the print size chosen when the designer opens. Short. Admin product page.
-#: templates/admin/product-side.php:136
+#: templates/admin/product-side.php:159
 msgid "Start"
 msgstr "Start"
 
 #. translators: Column heading over a side's print sizes. Admin product page.
-#: templates/admin/product-side.php:137
+#: templates/admin/product-side.php:160
 msgid "Size customers choose"
 msgstr "Størrelse, kunderne vælger"
 
 #. translators: Button that adds the print position's own size to a side's print sizes. Admin product page.
-#: templates/admin/product-side.php:149
+#: templates/admin/product-side.php:172
 msgid "Add the print position’s size"
 msgstr "Tilføj trykpositionens størrelse"
 
 #. translators: Button that adds a print size entered in millimetres to a side. Admin product page.
-#: templates/admin/product-side.php:150
+#: templates/admin/product-side.php:173
 msgid "Add a size in mm"
 msgstr "Tilføj en størrelse i mm"
 
 #. translators: Label of the dropdown choosing the product attribute (such as Size) whose values each get a print size of their own. Admin product page.
-#: templates/admin/product-side.php:161
+#: templates/admin/product-side.php:184
 msgid "Print size by attribute"
 msgstr "Trykstørrelse efter egenskab"
 
 #. translators: Option of the Print size by attribute dropdown: no attribute gives the print size. Admin product page.
-#: templates/admin/product-side.php:164
+#: templates/admin/product-side.php:187
 msgid "None"
 msgstr "Ingen"
 
-#: templates/admin/product-side.php:170
+#: templates/admin/product-side.php:193
 msgid ""
 "Each variation prints at the size of its value, unless it has a print size "
 "of its own. Variations without either print at the print sizes above; when "
@@ -13079,49 +13218,49 @@ msgstr ""
 "ovenfor; når alle varianter har en størrelse, er de ikke nødvendige."
 
 #. translators: %s: an attribute's value, e.g. "30×40 cm". Screen reader label of the width of that value's print size. Admin product page.
-#: templates/admin/product-side.php:185
+#: templates/admin/product-side.php:208
 #, php-format
 msgid "%s: width in millimetres"
 msgstr "%s: bredde i millimeter"
 
 #. translators: %s: an attribute's value, e.g. "30×40 cm". Screen reader label of the height of that value's print size. Admin product page.
-#: templates/admin/product-side.php:187
+#: templates/admin/product-side.php:210
 #, php-format
 msgid "%s: height in millimetres"
 msgstr "%s: højde i millimeter"
 
 #. translators: %s: an attribute's value, e.g. "30×40 cm". Screen reader label of the name customers see for that value's print size. Admin product page.
-#: templates/admin/product-side.php:189
+#: templates/admin/product-side.php:212
 #, php-format
 msgid "%s: label customers see"
 msgstr "%s: navn, som kunderne ser"
 
 #. translators: A closed section of a product side holding its less used settings. Admin product page.
-#: templates/admin/product-side.php:200
+#: templates/admin/product-side.php:223
 msgid "More for this side"
 msgstr "Mere for denne side"
 
 #. translators: Label of the fields naming a product side and its key. Admin product page.
-#: templates/admin/product-side.php:206
+#: templates/admin/product-side.php:229
 msgid "Name"
 msgstr "Navn"
 
 #. translators: Placeholder of the field naming a product side, which customers see. Admin product page.
-#: templates/admin/product-side.php:208
+#: templates/admin/product-side.php:231
 msgid "Name customers see, e.g. Front"
 msgstr "Navn, som kunderne ser, f.eks. Forside"
 
 #. translators: Placeholder of the field for a side's key, a short lowercase identifier. Admin product page.
-#: templates/admin/product-side.php:209
+#: templates/admin/product-side.php:232
 msgid "Key, e.g. front"
 msgstr "Nøgle, f.eks. front"
 
 #. translators: Screen reader label of the field for a side's key. Admin product page.
-#: templates/admin/product-side.php:209
+#: templates/admin/product-side.php:232
 msgid "Side key"
 msgstr "Sidens nøgle"
 
-#: templates/admin/product-side.php:211
+#: templates/admin/product-side.php:234
 msgid ""
 "Shown on the side’s tab in the designer. Empty, both follow the print "
 "position."
@@ -13130,11 +13269,11 @@ msgstr ""
 "trykpositionen."
 
 #. translators: Checkbox on a product side; unticked, the side is a fixed design printed as the template is. Admin product page.
-#: templates/admin/product-side.php:218
+#: templates/admin/product-side.php:241
 msgid "Customers fill in the template"
 msgstr "Kunderne udfylder skabelonen"
 
-#: templates/admin/product-side.php:221
+#: templates/admin/product-side.php:244
 msgid ""
 "Unticked, it is a fixed design: printed as the template is, made when you "
 "update the product."
@@ -13142,7 +13281,7 @@ msgstr ""
 "Uden markering er det et fast design: trykt som skabelonen er og lavet, når "
 "du opdaterer varen."
 
-#: templates/admin/product-side.php:224
+#: templates/admin/product-side.php:247
 msgid ""
 "This template offers fields to fill in. On a standing side customers do not "
 "get to fill them in: it is printed as the template is."
@@ -13150,7 +13289,7 @@ msgstr ""
 "Denne skabelon har felter, der kan udfyldes. På en fast side kan kunderne "
 "ikke udfylde dem: den trykkes, som skabelonen er."
 
-#: templates/admin/product-side.php:227
+#: templates/admin/product-side.php:250
 msgid ""
 "This template offers nothing to fill in, so customers have nothing to "
 "personalise. Make the side standing to sell it as the template is."
@@ -13159,13 +13298,13 @@ msgstr ""
 "Gør siden fast for at sælge den, som skabelonen er."
 
 #. translators: %s: the option a blank's print areas change with, as the blank names it, e.g. "Size". Label of a standing side's previews, one per value of that option. Admin product page.
-#: templates/admin/product-side.php:239
+#: templates/admin/product-side.php:262
 #, php-format
 msgid "Per %s"
 msgstr "Pr. %s"
 
 #. translators: %s: the option a blank's print areas change with, as the blank names it, e.g. "Size". Admin product page.
-#: templates/admin/product-side.php:245
+#: templates/admin/product-side.php:268
 #, php-format
 msgid ""
 "The print area changes with %s, so each of its values is printed from its "
@@ -13179,7 +13318,7 @@ msgstr ""
 "justeret værdi beholder sit layout, når siden ændres, indtil du nulstiller "
 "den."
 
-#: templates/admin/product-side.php:248
+#: templates/admin/product-side.php:271
 msgid ""
 "The previews appear when you update the product. An adjusted value keeps its "
 "layout."
@@ -13188,28 +13327,28 @@ msgstr ""
 "beholder sit layout."
 
 #. translators: 1: the option, e.g. "Size"; 2: its value, e.g. "XL". Alt text of a standing side's preview for one option. Admin product page.
-#: templates/admin/product-side.php:255
+#: templates/admin/product-side.php:278
 #, php-format
 msgid "%1$s %2$s: the design on the blank"
 msgstr "%1$s %2$s: designet på basisproduktet"
 
 #. translators: Badge beside an option's value whose layout the store manager adjusted by hand on a standing side. Admin product page.
-#: templates/admin/product-side.php:264
+#: templates/admin/product-side.php:287
 msgid "Adjusted"
 msgstr "Justeret"
 
 #. translators: Under a standing side's preview for one option value: the side's print size does not fit that value's print area, so the design prints at the value's usual size. Admin product page.
-#: templates/admin/product-side.php:271
+#: templates/admin/product-side.php:294
 msgid "Usual size: the side's is too big"
 msgstr "Normal størrelse: sidens er for stor"
 
 #. translators: Link that opens an option's adjusted layout on Pixonaut again, to adjust it once more. Admin product page.
-#: templates/admin/product-side.php:275
+#: templates/admin/product-side.php:298
 msgid "Adjust again"
 msgstr "Juster igen"
 
 #. translators: %s: an option's value, e.g. "XL". Confirmation before the store manager resets the layout they adjusted by hand for that option. Admin product page.
-#: templates/admin/product-side.php:278
+#: templates/admin/product-side.php:301
 #, php-format
 msgid ""
 "Reset the layout of %s? It then follows the side again, and the layout you "
@@ -13219,12 +13358,12 @@ msgstr ""
 "layout, du justerede, gemmes ikke."
 
 #. translators: Link that opens one option's design of a standing side on Pixonaut, to move and scale its artwork by hand. Admin product page.
-#: templates/admin/product-side.php:282
+#: templates/admin/product-side.php:305
 msgid "Adjust layout"
 msgstr "Juster layout"
 
 #. translators: %d: how many options a standing side has a preview of. Button that shows them all. Admin product page.
-#: templates/admin/product-side.php:291
+#: templates/admin/product-side.php:314
 #, php-format
 msgid "Show all %d"
 msgid_plural "Show all %d"
@@ -13232,43 +13371,43 @@ msgstr[0] "Vis alle %d"
 msgstr[1] "Vis alle %d"
 
 #. translators: Button that shows only the first of a standing side's option previews again. Admin product page.
-#: templates/admin/product-side.php:293
+#: templates/admin/product-side.php:316
 msgid "Show fewer"
 msgstr "Vis færre"
 
 #. translators: Label of the setting that keeps a product side on one version of its template. Admin product page.
-#: templates/admin/product-side.php:298
+#: templates/admin/product-side.php:321
 msgid "Template version"
 msgstr "Skabelonversion"
 
 #. translators: Checkbox on a product side: keep the side on the template version picked beside it instead of moving to each new version published. Admin product page.
-#: templates/admin/product-side.php:302
+#: templates/admin/product-side.php:325
 msgid "Stay on one version"
 msgstr "Bliv på én version"
 
 #. translators: Option of a product side's template version picker: the template's latest published version. %d: its number, e.g. 3. Admin product page.
-#: templates/admin/product-side.php:305 templates/admin/product-side.php:316
+#: templates/admin/product-side.php:328 templates/admin/product-side.php:339
 #, php-format
 msgid "Version %d (current)"
 msgstr "Version %d (aktuel)"
 
 #. translators: Option of a product side's template version picker. %d: the version's number, e.g. 2. Admin product page.
-#: templates/admin/product-side.php:306 templates/admin/product-side.php:318
+#: templates/admin/product-side.php:329 templates/admin/product-side.php:341
 #, php-format
 msgid "Version %d"
 msgstr "Version %d"
 
-#: templates/admin/product-side.php:327
+#: templates/admin/product-side.php:350
 msgid "Unticked, the side follows each new version of the template."
 msgstr "Uden markering følger siden hver ny version af skabelonen."
 
 #. translators: Label of the setting that arranges the designer's form groups for one product side; a button that shows or hides it. Admin product page.
-#: templates/admin/product-side.php:335
+#: templates/admin/product-side.php:358
 msgid "Groups"
 msgstr "Grupper"
 
 #. translators: Label of the setting that arranges the designer's form groups for one product side; a button that shows or hides it. Admin product page.
-#: templates/admin/product-side.php:336
+#: templates/admin/product-side.php:359
 msgid ""
 "The order and names of the groups customers see in the designer. Open to "
 "arrange them."
@@ -13276,7 +13415,7 @@ msgstr ""
 "Rækkefølgen og navnene på de grupper, kunderne ser i designværktøjet. Åbn "
 "indstillingen for at arrangere dem."
 
-#: templates/admin/product-side.php:339
+#: templates/admin/product-side.php:362
 msgid ""
 "The order and names customers see in the designer on this product’s page. "
 "Drag groups and their fields to reorder them. A name changed here is this "
@@ -13290,7 +13429,7 @@ msgstr ""
 "længere Muligheder i formularen."
 
 #. translators: Option of a product side's canvas shape dropdown: the side draws its canvas as the product's own setting, under Store settings for this product, says. Admin product page.
-#: templates/admin/product-side.php:349
+#: templates/admin/product-side.php:372
 msgid "As the product’s store settings say"
 msgstr "Som varens butiksindstillinger angiver"
 

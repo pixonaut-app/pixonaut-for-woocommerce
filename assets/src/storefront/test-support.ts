@@ -69,6 +69,7 @@ export type FakeDesigner = {
 	getViews: Mock<() => Array<{ viewId: string; hasPhoto: boolean }>>;
 	setView: ReturnType<typeof vi.fn>;
 	getPages: Mock<() => FakePages | null>;
+	setPage: Mock<(page: number) => Promise<void>>;
 	setPageCount: Mock<(count: number) => void>;
 	setItemPageCount: ReturnType<typeof vi.fn>;
 	settled: ReturnType<typeof vi.fn>;
@@ -159,6 +160,7 @@ export function fakeDesigner({
 		getViews: vi.fn(() => []),
 		setView: vi.fn().mockResolvedValue(undefined),
 		getPages: vi.fn(() => paged),
+		setPage: vi.fn((_page: number) => Promise.resolve()),
 		setPageCount: vi.fn((count: number) => {
 			if (paged === null || count < paged.min || count > paged.max) {
 				throw new TypeError(`setPageCount: ${count} is not offered`);

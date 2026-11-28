@@ -279,7 +279,7 @@ final class InlineProducts {
 			return $this->mounts( $variation, $config, $variants );
 		}
 		// Alike with the values they are sold with: a variation of its own may have other values than its twin.
-		$values           = array_map( static fn ( Side $side ): ?string => SideValues::set_of( $variation, $side ), $config->sides );
+		$values           = array_map( static fn ( Side $side ): array => SideValues::sets_of( $variation, $side ), $config->sides );
 		$key              = md5( serialize( array( $config, $values ) ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize -- compares two configurations, never stored.
 		$shared[ $key ] ??= $this->mounts( $variation, $config, $variants );
 		return $shared[ $key ];
@@ -364,10 +364,10 @@ final class InlineProducts {
 			if ( null !== $groups ) {
 				$options['formGroups'] = $groups;
 			}
-			$value_set = SideValues::set_of( $product, $side );
-			if ( null !== $value_set ) {
-				// The side's own values, by its template's base id: the designer opens on them, and names the set in every read and request.
-				$options['valueSets'] = array( $side->template_base_id => $value_set );
+			$value_sets = SideValues::sets_of( $product, $side );
+			if ( array() !== $value_sets ) {
+				// The side's own values, by its template's base id, and by each page layout's the layout's set: the designer opens each on them, and names the set in every read and request.
+				$options['valueSets'] = $value_sets;
 			}
 
 			/**
@@ -416,7 +416,7 @@ final class InlineProducts {
 			 *
 			 * @since 0.1.0
 			 *
-			 * @param array<string, mixed> $options  `publishableKey`, `apiBase`, `templateId`, `blankId`, `placementId`, `placements`, `views` and `variants` (with a blank; `variants` once a variant is sold), `initialView` (with a blank, when the product names a starting view), `printSizes` (with a size menu), `selectedPrintSizeIndex` (the size the side starts on), `locale` (one of `DesignerLanguage::languages()`, absent for the workspace's default), `layout` (`page` or `steps`, absent to follow the template), `formGroups` (with an arrangement), `valueSets` (the template's base id and the value set of the side's own values, with values; `set-product-values`), `drawAtTemplateRatio` (`true` to draw the canvas at the template's ratio at every print size, `false` at the chosen size's; absent to follow the template), `preload`, `showPrintAreaFrame`, `accent` (with a custom accent colour).
+			 * @param array<string, mixed> $options  `publishableKey`, `apiBase`, `templateId`, `blankId`, `placementId`, `placements`, `views` and `variants` (with a blank; `variants` once a variant is sold), `initialView` (with a blank, when the product names a starting view), `printSizes` (with a size menu), `selectedPrintSizeIndex` (the size the side starts on), `locale` (one of `DesignerLanguage::languages()`, absent for the workspace's default), `layout` (`page` or `steps`, absent to follow the template), `formGroups` (with an arrangement), `valueSets` (the template's base id and the value set of the side's own values, with values; `set-product-values`; on a side with page layouts, each layout's base id and its set too), `drawAtTemplateRatio` (`true` to draw the canvas at the template's ratio at every print size, `false` at the chosen size's; absent to follow the template), `preload`, `showPrintAreaFrame`, `accent` (with a custom accent colour).
 			 * @param WC_Product           $product  The product, or on a variable product the variation the options are for.
 			 * @param string               $side_key The side, e.g. `front`.
 			 *

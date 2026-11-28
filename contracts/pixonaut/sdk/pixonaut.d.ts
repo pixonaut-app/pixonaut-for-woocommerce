@@ -528,10 +528,21 @@ export declare class DesignerProduct {
     setItemPageCount(count: number): void;
     /** Show page `page`, from 1 to the count, of the side printed as pages
      *  while it is the side shown, else a `TypeError`. Each page keeps its
-     *  own values on the side's one template: the page left keeps its, and a
-     *  page never shown starts from the template's own. `on("pages")`
-     *  reports it. */
-    setPage(page: number): void;
+     *  own template and values: the page left keeps its, and a page never
+     *  shown starts from the side's template's own. Resolves once the page is
+     *  drawn, which for a page on another template takes that template's
+     *  read; the page left stays shown until then. `on("pages")` reports
+     *  it. */
+    setPage(page: number): Promise<void>;
+    /** Design the page shown of the side printed as pages on template
+     *  `templateId`, one of those the side offers (`getPages().templates`:
+     *  its own and its `pageTemplates`), while it is the side shown; else a
+     *  rejected `TypeError`. Only that page changes: its keyed values, such
+     *  as a photo or a caption, follow their keys into the template's fields,
+     *  and a page shown on a template again finds what it held there. Each
+     *  page's design is made from its own template. Resolves once it is
+     *  drawn; `on("pages")` reports it. */
+    setPageTemplate(templateId: string): Promise<void>;
     /** Fill the empty pictures of the side printed as pages with `files`,
      *  while it is the side shown, else a `TypeError`: each photo goes to the
      *  next picture the shopper may upload to that holds none of theirs,
@@ -2049,6 +2060,9 @@ declare interface PageMessages {
     "pages.page-of": string;
     "pages.previous": string;
     "pages.next": string;
+    /** The layouts a page may be laid in, and each by its place. */
+    "pages.layout": string;
+    "pages.layout-option": string;
     /** Under the picker: how a page is designed and printed. */
     "pages.note": string;
     /** Choosing several photos at once, under the picker (`fillPages()`). */
@@ -2120,6 +2134,11 @@ export declare interface PagesState {
     /** Whether the side shown is this one: `setPage()` takes a page only
      *  then. */
     shown: boolean;
+    /** The template the page shown is designed on, `baseId@version`. */
+    templateId: string;
+    /** The templates a page may be designed on (`setPageTemplate()`): the
+     *  side's own, which every page starts on, then the others it offers. */
+    templates: string[];
 }
 
 /** A named color entry within a palette, as the resolved document carries
@@ -2939,6 +2958,14 @@ export declare interface ProductPlacement {
     /** On a placement printed as pages: the count the item starts at, one of
      *  those offered. Omitted, the fewest offered. */
     pageCount?: number;
+    /** On a placement printed as pages: the other templates a page may be
+     *  designed on (layouts, such as two photos or four), each
+     *  `baseId@version` at the ratio of the side's own template, which every
+     *  page starts on. The shopper picks one a page (`setPageTemplate()`),
+     *  and each page's design is made from its own. At most
+     *  `MAX_PAGE_TEMPLATES`, none twice nor the side's own; on a placement of
+     *  one page, a `TypeError`. */
+    pageTemplates?: readonly string[];
 }
 
 /** One variant the product offers, as `getVariants()` lists it. */
@@ -3491,6 +3518,9 @@ export declare interface SideMountOptions {
     pages?: OfferedPages;
     /** A one-placement mount's `pageCount` (`ProductPlacement.pageCount`). */
     pageCount?: number;
+    /** A one-placement mount's `pageTemplates`
+     *  (`ProductPlacement.pageTemplates`). */
+    pageTemplates?: readonly string[];
 }
 
 /** A side's print as it is drawn into a region: unshaded, at its print box. */

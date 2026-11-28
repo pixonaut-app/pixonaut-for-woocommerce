@@ -85,11 +85,15 @@ final class Side {
 	 *                                           attributes, which a variation with that value prints at; null for none.
 	 * @param LowResolutionSize[] $low_resolution The sizes judged, sold or refused, at which images of the template print
 	 *                                       below their recommended resolution, as last checked; empty when none.
+	 * @param PageTemplate[]      $page_templates The other templates a page may be designed on, on a side whose placement
+	 *                                       is printed as pages (`PageTemplate`): every page starts on the side's own
+	 *                                       template. Empty for none, and on any other side.
 	 * @phpstan-param list<PrintSize> $print_sizes
 	 * @phpstan-param list<PrintSize|null>|null $pending_sizes
 	 * @phpstan-param list<string> $misfit_sizes
 	 * @phpstan-param list<RowSize> $row_sizes
 	 * @phpstan-param list<LowResolutionSize> $low_resolution
+	 * @phpstan-param list<PageTemplate> $page_templates
 	 */
 	public function __construct(
 		public readonly string $key,
@@ -115,6 +119,7 @@ final class Side {
 		public readonly array $row_sizes = array(),
 		public readonly ?ValueSizes $value_sizes = null,
 		public readonly array $low_resolution = array(),
+		public readonly array $page_templates = array(),
 	) {
 	}
 
@@ -253,6 +258,60 @@ final class Side {
 	}
 
 	/**
+	 * A copy offering other page layouts.
+	 *
+	 * @param PageTemplate[] $layouts The layouts, in order; empty for none.
+	 * @phpstan-param list<PageTemplate> $layouts
+	 */
+	public function with_page_templates( array $layouts ): self {
+		return $this->copy( array( 'page_templates' => $layouts ) );
+	}
+
+	/**
+	 * A copy whose page layouts follow their templates' live versions
+	 * (`PageTemplate::rolled_to()`), or stay on theirs with the side's pin.
+	 * A layout whose template is not among the live ones is kept as it is.
+	 *
+	 * @param array<string, int> $live The live templates' versions, by base id.
+	 */
+	public function with_page_templates_rolled( array $live ): self {
+		if ( array() === $this->page_templates ) {
+			return $this;
+		}
+		$rolled = array_map( fn ( PageTemplate $layout ): PageTemplate => isset( $live[ $layout->base_id ] ) ? $layout->rolled_to( $live[ $layout->base_id ], $this->pinned ) : $layout, $this->page_templates );
+		return $rolled === $this->page_templates ? $this : $this->with_page_templates( $rolled );
+	}
+
+	/**
+	 * The page layout on a template, a renamed one found by any of its ids;
+	 * null when the side offers none on it.
+	 *
+	 * @param string $base_id The template's base id.
+	 */
+	public function page_template( string $base_id ): ?PageTemplate {
+		foreach ( $this->page_templates as $layout ) {
+			if ( TemplateRenames::same( $layout->base_id, $base_id ) ) {
+				return $layout;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Every template the side is designed on, by base id: its own, then its
+	 * page layouts'. Empty without a template.
+	 *
+	 * @return list<string>
+	 */
+	public function template_base_ids(): array {
+		$ids = '' === $this->template_base_id ? array() : array( $this->template_base_id );
+		foreach ( $this->page_templates as $layout ) {
+			$ids[] = $layout->base_id;
+		}
+		return array_values( array_unique( $ids ) );
+	}
+
+	/**
 	 * The row of the blank's print areas a variant is in; null when the
 	 * side has no rows, or none holds the variant.
 	 *
@@ -311,7 +370,8 @@ final class Side {
 
 	/**
 	 * A copy on template `$to`, keeping its versions, when it is on `$from`,
-	 * its rows' layout adjustments too; this very side otherwise.
+	 * its rows' layout adjustments and its page layouts too; this very side
+	 * otherwise.
 	 *
 	 * @param string $from The template's old base id.
 	 * @param string $to   Its new base id.
@@ -319,6 +379,10 @@ final class Side {
 	public function with_template_renamed( string $from, string $to ): self {
 		$rows    = array_map( static fn ( StandingRow $row ): StandingRow => $row->with_template_renamed( $from, $to ), $this->standing_rows );
 		$changes = $rows === $this->standing_rows ? array() : array( 'standing_rows' => $rows );
+		$layouts = array_map( static fn ( PageTemplate $layout ): PageTemplate => $layout->with_template_renamed( $from, $to ), $this->page_templates );
+		if ( $layouts !== $this->page_templates ) {
+			$changes['page_templates'] = $layouts;
+		}
 		if ( $this->template_base_id === $from ) {
 			$changes['template_base_id'] = $to;
 		}
@@ -382,6 +446,7 @@ final class Side {
 			array_values( array_filter( array_map( array( RowSize::class, 'from_array' ), is_array( $data['rowSizes'] ?? null ) ? $data['rowSizes'] : array() ) ) ),
 			ValueSizes::from_array( $data['valueSizes'] ?? null ),
 			LowResolutionSize::list_from_array( $data['lowResolution'] ?? null ),
+			PageTemplate::list_from_array( $data['pageTemplates'] ?? null ),
 		);
 		// A name the merchant did not type is what the side follows now, never a template id an earlier save stored.
 		return '' === $side->typed_label() ? $side->copy( array( 'label' => self::followed_label( $side->placement_name, $side->template_name, $side->key ) ) ) : $side;
@@ -418,6 +483,7 @@ final class Side {
 			'rowSizes'            => array_map( static fn ( RowSize $row ): array => $row->to_array(), $this->row_sizes ),
 			'valueSizes'          => $this->value_sizes?->to_array(),
 			'lowResolution'       => array_map( static fn ( LowResolutionSize $size ): array => $size->to_array(), $this->low_resolution ),
+			'pageTemplates'       => array_map( static fn ( PageTemplate $layout ): array => $layout->to_array(), $this->page_templates ),
 		) + ( null === $this->pending_sizes ? array() : array(
 			'pendingSizes' => array_map(
 				static fn ( ?PrintSize $size ): array => null === $size ? array( 'placementDefault' => true ) : $size->stored(),

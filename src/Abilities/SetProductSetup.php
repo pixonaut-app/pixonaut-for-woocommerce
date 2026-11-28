@@ -9,8 +9,10 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Abilities;
 
+use Pixonaut\WooCommerce\Admin\PanelFields;
 use Pixonaut\WooCommerce\Admin\VariationPanel;
 use Pixonaut\WooCommerce\ApprovalMode;
+use Pixonaut\WooCommerce\Catalogue\InvalidReason;
 use Pixonaut\WooCommerce\Catalogue\PostedSides;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\FormLayout;
@@ -32,6 +34,13 @@ use WP_Error;
 final class SetProductSetup implements Ability {
 
 	/**
+	 * Why a setup was refused: a side's page layouts cannot be offered, as
+	 * on a side not printed as pages, a layout at another ratio than the
+	 * side's template, one named twice or the side's own, or too many.
+	 */
+	public const PAGE_TEMPLATES_REFUSED = 'pixonaut_wc_ability_page_templates_refused';
+
+	/**
 	 * @param ProductLinks $links  Saves the setup.
 	 * @param SetupFields  $fields Turns the input into the product screen's fields.
 	 */
@@ -51,7 +60,7 @@ final class SetProductSetup implements Ability {
 		return array(
 			/* translators: Name of an ability an AI assistant or an MCP client can use on the store. */
 			'label'               => __( 'Set up a product for Pixonaut', 'pixonaut-for-woocommerce' ),
-			'description'         => __( 'Sets up a simple or variable product, or one variation, as its Pixonaut tab does: the blank, every side (template, placement, print sizes, start size, form arrangement, personalised or standing), layout, form layout, approval mode, canvas shape, the designer\'s views, the printshop and the blank variant. A field left out keeps what it has, so read the setup with `list-products` and send what changes. A variation given any setup field gets a setup of its own; `own_setup` false makes it follow its product again. Pixonaut checks the setup; one that fails a check is saved but cannot be bought, and the answer says why.', 'pixonaut-for-woocommerce' ),
+			'description'         => __( 'Sets up a simple or variable product, or one variation, as its Pixonaut tab does: the blank, every side (template, placement, print sizes, start size, form arrangement, personalised or standing), layout, form layout, approval mode, canvas shape, the designer\'s views, the printshop and the blank variant. A field left out keeps what it has, so read the setup with `list-products` and send what changes. A variation given any setup field gets a setup of its own; `own_setup` false makes it follow its product again. Pixonaut checks the setup; one that fails a check is saved but cannot be bought, and the answer says why. Page layouts that cannot be offered refuse the call instead, and nothing is saved.', 'pixonaut-for-woocommerce' ),
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
@@ -129,7 +138,14 @@ final class SetProductSetup implements Ability {
 		$variant = is_string( $input['variant'] ?? null ) ? sanitize_text_field( $input['variant'] ) : null;
 		if ( ! $product->is_type( 'variation' ) ) {
 			$posted = $this->fields->posted( $input, ProductConfig::stored_on( $product ) );
-			return $posted instanceof WP_Error ? $posted : $this->links->configure( $product, $posted, $variant );
+			if ( $posted instanceof WP_Error ) {
+				return $posted;
+			}
+			if ( ! self::has_layouts( $posted ) ) {
+				return $this->links->configure( $product, $posted, $variant );
+			}
+			$checked = $this->links->check( $product, $posted );
+			return self::layouts_refused( $checked, false ) ?? $this->links->save_checked( $product, $checked, $variant );
 		}
 
 		if ( array() !== array_intersect_key( $input, array_flip( SetupFields::PRODUCT_KEYS ) ) ) {
@@ -141,6 +157,42 @@ final class SetProductSetup implements Ability {
 			return $this->links->configure_variation( $product, null, $variant );
 		}
 		$posted = $this->fields->posted( $input, VariationPanel::own_or_inherited( $product ) );
-		return $posted instanceof WP_Error ? $posted : $this->links->configure_variation( $product, $posted, $variant );
+		if ( $posted instanceof WP_Error ) {
+			return $posted;
+		}
+		if ( ! self::has_layouts( $posted ) ) {
+			return $this->links->configure_variation( $product, $posted, $variant );
+		}
+		$checked = $this->links->check_variation( $product, $posted );
+		return self::layouts_refused( $checked, true ) ?? $this->links->save_variation( $product, $checked, $variant );
+	}
+
+	/**
+	 * Whether a side posted offers page layouts.
+	 *
+	 * @param array<string, mixed> $posted The fields, by `PanelFields` key.
+	 */
+	private static function has_layouts( array $posted ): bool {
+		foreach ( is_array( $posted[ PanelFields::SIDES ] ?? null ) ? $posted[ PanelFields::SIDES ] : array() as $row ) {
+			if ( is_array( $row ) && array() !== ( $row[ PostedSides::PAGE_TEMPLATES ] ?? array() ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * The refusal of a setup whose page layouts cannot be offered, which is
+	 * never saved, unlike a setup that fails another check; null for one
+	 * that can be saved.
+	 *
+	 * @param ProductConfig $checked   The setup, as checked.
+	 * @param bool          $variation Whether it is a variation's own.
+	 */
+	private static function layouts_refused( ProductConfig $checked, bool $variation ): ?WP_Error {
+		if ( $checked->valid || ! in_array( $checked->invalid_reason, InvalidReason::PAGE_TEMPLATES, true ) ) {
+			return null;
+		}
+		return new WP_Error( self::PAGE_TEMPLATES_REFUSED, InvalidReason::stored( $checked, $variation ), array( 'reason' => $checked->invalid_reason ) );
 	}
 }

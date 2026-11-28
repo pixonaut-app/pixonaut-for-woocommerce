@@ -463,6 +463,11 @@ final class ProductValuesShopToolsTest extends WP_UnitTestCase {
 				public function make( string $template_id, array $values ): string {
 					return $this->test->made( $template_id, $values );
 				}
+
+				public function layer_ids( string $template_id ): array {
+					// Read only for a side with page layouts, which these products have none of.
+					return array();
+				}
 			}
 		);
 	}

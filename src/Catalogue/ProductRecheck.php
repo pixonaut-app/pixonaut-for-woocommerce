@@ -181,6 +181,7 @@ final class ProductRecheck {
 	 * @param ProductVariants      $variants Resolves each variation's blank variant again.
 	 * @param KeptDesignerLinks    $links   Forgets the designer links Pixonaut no longer lists.
 	 * @param Closure|null         $rechecked `fn( WC_Product ): void`, told each product or variation checked again; null tells nobody.
+	 * @param LayoutValueSets|null $layout_sets Makes the page layouts' sets a save left pending; null makes none.
 	 * @phpstan-param (Closure(WC_Product): void)|null $rechecked
 	 */
 	/**
@@ -208,6 +209,7 @@ final class ProductRecheck {
 		private readonly ProductVariants $variants,
 		private readonly KeptDesignerLinks $links,
 		private readonly ?Closure $rechecked = null,
+		private readonly ?LayoutValueSets $layout_sets = null,
 	) {
 	}
 
@@ -601,6 +603,11 @@ final class ProductRecheck {
 			LowResolutionWarnings::prune( $fresh instanceof WC_Product ? $fresh : $product );
 		}
 		$this->notice->note( $product, $checked );
+		if ( null !== $this->layout_sets ) {
+			// A page layout a save left without its side's values is not sold until its set is made.
+			$fresh = wc_get_product( $product_id );
+			$this->layout_sets->retry( $fresh instanceof WC_Product ? $fresh : $product );
+		}
 		return $this->refresh_variants( $product );
 	}
 

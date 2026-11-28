@@ -14,6 +14,7 @@ use Pixonaut\WooCommerce\Admin\PanelFields;
 use Pixonaut\WooCommerce\Admin\ProductPanel;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Catalogue\CanvasRatio;
+use Pixonaut\WooCommerce\Catalogue\PageTemplate;
 use Pixonaut\WooCommerce\Catalogue\PostedSides;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
@@ -29,7 +30,8 @@ use WP_Error;
  * saved as the screen's are. A side's template is a version (`mini-tee@2`),
  * or a template's id alone for its live version now; either way the side
  * follows the template's latest version from then on, unless it is pinned
- * to that version.
+ * to that version. A side's page layouts (`page_templates`) are given as
+ * its template is, and follow or stay with it.
  */
 final class SetupFields {
 
@@ -130,6 +132,7 @@ final class SetupFields {
 			'start_size'      => $side->start_size < count( $menu ) ? $side->start_size : 0,
 			'form_groups'     => $side->form_groups?->to_array(),
 			'canvas_ratio'    => CanvasRatio::posted( $side->draw_at_template_ratio ),
+			'page_templates'  => array_map( static fn ( PageTemplate $layout ): string => (string) $layout->id(), $side->page_templates ),
 		);
 	}
 
@@ -226,6 +229,12 @@ final class SetupFields {
 					'description' => __( 'How the designer\'s form is arranged on the product page, as `list-products` gives it: `{groups: [{id, title, items}]}`, an item being `{field: "<layerId>:<prop>", label, help, placeholder, options}` or `{attribute: <attribute slug>}`. Null or left out for the template\'s own.', 'pixonaut-for-woocommerce' ),
 				),
 				'canvas_ratio'    => self::canvas_ratio_schema( __( 'empty or left out for the product\'s choice', 'pixonaut-for-woocommerce' ) ),
+				'page_templates'  => array(
+					'type'        => 'array',
+					/* translators: %d: most page layouts one side offers. */
+					'description' => sprintf( __( 'On a side whose placement is printed as pages, such as a photo book\'s inner pages: the other templates a page may be designed on (layouts such as two or four photos), as `template_id` takes them, in the order the shopper sees them; every page starts on `template_id`. Each follows its latest published version, or stays on the version given when `template_pinned` is true. At most %d, each at the ratio of `template_id`, none twice and not `template_id` itself; any other is refused. Empty or left out for none.', 'pixonaut-for-woocommerce' ), PageTemplate::MAX ),
+					'items'       => array( 'type' => 'string' ),
+				),
 			),
 			'required'             => array( 'template_id' ),
 			'additionalProperties' => false,
@@ -260,25 +269,46 @@ final class SetupFields {
 			if ( ! is_array( $side ) ) {
 				continue;
 			}
-			$template = is_string( $side['template_id'] ?? null ) ? trim( $side['template_id'] ) : '';
-			if ( '' !== $template && null === TemplateId::parse( $template ) ) {
-				try {
-					$this->live ??= ( $this->live_versions )();
-				} catch ( ApiException $e ) {
-					return new WP_Error( 'pixonaut_wc_ability_pixonaut_unreachable', __( 'Pixonaut could not be asked for the template\'s live version. Give the version, as the template list gives it, or try again later.', 'pixonaut-for-woocommerce' ) );
-				}
-				if ( ! isset( $this->live[ $template ] ) ) {
-					return new WP_Error(
-						'pixonaut_wc_ability_unknown_template',
-						/* translators: %s: a template's id, e.g. "mini-tee". */
-						sprintf( __( 'No live template has the id "%s".', 'pixonaut-for-woocommerce' ), $template )
-					);
-				}
-				$template = (string) new TemplateId( $template, $this->live[ $template ] );
+			$template = $this->versioned( is_string( $side['template_id'] ?? null ) ? trim( $side['template_id'] ) : '' );
+			if ( $template instanceof WP_Error ) {
+				return $template;
 			}
-			$rows[ $index ] = self::row( $side, $template, $current );
+			$layouts = array();
+			foreach ( is_array( $side['page_templates'] ?? null ) ? $side['page_templates'] : array() as $layout ) {
+				$layout = is_string( $layout ) ? $this->versioned( trim( $layout ) ) : '';
+				if ( $layout instanceof WP_Error ) {
+					return $layout;
+				}
+				$layouts[] = $layout;
+			}
+			$rows[ $index ] = self::row( $side, $template, $current ) + array( PostedSides::PAGE_TEMPLATES => $layouts );
 		}
 		return $rows;
+	}
+
+	/**
+	 * A template as the abilities take it, given a version: its id alone
+	 * is its live version now.
+	 *
+	 * @param string $template A version such as `two-photos@2`, or an id alone; empty for none.
+	 */
+	private function versioned( string $template ): string|WP_Error {
+		if ( '' === $template || null !== TemplateId::parse( $template ) ) {
+			return $template;
+		}
+		try {
+			$this->live ??= ( $this->live_versions )();
+		} catch ( ApiException $e ) {
+			return new WP_Error( 'pixonaut_wc_ability_pixonaut_unreachable', __( 'Pixonaut could not be asked for the template\'s live version. Give the version, as the template list gives it, or try again later.', 'pixonaut-for-woocommerce' ) );
+		}
+		if ( ! isset( $this->live[ $template ] ) ) {
+			return new WP_Error(
+				'pixonaut_wc_ability_unknown_template',
+				/* translators: %s: a template's id, e.g. "mini-tee". */
+				sprintf( __( 'No live template has the id "%s".', 'pixonaut-for-woocommerce' ), $template )
+			);
+		}
+		return (string) new TemplateId( $template, $this->live[ $template ] );
 	}
 
 	/**

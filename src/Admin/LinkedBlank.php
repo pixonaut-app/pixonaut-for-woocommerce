@@ -88,7 +88,7 @@ final class LinkedBlank {
 	 * deleted: Pixonaut still reads a deleted blank, which sells nothing.
 	 *
 	 * @param string $blank_id The blank.
-	 * @return array{placements: list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float}>, printshop_id: string|null, printshop_source: string, deleted: bool, status: string, name: string}|null Null when Pixonaut cannot be asked.
+	 * @return array{placements: list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float, pages?: bool}>, printshop_id: string|null, printshop_source: string, deleted: bool, status: string, name: string}|null Null when Pixonaut cannot be asked.
 	 */
 	public function read( string $blank_id ): ?array {
 		try {
@@ -124,7 +124,7 @@ final class LinkedBlank {
 				$placements[] = array(
 					'id'   => $placement['id'],
 					'text' => $placement['text'],
-				) + SearchResults::limit( $placement );
+				) + SearchResults::limit( $placement ) + ( true === ( $placement['pages'] ?? null ) ? array( 'pages' => true ) : array() );
 			}
 		}
 		$printshop_id = is_string( $blank['printshop_id'] ?? null ) ? $blank['printshop_id'] : null;
@@ -292,7 +292,7 @@ final class LinkedBlank {
 	 *
 	 * @param string                    $blank_id The blank.
 	 * @param array<string, mixed>|null $blank    The blank as read() gave it; null when Pixonaut could not be asked.
-	 * @phpstan-param array{placements: list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float}>, printshop_id: string|null, printshop_source: string, deleted: bool, status: string, name: string}|null $blank
+	 * @phpstan-param array{placements: list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float, pages?: bool}>, printshop_id: string|null, printshop_source: string, deleted: bool, status: string, name: string}|null $blank
 	 * @return array{name: string, url: string, integration: string}
 	 */
 	public function printshop( string $blank_id, ?array $blank ): array {

@@ -59,20 +59,42 @@ final class DesignCheck {
 	/**
 	 * What does not match, or null when the design is what the side sells.
 	 *
-	 * @param Design      $design       The design, as Pixonaut answered it.
-	 * @param Side        $side         The side the design was made for.
-	 * @param string|null $blank_id     The product's blank; null for a template-only product.
-	 * @param string|null $value_set_id The side's own value set (`SideValues::set_of()`); null when it has none.
+	 * A page of a side printed as pages may be made from one of the side's
+	 * page layouts instead of its template: it is then judged by the
+	 * layout's versions and value set.
+	 *
+	 * @param Design                $design          The design, as Pixonaut answered it.
+	 * @param Side                  $side            The side the design was made for.
+	 * @param string|null           $blank_id        The product's blank; null for a template-only product.
+	 * @param string|null           $value_set_id    The side's own value set (`SideValues::set_of()`); null when it has none.
+	 * @param array<string, string> $layout_sets     The value set of each of the side's page layouts that has one, by its
+	 *                                               base id (`SideValues::sets_of()`); a layout without one has none.
+	 * @param string[]              $layouts_pending The base ids of the side's page layouts whose set could not be made
+	 *                                               yet (`SideValues::pending_of()`): a page on one is refused, as it
+	 *                                               was made without the side's values.
+	 *
+	 * @phpstan-param list<string> $layouts_pending
 	 *
 	 * @return string|null One of the class constants, or null.
 	 */
-	public static function mismatch( Design $design, Side $side, ?string $blank_id, ?string $value_set_id ): ?string {
+	public static function mismatch( Design $design, Side $side, ?string $blank_id, ?string $value_set_id, array $layout_sets = array(), array $layouts_pending = array() ): ?string {
 		// Pixonaut moves a design to its template's new id; the side may hold the old one until `template.renamed` is handled.
-		if ( ! TemplateRenames::same( $design->template_base_id, $side->template_base_id ) ) {
+		$own    = TemplateRenames::same( $design->template_base_id, $side->template_base_id );
+		$layout = $own || null === $design->page ? null : $side->page_template( $design->template_base_id );
+		if ( ! $own && null === $layout ) {
 			return self::TEMPLATE;
 		}
-		if ( null === $design->template_version || ! self::version_accepted( $design->template_version, $side ) ) {
+		$accepted = null === $layout ? self::version_accepted( $design->template_version ?? 0, $side ) : in_array( $design->template_version, $layout->accepted_versions(), true );
+		if ( null === $design->template_version || ! $accepted ) {
 			return self::TEMPLATE_OUTDATED;
+		}
+		if ( null !== $layout ) {
+			foreach ( $layouts_pending as $pending ) {
+				if ( TemplateRenames::same( $pending, $layout->base_id ) ) {
+					return self::VALUES;
+				}
+			}
+			$value_set_id = $layout_sets[ $layout->base_id ] ?? null;
 		}
 		if ( $design->blank_id !== $blank_id ) {
 			return self::BLANK;
@@ -136,7 +158,8 @@ final class DesignCheck {
 
 	/**
 	 * A cart accepts the live version and the one before it, so a customer
-	 * who started before a publish can still buy what they made.
+	 * who started before a publish can still buy what they made. A page
+	 * layout's versions are accepted alike (`PageTemplate::accepted_versions()`).
 	 *
 	 * @param int  $version The design's template version.
 	 * @param Side $side    The side.

@@ -55,20 +55,21 @@ function book({
 		designer: designer as unknown as PixonautDesigner,
 		given,
 		pages: () => pages,
-		carry: (kept = KEPT) =>
+		carry: (kept = KEPT, stale?: () => boolean) =>
 			carryPageValues(
 				designer as unknown as PixonautDesigner,
 				kept,
 				designer.setPageCount,
+				stale,
 			),
 	};
 }
 
 describe('carryPageValues()', () => {
-	it('gives each page its values on another template, the ones past the count too, and goes back to the page and count shown', () => {
+	it('gives each page its values on another template, the ones past the count too, and goes back to the page and count shown', async () => {
 		const { carry, given, pages } = book();
 
-		carry();
+		await carry();
 
 		expect(given).toEqual([
 			[1, 'title', 'content', 'One'],
@@ -78,32 +79,32 @@ describe('carryPageValues()', () => {
 		expect(pages()).toMatchObject({ page: 2, count: 4 });
 	});
 
-	it('gives the page shown its own when the one shown before was past the count', () => {
+	it('gives the page shown its own when the one shown before was past the count', async () => {
 		const { carry, given } = book({ count: 2, shown: 2 });
 
-		carry({ ...KEPT, saved: { ...KEPT.saved, page: 5 } });
+		await carry({ ...KEPT, saved: { ...KEPT.saved, page: 5 } });
 
 		expect(given).toContainEqual([2, 'title', 'content', 'Two']);
 	});
 
-	it('carries a keyed field’s value to the field of its key', () => {
+	it('carries a keyed field’s value to the field of its key', async () => {
 		const { carry, given } = book({
 			layers: [{ id: 'name', props: { content: { fieldKey: 'who' } } }],
 			fields: [{ layerId: 'name', prop: 'content' }],
 		});
 
-		carry({ ...KEPT, keys: new Map([['title:content', 'who']]) });
+		await carry({ ...KEPT, keys: new Map([['title:content', 'who']]) });
 
 		expect(given[0]).toEqual([1, 'name', 'content', 'One']);
 	});
 
-	it('still gives the other pages theirs when one refuses a value', () => {
+	it('still gives the other pages theirs when one refuses a value', async () => {
 		const logged = vi
 			.spyOn(console, 'error')
 			.mockImplementation(() => undefined);
 		const { carry, given, pages } = book({ refuses: 'One' });
 
-		carry();
+		await carry();
 
 		expect(given.map(([, , , value]) => value)).toEqual(['Four', 'Five']);
 		expect(pages()).toMatchObject({ page: 2, count: 4 });
@@ -111,10 +112,40 @@ describe('carryPageValues()', () => {
 		logged.mockRestore();
 	});
 
-	it('leaves the pages alone on the template they were designed on', () => {
+	it('gives no values to a page saved on a page layout, which keeps its layout', async () => {
+		const { carry, given } = book();
+		const pages = [...KEPT.saved.pages];
+		pages[3] = {
+			templateId: 'two-photos@2',
+			values: { title: { content: 'Four' } },
+		};
+
+		await carry({ ...KEPT, saved: { ...KEPT.saved, pages } });
+
+		expect(given).toEqual([
+			[1, 'title', 'content', 'One'],
+			[5, 'title', 'content', 'Five'],
+		]);
+	});
+
+	it('carries no further page once a newer carry began, and shows the page and count it found again', async () => {
+		const { carry, given, pages } = book();
+		let begun = false;
+
+		await carry(KEPT, () => {
+			const was = begun;
+			begun = true;
+			return was;
+		});
+
+		expect(given).toEqual([[1, 'title', 'content', 'One']]);
+		expect(pages()).toMatchObject({ page: 2, count: 4 });
+	});
+
+	it('leaves the pages alone on the template they were designed on', async () => {
 		const { carry, given, pages } = book({ templateId: 'plain@1' });
 
-		carry();
+		await carry();
 
 		expect(given).toEqual([]);
 		expect(pages()).toMatchObject({ page: 2, count: 4 });

@@ -176,7 +176,32 @@ final class ProductLinks {
 	 * @return array<string, mixed> As `summary()`.
 	 */
 	public function configure( WC_Product $product, array $posted, ?string $variant = null ): array {
-		$config = $this->panel->configure( $product, $posted );
+		return $this->save_checked( $product, $this->panel->checked( $product, $posted ), $variant );
+	}
+
+	/**
+	 * A product's setup its fields make, checked with Pixonaut, without
+	 * saving it, for a caller that refuses some outcomes before
+	 * `save_checked()` saves it.
+	 *
+	 * @param WC_Product           $product A simple or variable product.
+	 * @param array<string, mixed> $posted  Its fields, by `PanelFields` key.
+	 */
+	public function check( WC_Product $product, array $posted ): ProductConfig {
+		return $this->panel->checked( $product, $posted );
+	}
+
+	/**
+	 * Saves a product's setup `check()` made, and resolves its blank
+	 * variant as `configure()` does.
+	 *
+	 * @param WC_Product    $product The product.
+	 * @param ProductConfig $checked Its setup, as checked.
+	 * @param string|null   $variant Its blank variant, `''` to match it by options; null keeps what it has.
+	 * @return array<string, mixed> As `summary()`.
+	 */
+	public function save_checked( WC_Product $product, ProductConfig $checked, ?string $variant = null ): array {
+		$config = $this->panel->store( $product, $checked );
 		$this->variants( $product, $config, $variant );
 		return $this->summary( $product );
 	}
@@ -217,12 +242,13 @@ final class ProductLinks {
 	 *
 	 * @param WC_Product    $variation The variation.
 	 * @param ProductConfig $checked   Its setup, as checked.
+	 * @param string|null   $variant   Its blank variant, `''` to match it by options; null keeps what it has.
 	 * @return array<string, mixed> As `summary()`.
 	 */
-	public function save_variation( WC_Product $variation, ProductConfig $checked ): array {
+	public function save_variation( WC_Product $variation, ProductConfig $checked, ?string $variant = null ): array {
 		$this->panel->store( $variation, $checked );
 		self::drop_own_sizes( $variation );
-		return $this->variation_saved( $variation, null );
+		return $this->variation_saved( $variation, $variant );
 	}
 
 	/**

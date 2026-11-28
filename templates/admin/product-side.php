@@ -12,9 +12,9 @@
  * @var string                                                                    $id_prefix     Put before every field's id.
  * @var string                                                                    $index         The side's index, or the placeholder a new side's is put in.
  * @var string                                                                    $size_index    The placeholder a new size row's index is put in.
- * @var array{key: string, label: string, title?: string, placement_id: string, template_id: string, template_name: string, pinned: bool, version: int, versions: list<int>, mode: string, offers_properties: bool|null, misfit_warning?: string, low_resolution_html?: string, form_groups?: string, canvas_ratio?: string, sizes: list<array{kind: string, width: string, height: string, label: string, start: bool}>, value_sizes?: array{attribute: string, sizes: array<string, array{width: string, height: string, label: string}>}, options_by?: string, options?: list<array{value: string, size: string, usual: bool, image: string, adjusted: bool, adjust_url: string, reset_url: string}>} $side The side's fields: `label` is the name the merchant typed, empty while it follows the placement or template, and `title` the name it has now; `versions` are its template's versions, the latest first, `template_id` names the latest, and `pinned` whether it stays on `version` rather than following the latest; a standing side on a blank whose print areas change with an option has `options`, its design per row of `options_by` (empty otherwise), `misfit_warning` names the blank's sizes its template cannot be printed at (empty when it fits every size), `low_resolution_html` is `admin/low-resolution-warnings.php` for the images its sizes print below their recommended resolution (empty for none), and `canvas_ratio` is how the designer draws a print size whose ratio is not the template's, a `CanvasRatio` choice (empty for the product's); `value_sizes` is the attribute it has a size per value of (empty for none) and those sizes by value.
+ * @var array{key: string, label: string, title?: string, placement_id: string, template_id: string, template_name: string, pinned: bool, version: int, versions: list<int>, mode: string, offers_properties: bool|null, misfit_warning?: string, low_resolution_html?: string, form_groups?: string, canvas_ratio?: string, page_templates?: list<array{id: string, name: string}>, sizes: list<array{kind: string, width: string, height: string, label: string, start: bool}>, value_sizes?: array{attribute: string, sizes: array<string, array{width: string, height: string, label: string}>}, options_by?: string, options?: list<array{value: string, size: string, usual: bool, image: string, adjusted: bool, adjust_url: string, reset_url: string}>} $side The side's fields: `label` is the name the merchant typed, empty while it follows the placement or template, and `title` the name it has now; `versions` are its template's versions, the latest first, `template_id` names the latest, and `pinned` whether it stays on `version` rather than following the latest; a standing side on a blank whose print areas change with an option has `options`, its design per row of `options_by` (empty otherwise), `misfit_warning` names the blank's sizes its template cannot be printed at (empty when it fits every size), `low_resolution_html` is `admin/low-resolution-warnings.php` for the images its sizes print below their recommended resolution (empty for none), and `canvas_ratio` is how the designer draws a print size whose ratio is not the template's, a `CanvasRatio` choice (empty for the product's); `page_templates` are the other templates a page of a side printed as pages may be designed on, each by the version it is posted as; `value_sizes` is the attribute it has a size per value of (empty for none) and those sizes by value.
  * @var array{kind: string, width: string, height: string, label: string, start: bool} $new_size A new size row's fields.
- * @var list<array{id: string, text: string, thumbnail: string, maxWidthMm?: float, maxHeightMm?: float}> $placements The blank's placements, each with its first view's photo (empty without one) and the largest print it takes, when Pixonaut said.
+ * @var list<array{id: string, text: string, thumbnail: string, maxWidthMm?: float, maxHeightMm?: float, pages?: bool}> $placements The blank's placements, each with its first view's photo (empty without one) and the largest print it takes, when Pixonaut said; `pages` is true on one printed as pages, whose sides offer page layouts.
  * @var list<string>                                                              $open       The disclosures open when the product was last updated; `side-<index>` opens this side's.
  * @var array{url: string, attributes: list<array{slug: string, label: string}>}|null $groups The Groups setting's template groups route and the product's attributes used for variations; null where the form is not arranged (a variation's own sides).
  * @var string                                                                    $studio     The Pixonaut studio's templates page, a template's own page being under it by its base id; empty while the workspace is not known, which shows no link.
@@ -22,6 +22,7 @@
  */
 
 use Pixonaut\WooCommerce\Catalogue\CanvasRatio;
+use Pixonaut\WooCommerce\Catalogue\PageTemplate;
 use Pixonaut\WooCommerce\Catalogue\PostedSides;
 use Pixonaut\WooCommerce\Catalogue\Side;
 use Pixonaut\WooCommerce\Catalogue\TemplateId;
@@ -102,6 +103,7 @@ $pixonaut_stays = __( 'stays on version %d', 'pixonaut-for-woocommerce' );
 						<?php if ( isset( $pixonaut_placement['maxWidthMm'], $pixonaut_placement['maxHeightMm'] ) ) : ?>
 							data-max-width-mm="<?php echo esc_attr( (string) $pixonaut_placement['maxWidthMm'] ); ?>" data-max-height-mm="<?php echo esc_attr( (string) $pixonaut_placement['maxHeightMm'] ); ?>"
 						<?php endif; ?>
+						<?php echo empty( $pixonaut_placement['pages'] ) ? '' : 'data-pages="true"'; ?>
 						<?php selected( $pixonaut_placement['id'], $side['placement_id'] ); ?>><?php echo esc_html( $pixonaut_placement['text'] ); ?></option>
 				<?php endforeach; ?>
 			</select>
@@ -121,6 +123,27 @@ $pixonaut_stays = __( 'stays on version %d', 'pixonaut-for-woocommerce' );
 			<a class="pixonaut-template-studio" href="<?php echo esc_url( '' === $pixonaut_base ? $studio : $studio . '/' . rawurlencode( $pixonaut_base ) ); ?>" data-studio="<?php echo esc_url( $studio ); ?>" target="_blank" rel="noopener noreferrer" <?php echo '' === $pixonaut_base ? 'hidden' : ''; ?>><?php /* translators: Link beside a product side's template picker to that template's page in the Pixonaut studio. Admin product page. */ esc_html_e( 'Open in Pixonaut', 'pixonaut-for-woocommerce' ); ?></a>
 		<?php endif; ?>
 		<input type="hidden" class="pixonaut-side-template-name" name="<?php echo esc_attr( $pixonaut_name( '[template_name]' ) ); ?>" value="<?php echo esc_attr( $side['template_name'] ); ?>" />
+	</p>
+	<p class="form-field pixonaut-with-blank pixonaut-side-page-templates-field" <?php echo array() === ( $side['page_templates'] ?? array() ) ? 'hidden' : ''; ?>>
+		<label for="<?php echo esc_attr( $pixonaut_id( PostedSides::PAGE_TEMPLATES ) ); ?>"><?php /* translators: Label of the field picking the other templates (layouts, such as two or four photos) a page of a book may be designed on. Admin product page. */ esc_html_e( 'Page layouts', 'pixonaut-for-woocommerce' ); ?></label>
+		<span class="pixonaut-field-control">
+			<?php /* Posted with the field even when no layout is picked, so a save without layouts takes them off. */ ?>
+			<input type="hidden" name="<?php echo esc_attr( $pixonaut_name( '[' . PostedSides::PAGE_TEMPLATES . '][]' ) ); ?>" value="" />
+			<select id="<?php echo esc_attr( $pixonaut_id( PostedSides::PAGE_TEMPLATES ) ); ?>" name="<?php echo esc_attr( $pixonaut_name( '[' . PostedSides::PAGE_TEMPLATES . '][]' ) ); ?>" class="pixonaut-side-page-templates" multiple="multiple" style="width: 50%;" data-placeholder="<?php /* translators: Placeholder of the search dropdown picking a book page's other layouts. Admin product page. */ esc_attr_e( 'Search for templates', 'pixonaut-for-woocommerce' ); ?>">
+				<?php foreach ( $side['page_templates'] ?? array() as $pixonaut_layout ) : ?>
+					<option value="<?php echo esc_attr( $pixonaut_layout['id'] ); ?>" selected="selected"><?php echo esc_html( $pixonaut_layout['name'] ); ?></option>
+				<?php endforeach; ?>
+			</select>
+		</span>
+		<span class="description">
+		<?php
+		printf(
+			/* translators: %d: most page layouts a side offers. Help under the Page layouts field. Admin product page. */
+			esc_html__( 'Up to %d other templates, at the template’s aspect ratio, that customers may design a page on. Every page starts on the template above.', 'pixonaut-for-woocommerce' ),
+			(int) PageTemplate::MAX
+		);
+		?>
+		</span>
 	</p>
 	<div class="inline notice notice-warning pixonaut-background-warning" hidden>
 		<p><?php esc_html_e( 'This template’s background shows through, and this product has no blank: customers see the design on white paper in the designer, and it prints on white paper. You probably want to set a background on the template in Pixonaut. If transparent is what you intend, leave it as it is; customers can still buy the product.', 'pixonaut-for-woocommerce' ); ?></p>
