@@ -543,6 +543,10 @@ for (const viewport of VIEWPORTS) {
 		request,
 		baseURL,
 	}) => {
+		// Five switches, each after the page idles for `IDLE_MS` and each
+		// sampled for `SETTLED_FRAMES` after it settles: about 29 s of a
+		// default 30 s on an idle machine.
+		test.slow();
 		await page.context().addCookies([
 			{
 				name: 'pixonaut_e2e_product_form',
