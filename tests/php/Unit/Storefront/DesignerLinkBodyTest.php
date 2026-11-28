@@ -10,6 +10,7 @@ namespace Pixonaut\WooCommerce\Tests\Unit\Storefront;
 use Brain\Monkey\Functions;
 use Pixonaut\WooCommerce\Api\Deprecations;
 use Pixonaut\WooCommerce\Api\DesignerLinks;
+use Pixonaut\WooCommerce\Catalogue\PageTemplate;
 use Pixonaut\WooCommerce\Catalogue\PostedSides;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
@@ -35,6 +36,8 @@ final class DesignerLinkBodyTest extends TestCase {
 	private const LINK_URL = 'http://pixonaut.test/designer/dl_1';
 
 	private const VALUE_SET = 'vs_0123456789abcdef01234567';
+
+	private const LAYOUT_SET = 'vs_76543210fedcba9876543210';
 
 
 	public function test_one_side_goes_at_the_top_level(): void {
@@ -119,6 +122,30 @@ final class DesignerLinkBodyTest extends TestCase {
 		$this->assertArrayNotHasKey( 'valueSet', $several->body['sides'][0] );
 		$this->assertSame( self::VALUE_SET, $several->body['sides'][1]['valueSet'] );
 		$this->assertArrayNotHasKey( 'valueSet', $plain->body );
+	}
+
+	public function test_a_side_with_page_layouts_offers_each_with_its_value_set(): void {
+		$book    = self::front()->with_page_templates( array( new PageTemplate( 'four-photos', 3 ), new PageTemplate( 'two-photos', 1 ) ) );
+		$one     = DesignerLinkBody::for_config( self::config( array( $book ) ), self::RETURN_URL, 'en', layout_sets: array( array( 'four-photos' => self::LAYOUT_SET ) ) );
+		$several = DesignerLinkBody::for_config( self::config( array( self::back( 'mini-poster' ), $book ) ), self::RETURN_URL, 'en' );
+		$plain   = DesignerLinkBody::for_config( self::config( array( self::front() ) ), self::RETURN_URL, 'en' );
+
+		$this->assertNotNull( $one );
+		$this->assertNotNull( $several );
+		$this->assertNotNull( $plain );
+		$this->assertSame(
+			array(
+				array(
+					'templateId' => 'four-photos',
+					'valueSet'   => self::LAYOUT_SET,
+				),
+				array( 'templateId' => 'two-photos' ),
+			),
+			$one->body['pageTemplates']
+		);
+		$this->assertArrayNotHasKey( 'pageTemplates', $several->body['sides'][0] );
+		$this->assertSame( array( array( 'templateId' => 'four-photos' ), array( 'templateId' => 'two-photos' ) ), $several->body['sides'][1]['pageTemplates'] );
+		$this->assertArrayNotHasKey( 'pageTemplates', $plain->body );
 	}
 
 	public function test_a_side_on_the_first_sides_template_names_none(): void {

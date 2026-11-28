@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Storefront;
 
+use Pixonaut\WooCommerce\Catalogue\PageTemplate;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
@@ -34,6 +35,10 @@ use Pixonaut\WooCommerce\Catalogue\Side;
  * A side sold with values of its own names their value set, so the hosted
  * designer opens on the product's motif and texts, and the design it
  * returns carries the set the cart checks it against.
+ *
+ * A side printed as pages that offers page layouts names each, with the
+ * value set of the side's values on it, so the hosted designer offers them
+ * a page at a time as the product page does.
  */
 final class DesignerLinkBody {
 
@@ -55,20 +60,22 @@ final class DesignerLinkBody {
 	/**
 	 * The link for a product's sides, or null when a side cannot be sent.
 	 *
-	 * @param ProductConfig       $config     The product's configuration.
-	 * @param string              $return_url Where the hosted designer sends the customer back to.
-	 * @param string|null         $language   The hosted designer's language, one of `DesignerLanguage::languages()`; null for the workspace's default.
-	 * @param ProductVariant|null $variant    The variant the product or variation sells, on a blank.
-	 * @param bool                $frame      Whether the hosted designer frames the print area; see the `print_area_frame` setting.
-	 * @param string|null         $layout     The form's layout, `page` or `steps`; null follows each side's template. See `FormLayout`.
-	 * @param bool                $add_to_cart Whether the store adds the design to the cart on return, which the hosted page's button then says.
-	 * @param int|null            $page_count  The pages a book is sold at; null for none.
-	 * @param string[]            $paged       The blank's placements printed as pages.
-	 * @param array<string|null>  $value_sets  Each side's value set (`SideValues::set_of()`), by its place in the sides; null or absent for none.
+	 * @param ProductConfig                $config     The product's configuration.
+	 * @param string                       $return_url Where the hosted designer sends the customer back to.
+	 * @param string|null                  $language   The hosted designer's language, one of `DesignerLanguage::languages()`; null for the workspace's default.
+	 * @param ProductVariant|null          $variant    The variant the product or variation sells, on a blank.
+	 * @param bool                         $frame      Whether the hosted designer frames the print area; see the `print_area_frame` setting.
+	 * @param string|null                  $layout     The form's layout, `page` or `steps`; null follows each side's template. See `FormLayout`.
+	 * @param bool                         $add_to_cart Whether the store adds the design to the cart on return, which the hosted page's button then says.
+	 * @param int|null                     $page_count  The pages a book is sold at; null for none.
+	 * @param string[]                     $paged       The blank's placements printed as pages.
+	 * @param array<string|null>           $value_sets  Each side's value set (`SideValues::set_of()`), by its place in the sides; null or absent for none.
+	 * @param array<array<string, string>> $layout_sets The value set of each template a side is designed on, by base id (`SideValues::sets_of()`), by the side's place in the sides; a page layout absent from it has none.
 	 * @phpstan-param list<string> $paged
 	 * @phpstan-param array<int, string|null> $value_sets
+	 * @phpstan-param array<int, array<string, string>> $layout_sets
 	 */
-	public static function for_config( ProductConfig $config, string $return_url, ?string $language, ?ProductVariant $variant = null, bool $frame = false, ?string $layout = null, bool $add_to_cart = false, ?int $page_count = null, array $paged = array(), array $value_sets = array() ): ?self {
+	public static function for_config( ProductConfig $config, string $return_url, ?string $language, ?ProductVariant $variant = null, bool $frame = false, ?string $layout = null, bool $add_to_cart = false, ?int $page_count = null, array $paged = array(), array $value_sets = array(), array $layout_sets = array() ): ?self {
 		$sides = $config->sides;
 		if ( ! $config->valid || array() === $sides || ( count( $sides ) > 1 && null === $config->blank_id ) ) {
 			return null;
@@ -84,6 +91,10 @@ final class DesignerLinkBody {
 			if ( null !== $value_set ) {
 				// Absent, as for a link kept from before, the template's own values.
 				$part['valueSet'] = $value_set;
+			}
+			if ( array() !== $side->page_templates ) {
+				// Absent, as for a link kept from before, every page is laid in the side's own template.
+				$part['pageTemplates'] = self::page_templates( $side, $layout_sets[ $index ] ?? array() );
 			}
 			if ( null !== $page_count && in_array( $side->placement_id, $paged, true ) ) {
 				$part['pages'] = array(
@@ -127,6 +138,22 @@ final class DesignerLinkBody {
 			$body['afterApprove'] = self::AFTER_APPROVE_ADD_TO_CART;
 		}
 		return new self( $first->template_base_id, $body );
+	}
+
+	/**
+	 * A side's page layouts as the link names them: each by its template's
+	 * base id, as the link names the side's own, so a page is laid in its
+	 * live version; with the set of the side's values on it when it has one.
+	 *
+	 * @param Side                  $side The side, printed as pages.
+	 * @param array<string, string> $sets The value set of each template it is designed on, by base id.
+	 * @return list<array{templateId: string, valueSet?: string}>
+	 */
+	private static function page_templates( Side $side, array $sets ): array {
+		return array_map(
+			static fn ( PageTemplate $layout ): array => array( 'templateId' => $layout->base_id ) + ( isset( $sets[ $layout->base_id ] ) ? array( 'valueSet' => $sets[ $layout->base_id ] ) : array() ),
+			$side->page_templates
+		);
 	}
 
 	/**

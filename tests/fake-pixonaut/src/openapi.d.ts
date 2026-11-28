@@ -34344,6 +34344,17 @@ export interface operations {
                                         exact: boolean;
                                         /** @description The photo's mask, opened with no key. */
                                         maskUrl: string;
+                                        /** @description On a book lying open at a spread, the window of the spread's odd page, on the same piece: `printWindowMm` is then the even page's. A spread shows an even page and the odd page after it, so the first printed on both sides is pages 2 and 3. A reader that knows none of it draws the print in `printWindowMm` alone. */
+                                        oddPageWindowMm?: {
+                                            /** @description The window's height, in mm. */
+                                            heightMm: number;
+                                            /** @description The window's width, in mm. */
+                                            widthMm: number;
+                                            /** @description The window's left edge, in mm from the piece's left. */
+                                            xMm: number;
+                                            /** @description The window's top edge, in mm from the piece's top. */
+                                            yMm: number;
+                                        };
                                         photoSizePx: {
                                             h: number;
                                             w: number;
@@ -34560,6 +34571,17 @@ export interface operations {
                                     };
                                     /** @description The placements this photo carries a print of, in the order they are drawn, each with the window of its own print area. */
                                     regions: {
+                                        /** @description On a book lying open at a spread, the window of the spread's odd page, on the same piece: `printWindowMm` is then the even page's. A spread shows an even page and the odd page after it, so the first printed on both sides is pages 2 and 3. A reader that knows none of it draws the print in `printWindowMm` alone. */
+                                        oddPageWindowMm?: {
+                                            /** @description The window's height, in mm. */
+                                            heightMm: number;
+                                            /** @description The window's width, in mm. */
+                                            widthMm: number;
+                                            /** @description The window's left edge, in mm from the piece's left. */
+                                            xMm: number;
+                                            /** @description The window's top edge, in mm from the piece's top. */
+                                            yMm: number;
+                                        };
                                         /** @description A pattern piece of the view's UV pass, 1 to 253: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
                                         piece?: number;
                                         /** @description The print size on the model of the piece the region's `printWindowMm` lies on, in mm. Present with a print window only. */
@@ -58166,6 +58188,13 @@ export interface operations {
                     }[];
                     /** @description The link's new name; null removes it. Unique among the workspace's working links, case aside. */
                     name?: string | null;
+                    /** @description On a placement printed as pages (a photo book's pages): the other templates a page may be laid in, such as two photos or four, each at the ratio of the side's own template, none twice nor the side's own. Every page starts on the side's template and the shopper picks one a page; a design made on any of them is the side's. Absent or empty, every page is laid in the side's own. */
+                    pageTemplates?: {
+                        /** @description The template's base id: the page is designed on its live version. */
+                        templateId: string;
+                        /** @description A value set of this template, as the side's `valueSet` is of its own: a page laid in it reads it with those values, and its proofs and designs record the set. Absent, the template's own values. */
+                        valueSet?: string;
+                    }[];
                     /** @description On a placement printed as pages, the page counts the shopper picks from, on its own steps: a narrower range, or one count. Absent, the placement's whole range. */
                     pages?: {
                         /** @description Most pages the shopper may pick; equal to `min` for a fixed count. */
@@ -58310,6 +58339,13 @@ export interface operations {
                                  */
                                 kind: "cylinder";
                             } | null;
+                        }[];
+                        /** @description On a placement printed as pages (a photo book's pages): the other templates a page may be laid in, such as two photos or four, each at the ratio of the side's own template, none twice nor the side's own. Every page starts on the side's template and the shopper picks one a page; a design made on any of them is the side's. Absent or empty, every page is laid in the side's own. */
+                        pageTemplates?: {
+                            /** @description The template's base id: the page is designed on its live version. */
+                            templateId: string;
+                            /** @description A value set of this template, as the side's `valueSet` is of its own: a page laid in it reads it with those values, and its proofs and designs record the set. Absent, the template's own values. */
+                            valueSet?: string;
                         }[];
                         /** @description On a placement printed as pages, the page counts the shopper picks from, on its own steps: a narrower range, or one count. Absent, the placement's whole range. */
                         pages?: {
@@ -58758,6 +58794,13 @@ export interface operations {
                         }[];
                         /** @description The workspace's name for the link. */
                         name: string | null;
+                        /** @description On a placement printed as pages (a photo book's pages): the other templates a page may be laid in, such as two photos or four, each at the ratio of the side's own template, none twice nor the side's own. Every page starts on the side's template and the shopper picks one a page; a design made on any of them is the side's. Absent or empty, every page is laid in the side's own. */
+                        pageTemplates?: {
+                            /** @description The template's base id: the page is designed on its live version. */
+                            templateId: string;
+                            /** @description A value set of this template, as the side's `valueSet` is of its own: a page laid in it reads it with those values, and its proofs and designs record the set. Absent, the template's own values. */
+                            valueSet?: string;
+                        }[];
                         /** @description On a placement printed as pages, the page counts the shopper picks from, on its own steps: a narrower range, or one count. Absent, the placement's whole range. */
                         pages?: {
                             /** @description Most pages the shopper may pick; equal to `min` for a fixed count. */
@@ -58896,6 +58939,13 @@ export interface operations {
                                     /** @description The one kind of wrap: an upright round product. */
                                     kind: string;
                                 } | null;
+                            }[];
+                            /** @description On a placement printed as pages (a photo book's pages): the other templates a page may be laid in, such as two photos or four, each at the ratio of the side's own template, none twice nor the side's own. Every page starts on the side's template and the shopper picks one a page; a design made on any of them is the side's. Absent or empty, every page is laid in the side's own. */
+                            pageTemplates?: {
+                                /** @description The template's base id: the page is designed on its live version. */
+                                templateId: string;
+                                /** @description A value set of this template, as the side's `valueSet` is of its own: a page laid in it reads it with those values, and its proofs and designs record the set. Absent, the template's own values. */
+                                valueSet?: string;
                             }[];
                             /** @description On a placement printed as pages, the page counts the shopper picks from, on its own steps: a narrower range, or one count. Absent, the placement's whole range. */
                             pages?: {
@@ -60333,6 +60383,13 @@ export interface operations {
                     }[];
                     /** @description The workspace's own name for the link (`Spring market stand`), at most 80 characters, never shown on its page. Trimmed, inner spaces made one; empty is no name. Unique among the workspace's working links, case aside: one another holds is refused `share_link_name_taken` naming the holder, a longer one `share_link_name_too_long`. A withdrawn or expired link frees its name. */
                     name?: string;
+                    /** @description On a placement printed as pages (a photo book's pages): the other templates a page may be laid in, such as two photos or four, each at the ratio of the side's own template, none twice nor the side's own. Every page starts on the side's template and the shopper picks one a page; a design made on any of them is the side's. Absent or empty, every page is laid in the side's own. */
+                    pageTemplates?: {
+                        /** @description The template's base id: the page is designed on its live version. */
+                        templateId: string;
+                        /** @description A value set of this template, as the side's `valueSet` is of its own: a page laid in it reads it with those values, and its proofs and designs record the set. Absent, the template's own values. */
+                        valueSet?: string;
+                    }[];
                     /** @description On a placement printed as pages, the page counts the shopper picks from, on its own steps: a narrower range, or one count. Absent, the placement's whole range. */
                     pages?: {
                         /** @description Most pages the shopper may pick; equal to `min` for a fixed count. */
@@ -60477,6 +60534,13 @@ export interface operations {
                                  */
                                 kind: "cylinder";
                             } | null;
+                        }[];
+                        /** @description On a placement printed as pages (a photo book's pages): the other templates a page may be laid in, such as two photos or four, each at the ratio of the side's own template, none twice nor the side's own. Every page starts on the side's template and the shopper picks one a page; a design made on any of them is the side's. Absent or empty, every page is laid in the side's own. */
+                        pageTemplates?: {
+                            /** @description The template's base id: the page is designed on its live version. */
+                            templateId: string;
+                            /** @description A value set of this template, as the side's `valueSet` is of its own: a page laid in it reads it with those values, and its proofs and designs record the set. Absent, the template's own values. */
+                            valueSet?: string;
                         }[];
                         /** @description On a placement printed as pages, the page counts the shopper picks from, on its own steps: a narrower range, or one count. Absent, the placement's whole range. */
                         pages?: {
