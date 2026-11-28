@@ -191,6 +191,33 @@ final class LinkProductVariationsTest extends WP_UnitTestCase {
 		$this->assertSame( ProductRecheck::LINKED_PRIORITY, \ActionScheduler::store()->fetch_action( (string) $again[0] )->get_priority() );
 	}
 
+	public function test_a_recheck_queued_after_a_linked_one_in_the_same_request_takes_the_bulk_priority(): void {
+		$product = $this->variable_product();
+		$own     = $this->variation( $product, self::own_setup( false ) );
+		$other   = $this->variation( $product, self::own_setup( false ) );
+		$this->script_link();
+		$this->live_list( self::NEW_VERSION );
+		$this->recorder->json( self::TOO_MANY_REQUESTS, array( 'error' => 'rate_limited' ), array( 'Retry-After' => (string) self::RETRY_AFTER_SECONDS ) );
+		$this->link( $product );
+		$queued = ActionSchedulerRunner::pending( ProductRecheck::ACTION );
+		// The linked re-check runs, and is held again, ahead of the bulk queue.
+		\ActionScheduler::runner()->process_action( (int) $queued[0], 'test' );
+		$linked = ActionSchedulerRunner::pending( ProductRecheck::ACTION );
+
+		$this->plugin->product_recheck()->queue( array( $own, $other ) );
+
+		$bulk = array_values( array_diff( ActionSchedulerRunner::pending( ProductRecheck::ACTION ), $linked ) );
+		$this->assertSame( array(), $bulk, 'Both wait in the linked re-check already, so no bulk one is queued.' );
+		delete_option( CheckSlowdown::OPTION );
+		as_unschedule_all_actions( ProductRecheck::ACTION );
+
+		$this->plugin->product_recheck()->queue( array( $own ) );
+
+		$bulk = ActionSchedulerRunner::pending( ProductRecheck::ACTION );
+		$this->assertCount( 1, $bulk );
+		$this->assertSame( ProductRecheck::PRIORITY, \ActionScheduler::store()->fetch_action( (string) $bulk[0] )->get_priority() );
+	}
+
 	public function test_a_variation_pixonaut_did_not_answer_is_queued_with_the_ones_after_a_refusal(): void {
 		$product = $this->variable_product();
 		$first   = $this->variation( $product, self::own_setup( false ) );

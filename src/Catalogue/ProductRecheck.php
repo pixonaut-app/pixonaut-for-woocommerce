@@ -403,8 +403,9 @@ final class ProductRecheck {
 	 * versions. Without it such a variation waits for the re-check the
 	 * version's publishing queued, which a busy store can run long after,
 	 * and its customers design on the version it left until then. A link
-	 * checks at most `FOLLOW_INLINE_MAX` of them, and none once another
-	 * check would take it past `FOLLOW_BUDGET_SECONDS`; the rest, and any
+	 * checks at most `FOLLOW_INLINE_MAX` of them, and starts none once the
+	 * slowest check so far would take it past `FOLLOW_BUDGET_SECONDS` (the
+	 * first always starts, and one may run longer); the rest, and any
 	 * Pixonaut could not check now, are queued ahead of the bulk re-checks
 	 * and checked against the live versions then. A template that is not
 	 * live moves nothing: the re-check its event queued stops those

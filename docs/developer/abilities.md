@@ -315,8 +315,9 @@ template that side was on, in the same mode, not pinned, with no values of
 its own for that template). A
 moved variation keeps its blank, variant, placements and print sizes, and
 takes the product's values. A link checks at most two of them with
-Pixonaut before it answers, and none once another check would take it past
-three seconds; it queues the rest at once, ahead of the bulk re-checks.
+Pixonaut before it answers, and starts no further check once the slowest
+check so far would take it past three seconds (a single check may run
+longer); it queues the rest at once, ahead of the bulk re-checks.
 `variations_moved` counts those Pixonaut checked at once;
 `variations_moved_later` those it checks in the background, which keep the
 version they were on meanwhile, or, when they came from another template,
