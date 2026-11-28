@@ -1133,6 +1133,16 @@ values (`kept-pages.ts`): the next mount takes them under its own placement,
 and on another template each page is given its values by field key, else by
 layer, as the page shown is.
 
+A side printed as pages that offers page layouts (`page_templates` on the
+side) mounts with `pageTemplates` on its placement: the layouts' template
+versions, besides the side's own template every page starts on. The SDK
+draws the layout picker under its page picker, and each page's design is
+made from the layout it was designed on. `valueSets` names the side's own
+set and each layout's that has one, by base id, and a variation switch
+carries them as `valueSets` beside `valueSet`. The cart accepts a page made
+from one of the side's layouts, judged by the layout's own current and
+previous versions and its value set (`DesignCheck::mismatch()`).
+
 ### Kept between requests
 
 A variable product's page builds its designer, what WooCommerce tells its

@@ -98,6 +98,7 @@ final class ListProductsTest extends WP_UnitTestCase {
 					'start_size'       => 0,
 					'form_groups'      => null,
 					'canvas_ratio'     => CanvasRatio::FOLLOW,
+					'page_templates'   => array(),
 					'template_name'    => 'student-sign',
 					'placement_name'   => 'Front',
 					'standing_options' => array(),

@@ -344,7 +344,15 @@ the setup with `list-products` and sends what changes:
   (`mini-tee`), for its live version, which Pixonaut's list of live
   templates gives. Either way the side follows the template's latest
   published version from then on, unless `template_pinned` is true: the
-  side then stays on that version.
+  side then stays on that version. A side whose placement is printed as
+  pages (a book's inner pages) may also take `page_templates`: the other
+  templates a page may be designed on (layouts such as two or four
+  photos), given as `template_id` is and following or staying with it;
+  every page starts on `template_id`. A layout on a side not printed as
+  pages, at another ratio than `template_id`'s, named twice, the side's
+  own template, or more than eight refuses the call
+  (`pixonaut_wc_ability_page_templates_refused`, its `reason` in the
+  error's data) and saves nothing.
 - `layout`, `form_layout` and `approval_mode`, empty for the store's.
 - `option_groups` (`on_top`, `first`, `last`) and `group_numbers` (`on`, `off`),
   empty for the store's; a product's only, and refused on a variation.
@@ -497,6 +505,17 @@ nothing is saved either. The
 answer is every side of the product or variation, with its `template_id`,
 the `value_set_id` and `values` it is sold with, null where it has none,
 and `values_from`, whose they are.
+
+On a side with page layouts the values reach every layout: the store reads
+the layers of the side's template and of each layout (`GET
+/v1/templates/{id}`), refuses a layer none of them has, and makes the side's
+set of the values for its own template's layers and one set per layout of
+the values for the layout's layers (none for a layout with none of them); a
+value a layout's rules refuse refuses the call. The sets are kept beside the
+values and given in `page_template_value_sets`, by the layout's template id
+without its version. A setup saved with other layouts makes the new
+layouts' sets and drops the sets of those gone (`LayoutValueSets`); a
+layout moving to another version keeps its set, as the side's own does.
 
 `get-product-split-listing` reads what the product's Attributes tab shows
 for [listing each value as its own product](../../merchant/split-listings/):
