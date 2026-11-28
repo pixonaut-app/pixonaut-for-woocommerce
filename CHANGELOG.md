@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.38.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.37.1...v1.38.0) (2026-11-28)
+
+
+### Features
+
+* **pictures:** a product's gallery shows its other sides, drawn with their values ([#440](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/440)) ([ddf7b74](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/ddf7b740a940832aa219791135e46247a2085298))
+
 ## [1.37.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.37.0...v1.37.1) (2026-11-28)
 
 
