@@ -108,8 +108,8 @@ final class ProductPictures {
 	private const MAX_SENDS = 1 + 2 * ( 1 + self::STILL_DRAWING_ASKS ) * self::PICTURE_SENDS;
 
 	/**
-	 * Pictures a drawing saves at most: one per showcase set, and a
-	 * variation's flat picture.
+	 * Pictures a drawing saves at most: one per showcase set or other side,
+	 * `MAX_IMAGES` in all, and a variation's flat picture.
 	 */
 	private const MAX_PICTURES = ShowcaseImages::MAX_IMAGES + 1;
 
@@ -714,7 +714,7 @@ final class ProductPictures {
 	/**
 	 * Whether a product showing the store manager's own image still has
 	 * gallery pictures to draw or take out: a product, with showcase sets
-	 * chosen or gallery pictures recorded; a variation drawn flat too
+	 * or other sides chosen, or gallery pictures recorded; a variation drawn flat too
 	 * (`draws_flat()`), or with a flat picture recorded.
 	 *
 	 * @param WC_Product $product A product or variation.
@@ -725,7 +725,7 @@ final class ProductPictures {
 		if ( $product->is_type( 'variation' ) ) {
 			return self::draws_flat( $product ) || array() !== $stored['gallery'];
 		}
-		return array() !== ShowcaseImages::on( $product ) || array() !== $stored['gallery'];
+		return array() !== ShowcaseImages::on( $product ) || array() !== SidePictures::on( $product ) || array() !== $stored['gallery'];
 	}
 
 	/**
@@ -774,8 +774,8 @@ final class ProductPictures {
 	/**
 	 * What the picture depends on, as stored: the configuration of the
 	 * product (and of a variation's product), which holds each side's
-	 * template version, its variant, the showcase sets chosen when there are
-	 * any, the view and photo chosen when there is one, the variation a
+	 * template version, its variant, the showcase sets and other sides chosen
+	 * when there are any, the view and photo chosen when there is one, the variation a
 	 * variable product is drawn as, the template of a variation set up on
 	 * another than its product's while sets are chosen, the generation
 	 * `redraw_all()` moves, the numbers of its blanks `redraw_blank()`
@@ -801,6 +801,15 @@ final class ProductPictures {
 		if ( null !== $showcase ) {
 			// Only when set, so a product without showcase sets depends on what it did before them.
 			$parts[] = $showcase;
+		}
+		$sides = SidePictures::document_on( $product );
+		if ( null !== $sides ) {
+			// Likewise only when chosen; drawn with the values of the variation a variable product is pictured as.
+			$pictured = PicturedVariation::of( $product );
+			$parts[]  = array(
+				'side_pictures'   => $sides,
+				'pictured_values' => null === $pictured ? null : SideValues::document_on( $pictured ),
+			);
 		}
 		$views = array_filter(
 			array(

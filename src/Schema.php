@@ -221,6 +221,13 @@ final class Schema {
 	const PRODUCT_SHOWCASE_IMAGES_META = '_pixonaut_showcase_images';
 
 	/**
+	 * Product meta listing the product's other sides the store manager
+	 * chose as gallery pictures after its image, each with how it is drawn:
+	 * JSON, a list of `{side, kind}` (`SidePictures`).
+	 */
+	const PRODUCT_SIDE_PICTURES_META = '_pixonaut_side_pictures';
+
+	/**
 	 * Product and variation meta holding each side's own values for its
 	 * template's layers and the value set Pixonaut made of them: JSON,
 	 * `{v, sides: {<key>: {template, valueSet, values}}}` (`SideValues`).

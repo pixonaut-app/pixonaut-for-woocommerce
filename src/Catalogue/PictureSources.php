@@ -33,7 +33,9 @@ use WC_Product;
  * wants on its blank's photo (`CardPhotos`) has a second picture there,
  * drawn with the same set. With a picture for every variation
  * (`VariationPictures`), a variation whose image would be drawn flat is
- * drawn on its blank's photo instead, with the same set.
+ * drawn on its blank's photo instead, with the same set. A product's
+ * gallery then shows the other sides chosen for it (`SidePictures`), each
+ * with its own template and values.
  */
 final class PictureSources {
 
@@ -102,7 +104,52 @@ final class PictureSources {
 			// Its image is flat: the picture on its blank's photo a filtered card shows.
 			$sources[] = $photo + ( isset( $sources[0]['showcase'] ) ? array( 'showcase' => $sources[0]['showcase'] ) : array() ) + array( 'card_photo' => true );
 		}
-		return self::with_value_set( $product, $sources );
+		$sources = self::with_value_set( $product, $sources );
+		if ( ! $chooser->is_type( 'variation' ) ) {
+			$sources = array_merge( $sources, $this->of_sides( $product, SidePictures::on( $chooser ), ShowcaseImages::MAX_IMAGES - count( $sources ) ) );
+		}
+		return $sources;
+	}
+
+	/**
+	 * What the pictures of the product's other sides are drawn from, each
+	 * with the value set of its side, as many as there are slots for; a side
+	 * the product no longer has, or one with no template, draws none, and
+	 * one past the slots is not read.
+	 *
+	 * @param WC_Product                              $product The product, or the variation a variable product is drawn as.
+	 * @param list<array{side: string, kind: string}> $chosen  The sides chosen (`SidePictures`).
+	 * @param int                                     $slots   How many pictures the product has left room for.
+	 *
+	 * @return list<array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, value_set?: string}>
+	 *
+	 * @throws ApiException When the blank's views cannot be read.
+	 */
+	private function of_sides( WC_Product $product, array $chosen, int $slots ): array {
+		if ( array() === $chosen || $slots <= 0 ) {
+			return array();
+		}
+		$by_key = array();
+		foreach ( ProductConfig::config_for( $product )->sides as $side ) {
+			$by_key[ $side->key ] ??= $side;
+		}
+		$sources = array();
+		foreach ( $chosen as $choice ) {
+			$side = $by_key[ $choice['side'] ] ?? null;
+			if ( null === $side ) {
+				continue;
+			}
+			$source = $this->source( $product, PictureView::MOCKUP === $choice['kind'], $side );
+			if ( null === $source ) {
+				continue;
+			}
+			$set       = SideValues::set_of( $product, $side );
+			$sources[] = $source + ( null === $set ? array() : array( 'value_set' => $set ) );
+			if ( count( $sources ) === $slots ) {
+				break;
+			}
+		}
+		return $sources;
 	}
 
 	/**
@@ -193,19 +240,21 @@ final class PictureSources {
 	}
 
 	/**
-	 * What the product's picture is drawn from with the template's defaults;
-	 * null when the product shows none.
+	 * What the picture of one of the product's sides is drawn from with the
+	 * template's defaults: its first side's unless another is given; null
+	 * when the product shows none.
 	 *
 	 * @param WC_Product $product  A product or variation, or the variation a variable product is drawn as.
 	 * @param bool       $on_photo Whether it is drawn on the blank's photo when it can be; false for the template alone.
+	 * @param Side|null  $side     The side drawn; null for its first.
 	 *
 	 * @return array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null}|null
 	 *
 	 * @throws ApiException When the blank's views cannot be read.
 	 */
-	private function source( WC_Product $product, bool $on_photo ): ?array {
+	private function source( WC_Product $product, bool $on_photo, ?Side $side = null ): ?array {
 		$config = ProductConfig::config_for( $product );
-		$side   = $config->sides[0] ?? null;
+		$side ??= $config->sides[0] ?? null;
 		if ( ! $config->personalise || null === $side || '' === $side->template_base_id || null === $side->template_version ) {
 			return null;
 		}

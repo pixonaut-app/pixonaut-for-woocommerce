@@ -11,8 +11,11 @@ namespace Pixonaut\WooCommerce\Abilities;
 
 use Pixonaut\WooCommerce\Admin\ShowcaseField;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Catalogue\PicturedVariation;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ShowcaseImages;
+use Pixonaut\WooCommerce\Catalogue\Side;
+use Pixonaut\WooCommerce\Catalogue\SidePictures;
 use WC_Product;
 use WP_Error;
 use WP_Http;
@@ -24,8 +27,10 @@ use WP_Http;
  * on the photo on a view and photo of the blank it names, a scene's
  * included; one named without a view keeps the view and photo chosen for it
  * before (`SetProductPictureView`). A set may be named more than once, each
- * time on another view or photo. The pictures are drawn again once the
- * choice is saved. Whoever may edit the product may set them.
+ * time on another view or photo. With `side_pictures`, it also sets the
+ * product's other sides its gallery shows after them (`SidePictures`); left
+ * out, those are kept. The pictures are drawn again once the choice is
+ * saved. Whoever may edit the product may set them.
  */
 final class SetProductShowcase implements Ability {
 
@@ -44,22 +49,24 @@ final class SetProductShowcase implements Ability {
 	public function definition(): array {
 		$schema                                      = ProductLinks::output_schema();
 		$schema['properties']['available_showcases'] = self::available_schema( 'array', __( 'The sets the product\'s template offers, by id and name.', 'pixonaut-for-woocommerce' ) );
+		$schema['properties']['side_pictures']       = GetProductPictureViews::side_pictures_schema();
 		return array(
 			/* translators: Name of an ability an AI assistant or an MCP client can use on the store. */
 			'label'               => __( 'Set a product\'s showcase pictures', 'pixonaut-for-woocommerce' ),
 			'description'         => sprintf(
-				/* translators: %d: how many showcase pictures a product shows at most, e.g. 10. */
-				__( 'Sets which of its template\'s showcase sets a personalised simple or variable product\'s images are drawn with, in order, up to %d; replaces the ones it has, and an empty list removes them. Each is drawn on the blank\'s photo (`mockup`) or as the flat design (`preview`); a product without a blank has only the flat design. On the photo, `view` and `photo` name a view of the blank and one of its photos, a scene\'s too, as `get-product-picture-views` lists them; `view` null is the photo the product page starts on, and leaving both out keeps what the set was drawn on before. A set may be named more than once, on another view or photo each time, so a gallery can show the same set on several views. The pictures are drawn again. The answer lists the sets the template offers.', 'pixonaut-for-woocommerce' ),
-				ShowcaseImages::MAX_IMAGES
+				/* translators: 1: how many showcase pictures a product shows at most, e.g. 10; 2: how many pictures of its other sides, e.g. 9. */
+				__( 'Sets which of its template\'s showcase sets a personalised simple or variable product\'s images are drawn with, in order, up to %1$d; replaces the ones it has, and an empty list removes them. Each is drawn on the blank\'s photo (`mockup`) or as the flat design (`preview`); a product without a blank has only the flat design. On the photo, `view` and `photo` name a view of the blank and one of its photos, a scene\'s too, as `get-product-picture-views` lists them; `view` null is the photo the product page starts on, and leaving both out keeps what the set was drawn on before. A set may be named more than once, on another view or photo each time, so a gallery can show the same set on several views. `side_pictures`, up to %2$d, names the product\'s other sides its gallery shows after them, such as a calendar\'s month page or a shirt\'s back, each drawn with its side\'s template and the values that side is sold with, from the sides `get-product-picture-views` lists; it replaces the ones it has, and left out keeps them. The pictures are drawn again. The answer lists the sets the template offers.', 'pixonaut-for-woocommerce' ),
+				ShowcaseImages::MAX_IMAGES,
+				SidePictures::MAX_PICTURES
 			),
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
-					'product_id' => array(
+					'product_id'    => array(
 						'type'    => 'integer',
 						'minimum' => 1,
 					),
-					'images'     => array(
+					'images'        => array(
 						'type'     => 'array',
 						'maxItems' => ShowcaseImages::MAX_IMAGES,
 						'items'    => array(
@@ -84,6 +91,26 @@ final class SetProductShowcase implements Ability {
 								),
 							),
 							'required'             => array( 'id' ),
+							'additionalProperties' => false,
+						),
+					),
+					'side_pictures' => array(
+						'type'     => 'array',
+						'maxItems' => SidePictures::MAX_PICTURES,
+						'items'    => array(
+							'type'                 => 'object',
+							'properties'           => array(
+								'side' => array(
+									'type'        => 'string',
+									'description' => __( 'One of the product\'s sides, by key, as `get-product-picture-views` lists them in `sides`.', 'pixonaut-for-woocommerce' ),
+								),
+								'kind' => array(
+									'type'    => 'string',
+									'enum'    => array( ShowcaseImages::MOCKUP, ShowcaseImages::PREVIEW ),
+									'default' => ShowcaseImages::MOCKUP,
+								),
+							),
+							'required'             => array( 'side' ),
 							'additionalProperties' => false,
 						),
 					),
@@ -155,8 +182,68 @@ final class SetProductShowcase implements Ability {
 				'name' => $set['name'],
 			) + $choice;
 		}
+		$sides = null;
+		if ( is_array( $input['side_pictures'] ?? null ) ) {
+			$sides = self::side_pictures( $product, $input['side_pictures'] );
+			if ( $sides instanceof WP_Error ) {
+				return $sides;
+			}
+		}
+		// Without a set, the product still shows its first side's picture.
+		$shown = max( count( $images ), 1 ) + count( $sides ?? SidePictures::on( $product ) );
+		if ( $shown > ShowcaseImages::MAX_IMAGES ) {
+			return new WP_Error(
+				'pixonaut_wc_ability_too_many_pictures',
+				sprintf(
+					/* translators: 1: how many pictures were asked for, e.g. 12; 2: how many a product shows at most, e.g. 10. */
+					__( 'That is %1$d pictures, and a product shows at most %2$d: its showcase sets, or its first side\'s picture, and the pictures of its other sides. Name fewer, or take side pictures off with `side_pictures`.', 'pixonaut-for-woocommerce' ),
+					$shown,
+					ShowcaseImages::MAX_IMAGES
+				)
+			);
+		}
 		ShowcaseImages::save( $product, $images );
-		return $this->links->summary( $product ) + array( 'available_showcases' => $sets );
+		if ( null !== $sides ) {
+			SidePictures::save( $product, $sides );
+		}
+		return $this->links->summary( $product ) + array(
+			'available_showcases' => $sets,
+			'side_pictures'       => SidePictures::on( $product ),
+		);
+	}
+
+	/**
+	 * The side pictures posted, each a side the product's gallery can show:
+	 * flat when what it is pictured as has no blank.
+	 *
+	 * @param WC_Product   $product The product.
+	 * @param array<mixed> $posted  The side pictures as posted.
+	 *
+	 * @return list<array{side: string, kind: string}>|WP_Error
+	 */
+	private static function side_pictures( WC_Product $product, array $posted ): array|WP_Error {
+		$on_flat = null === ProductConfig::config_for( PicturedVariation::of( $product ) ?? $product )->blank_id;
+		$keys    = array_map( static fn ( Side $side ): string => $side->key, SidePictures::sides_of( $product ) );
+		$chosen  = array();
+		foreach ( $posted as $row ) {
+			$side = is_array( $row ) && is_string( $row['side'] ?? null ) ? $row['side'] : '';
+			if ( ! in_array( $side, $keys, true ) ) {
+				return new WP_Error(
+					'pixonaut_wc_ability_unknown_side',
+					sprintf(
+						/* translators: 1: a side's key; 2: the keys of the product's sides, e.g. "front, back". */
+						__( 'The product has no side "%1$s". It has: %2$s.', 'pixonaut-for-woocommerce' ),
+						$side,
+						implode( ', ', $keys )
+					)
+				);
+			}
+			$chosen[] = array(
+				'side' => $side,
+				'kind' => $on_flat || ShowcaseImages::PREVIEW === ( $row['kind'] ?? null ) ? ShowcaseImages::PREVIEW : ShowcaseImages::MOCKUP,
+			);
+		}
+		return $chosen;
 	}
 
 	/**
